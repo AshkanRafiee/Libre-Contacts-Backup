@@ -82,7 +82,9 @@ git tag v1.0
 git push origin v1.0
 ```
 
-Then create and publish a GitHub Release for the `v1.0` tag. The workflow builds the signed APK and AAB, creates SHA-256 checksums, and uploads them to that published release. Ordinary pushes and tags do not publish release artifacts.
+Then create and publish a GitHub Release for the `v1.0` tag. The workflow builds the signed APK and AAB, renames them to `Libre-Contacts-Backup-vX.Y.apk` and `Libre-Contacts-Backup-vX.Y.aab`, creates matching SHA-256 checksums, and uploads them to that published release. Ordinary pushes and tags do not publish release artifacts.
+
+The APK is for direct installation and F-Droid. The AAB is important for Google Play, which expects an Android App Bundle for Play distribution. It is not needed for direct APK installation.
 
 For an already-published release whose workflow did not run, use **Actions -> Release Android APK and AAB -> Run workflow**, enter the existing tag, and start it manually.
 

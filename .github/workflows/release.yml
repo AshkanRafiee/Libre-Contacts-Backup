@@ -71,7 +71,14 @@ jobs:
         run: bash ./gradlew clean assembleRelease bundleRelease
 
       - name: Create checksums
-        run: sha256sum app/build/outputs/apk/release/app-release.apk app/build/outputs/bundle/release/app-release.aab > SHA256SUMS
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name || inputs.tag_name }}
+        run: |
+          APK_NAME="Libre-Contacts-Backup-${TAG_NAME}.apk"
+          AAB_NAME="Libre-Contacts-Backup-${TAG_NAME}.aab"
+          cp app/build/outputs/apk/release/app-release.apk "$APK_NAME"
+          cp app/build/outputs/bundle/release/app-release.aab "$AAB_NAME"
+          sha256sum "$APK_NAME" "$AAB_NAME" > "Libre-Contacts-Backup-${TAG_NAME}-SHA256SUMS"
 
       - name: Publish GitHub release
         env:
@@ -79,7 +86,7 @@ jobs:
           TAG_NAME: ${{ github.event.release.tag_name || inputs.tag_name }}
         run: |
           gh release upload "$TAG_NAME" \
-            app/build/outputs/apk/release/app-release.apk \
-            app/build/outputs/bundle/release/app-release.aab \
-            SHA256SUMS \
+            "Libre-Contacts-Backup-${TAG_NAME}.apk" \
+            "Libre-Contacts-Backup-${TAG_NAME}.aab" \
+            "Libre-Contacts-Backup-${TAG_NAME}-SHA256SUMS" \
             --clobber
