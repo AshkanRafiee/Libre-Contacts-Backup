@@ -27,11 +27,11 @@ Repo: https://github.com/AshkanRafiee/Libre-Contacts-Backup.git
 Builds:
   - versionName: '1.0'
     versionCode: 1
-    commit: a8d38db4e9c8b991262a1a9fbae95e3c59e5d449
+    commit: bad1fd127bccf4ee4cfb093cce4a4ccf61d38b96
     subdir: app
     gradle:
       - yes
     rm: gradle/wrapper/gradle-wrapper.jar
 
 AutoUpdateMode: Version
-UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+$
+UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+(\.[0-9]+)?$
