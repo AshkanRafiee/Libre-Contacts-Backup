@@ -142,7 +142,7 @@ public class MainActivity extends Activity {
     void manualExport(String format) { if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingManualFormat = format; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 23); return; } launchManualExport(format); }
     void launchManualExport(String format) { int request = format.equals("csv") ? MANUAL_CSV : format.equals("vcf") ? MANUAL_VCF : MANUAL_XLS; String extension = format.equals("csv") ? ".csv" : format.equals("vcf") ? ".vcf" : ".xls"; String mime = format.equals("csv") ? "text/csv" : format.equals("vcf") ? "text/x-vcard" : "application/vnd.ms-excel"; String name = "manual_librecontacts_" + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(new Date()) + extension; startActivityForResult(new Intent(Intent.ACTION_CREATE_DOCUMENT).setType(mime).putExtra(Intent.EXTRA_TITLE, name).addCategory(Intent.CATEGORY_OPENABLE), request); }
     void backup() {
-        if (BackupManager.folder(this).isEmpty()) { chooseFolder(); return; }
+        if (BackupManager.folder(this).isEmpty()) { pendingBackup = true; chooseFolder(); return; }
         if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingBackup = true; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 21); return; }
         new Thread(() -> { String result = BackupManager.runBackup(this, true); runOnUiThread(() -> status.setText(result)); }).start();
     }
@@ -158,9 +158,9 @@ public class MainActivity extends Activity {
         new AlertDialog.Builder(this).setTitle("Keep backup sets").setItems(options, (dialog, which) -> { int keep = which == 4 ? 9999 : Integer.parseInt(options[which].split(" ")[0]); BackupManager.prefs(this).edit().putInt("keep", keep).apply(); keepValue.setText(keep > 100 ? "All sets" : keep + " set" + (keep == 1 ? "" : "s")); }).show();
     }
     @Override protected void onActivityResult(int request, int result, Intent data) {
-        super.onActivityResult(request, result, data); if (result != RESULT_OK || data == null) return; Uri uri = data.getData();
+        super.onActivityResult(request, result, data); if (result != RESULT_OK || data == null) { if (request == FOLDER) pendingBackup = false; return; } Uri uri = data.getData();
         try { if (request == MANUAL_CSV || request == MANUAL_VCF || request == MANUAL_XLS) { String format = request == MANUAL_CSV ? "csv" : request == MANUAL_VCF ? "vcf" : "xls"; new Thread(() -> { try { BackupManager.writeManualExport(this, uri, format); } catch (Exception e) { notice(this, "Export failed", e.getMessage()); } }).start(); }
-            else if (request == FOLDER) { getContentResolver().takePersistableUriPermission(uri, data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION)); BackupManager.prefs(this).edit().putString("folder", uri.toString()).apply(); load(); }
+            else if (request == FOLDER) { getContentResolver().takePersistableUriPermission(uri, data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION)); BackupManager.prefs(this).edit().putString("folder", uri.toString()).apply(); load(); if (pendingBackup) backup(); }
             else { if (checkSelfPermission(Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED) { requestPermissions(new String[]{Manifest.permission.WRITE_CONTACTS}, 22); return; } restoreSelected(uri); }
         } catch (Exception e) { notice(this, "Could not open", e.getMessage()); }
     }
