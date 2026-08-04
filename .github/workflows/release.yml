@@ -1,0 +1,67 @@
+name: Release Android APK and AAB
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android platform
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Restore production signing files
+        env:
+          KEYSTORE_BASE64: ${{ secrets.LIBRECONTACTS_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.LIBRECONTACTS_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.LIBRECONTACTS_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.LIBRECONTACTS_KEY_PASSWORD }}
+        run: |
+          test -n "$KEYSTORE_BASE64"
+          test -n "$KEYSTORE_PASSWORD"
+          test -n "$KEY_ALIAS"
+          test -n "$KEY_PASSWORD"
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > app/librecontacts-release.jks
+          cat > signing.properties <<EOF
+          storeFile=app/librecontacts-release.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+
+      - name: Build signed release artifacts
+        run: ./gradlew clean assembleRelease bundleRelease
+
+      - name: Create checksums
+        run: sha256sum app/build/outputs/apk/release/app-release.apk app/build/outputs/bundle/release/app-release.aab > SHA256SUMS
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            app/build/outputs/apk/release/app-release.apk \
+            app/build/outputs/bundle/release/app-release.aab \
+            SHA256SUMS \
+            --title "Libre Contacts Backup $GITHUB_REF_NAME" \
+            --generate-notes
