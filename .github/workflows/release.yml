@@ -3,6 +3,12 @@ name: Release Android APK and AAB
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: Existing release tag to build and upload
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -14,7 +20,7 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ github.event.release.tag_name || inputs.tag_name }}
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -70,7 +76,7 @@ jobs:
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG_NAME: ${{ github.event.release.tag_name }}
+          TAG_NAME: ${{ github.event.release.tag_name || inputs.tag_name }}
         run: |
           gh release upload "$TAG_NAME" \
             app/build/outputs/apk/release/app-release.apk \
