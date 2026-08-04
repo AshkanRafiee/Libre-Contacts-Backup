@@ -1,4 +1,4 @@
-package com.librecontacts.backup;
+package com.ashkanrafiee.librecontactsbackup;
 import android.app.*;import android.content.*;import android.os.Build;import java.util.*;
 public final class AlarmScheduler {
     public static void set(Context c,String ignored){scheduleNext(c);}

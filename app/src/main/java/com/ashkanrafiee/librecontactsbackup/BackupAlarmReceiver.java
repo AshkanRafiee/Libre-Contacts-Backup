@@ -1,4 +1,4 @@
-package com.librecontacts.backup;
+package com.ashkanrafiee.librecontactsbackup;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
