@@ -53,14 +53,14 @@ On macOS, use:
 base64 app/librecontacts-release.jks | tr -d '\n'
 ```
 
-The release workflow runs when a tag beginning with `v` is pushed:
+The release workflow runs only when a GitHub Release is published. Create the release from a tag beginning with `v`:
 
 ```bash
 git tag v1.0
 git push origin v1.0
 ```
 
-It builds a signed APK and AAB, creates SHA-256 checksums, and publishes a GitHub Release automatically.
+Then create and publish a GitHub Release for the `v1.0` tag. The workflow builds the signed APK and AAB, creates SHA-256 checksums, and uploads them to that published release. Ordinary pushes and tags do not publish release artifacts.
 
 Increment `versionCode` in `app/build.gradle` for every future release.
 
