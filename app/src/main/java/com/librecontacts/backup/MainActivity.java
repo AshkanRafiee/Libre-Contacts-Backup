@@ -23,9 +23,10 @@ public class MainActivity extends Activity {
     final int purple = Color.rgb(137, 125, 255), mint = Color.rgb(143, 240, 208), background = Color.rgb(10, 14, 24);
     final int card = Color.rgb(20, 27, 42), muted = Color.rgb(151, 161, 181);
     TextView status, folderValue, scheduleValue, keepValue, restoreStatus;
-    Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat;
+    Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat; boolean compact;
 
     int dp(float value) { return (int) (value * getResources().getDisplayMetrics().density + .5f); }
+    int v(int normal, int small) { return compact ? small : normal; }
     TextView label(String value, float size, int color) {
         TextView view = new TextView(this);
         view.setText(value); view.setTextSize(size); view.setTextColor(color);
@@ -50,21 +51,22 @@ public class MainActivity extends Activity {
     }
 
     void build() {
+        int heightDp = (int) (getResources().getDisplayMetrics().heightPixels / getResources().getDisplayMetrics().density); compact = heightDp < 900;
         LinearLayout root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(20), dp(14), dp(20), dp(14)); root.setBackgroundColor(background);
-        root.setOnApplyWindowInsetsListener((view, insets) -> { int top; int bottom; if (Build.VERSION.SDK_INT >= 30) { android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars()); top = bars.top; bottom = bars.bottom; } else { top = insets.getSystemWindowInsetTop(); bottom = insets.getSystemWindowInsetBottom(); } view.setPadding(dp(20), top + dp(14), dp(20), bottom + dp(14)); return insets; });
+        root.setPadding(dp(20), dp(v(14, 8)), dp(20), dp(v(14, 8))); root.setBackgroundColor(background);
+        root.setOnApplyWindowInsetsListener((view, insets) -> { int top; int bottom; if (Build.VERSION.SDK_INT >= 30) { android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars()); top = bars.top; bottom = bars.bottom; } else { top = insets.getSystemWindowInsetTop(); bottom = insets.getSystemWindowInsetBottom(); } view.setPadding(dp(20), top + dp(v(14, 8)), dp(20), bottom + dp(v(14, 8))); return insets; });
         setContentView(root);
         ScrollView scroll = new ScrollView(this); scroll.setClipToPadding(false); scroll.setFillViewport(true);
         LinearLayout body = new LinearLayout(this); body.setOrientation(LinearLayout.VERTICAL); scroll.addView(body, new ScrollView.LayoutParams(-1, -1));
         root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
 
         LinearLayout header = new LinearLayout(this); header.setGravity(Gravity.CENTER_VERTICAL);
-        TextView mark = label("L", 18, background); mark.setGravity(Gravity.CENTER); mark.setTypeface(null, android.graphics.Typeface.BOLD); mark.setBackground(rounded(mint, 12)); header.addView(mark, new LinearLayout.LayoutParams(dp(38), dp(38)));
+        TextView mark = label("L", compact ? 16 : 18, background); mark.setGravity(Gravity.CENTER); mark.setTypeface(null, android.graphics.Typeface.BOLD); mark.setBackground(rounded(mint, 12)); header.addView(mark, new LinearLayout.LayoutParams(dp(v(38, 34)), dp(v(38, 34))));
         LinearLayout name = new LinearLayout(this); name.setOrientation(LinearLayout.VERTICAL);
-        name.addView(label("Libre Contacts Backup", 22, Color.WHITE)); name.addView(label("Offline & encrypted", 12, muted));
-        LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(-2, -2); nameParams.setMargins(dp(10), 0, 0, 0); header.addView(name, nameParams); body.addView(header, margins(0, 0, 0, 16));
+        name.addView(label("Libre Contacts Backup", compact ? 20 : 22, Color.WHITE)); name.addView(label("Offline & encrypted", 12, muted));
+        LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(-2, -2); nameParams.setMargins(dp(10), 0, 0, 0); header.addView(name, nameParams); body.addView(header, margins(0, 0, 0, v(16, 10)));
 
-        LinearLayout hero = new LinearLayout(this); hero.setOrientation(LinearLayout.VERTICAL); hero.setPadding(dp(18), dp(17), dp(18), dp(16));
+        LinearLayout hero = new LinearLayout(this); hero.setOrientation(LinearLayout.VERTICAL); hero.setPadding(dp(v(18, 14)), dp(v(17, 12)), dp(v(18, 14)), dp(v(16, 12)));
         hero.setBackground(gradient(new int[]{Color.rgb(41, 57, 91), Color.rgb(35, 34, 72)}, 22));
         FrameLayout heroTop = new FrameLayout(this);
         LinearLayout heroWords = new LinearLayout(this); heroWords.setOrientation(LinearLayout.VERTICAL);
@@ -72,38 +74,38 @@ public class MainActivity extends Activity {
         status = label("Ready for a fresh backup", 18, Color.WHITE); status.setMaxLines(1); status.setEllipsize(TextUtils.TruncateAt.END); status.setPadding(0, dp(5), 0, dp(2)); heroWords.addView(status);
         heroWords.addView(label("Private, local, and ready when you are.", 12, Color.rgb(201, 211, 230)));
         int widthDp = (int) (getResources().getDisplayMetrics().widthPixels / getResources().getDisplayMetrics().density);
-        int orbitDp = Math.max(88, Math.min(132, (int) (widthDp * .28f)));
+        int orbitDp = compact ? Math.max(76, Math.min(100, (int) (widthDp * .25f))) : Math.max(88, Math.min(132, (int) (widthDp * .28f)));
         FrameLayout.LayoutParams wordsParams = new FrameLayout.LayoutParams(-1, -2); wordsParams.rightMargin = dp(orbitDp + 12); heroTop.addView(heroWords, wordsParams);
         heroTop.addView(new ContactOrbit(this), new FrameLayout.LayoutParams(dp(orbitDp), dp(orbitDp), Gravity.RIGHT | Gravity.TOP)); hero.addView(heroTop);
         Button backup = button("Back up now", mint); backup.setTextColor(background); backup.setOnClickListener(v -> backup());
-        LinearLayout.LayoutParams actionParams = new LinearLayout.LayoutParams(-1, dp(48)); actionParams.setMargins(0, dp(15), 0, 0); hero.addView(backup, actionParams); body.addView(hero, margins(0, 0, 0, 22));
+        LinearLayout.LayoutParams actionParams = new LinearLayout.LayoutParams(-1, dp(v(48, 44))); actionParams.setMargins(0, dp(v(15, 10)), 0, 0); hero.addView(backup, actionParams); body.addView(hero, margins(0, 0, 0, v(22, 14)));
 
-        body.addView(label("KEEP IT IN YOUR POCKET", 10, muted), margins(0, 0, 0, 8));
+        body.addView(label("KEEP IT IN YOUR POCKET", 10, muted), margins(0, 0, 0, v(8, 5)));
         folderValue = label("Not selected", 13, Color.rgb(190, 184, 255));
-        body.addView(setting("Backup folder", "Where timestamped files are saved", folderValue, false, v -> chooseFolder()), margins(0, 0, 0, 8));
+        body.addView(setting("Backup folder", "Where timestamped files are saved", folderValue, false, v -> chooseFolder()), margins(0, 0, 0, v(8, 5)));
         scheduleValue = label("Off", 13, Color.rgb(190, 184, 255));
-        body.addView(setting("Schedule", "When automatic backups run", scheduleValue, false, v -> scheduleDialog()), margins(0, 0, 0, 8));
+        body.addView(setting("Schedule", "When automatic backups run", scheduleValue, false, v -> scheduleDialog()), margins(0, 0, 0, v(8, 5)));
         keepValue = label("5 sets", 13, Color.rgb(190, 184, 255));
-        body.addView(setting("Keep last backups", "Older backup sets are removed together", keepValue, false, v -> retentionDialog()), margins(0, 0, 0, 8));
-        body.addView(setting("Encryption", "Protect exported files with AES", null, true, v -> {}), margins(0, 0, 0, 20));
+        body.addView(setting("Keep last backups", "Older backup sets are removed together", keepValue, false, v -> retentionDialog()), margins(0, 0, 0, v(8, 5)));
+        body.addView(setting("Encryption", "Protect exported files with AES", null, true, v -> {}), margins(0, 0, 0, v(20, 12)));
 
-        body.addView(label("EXPORT A COPY", 10, muted), margins(0, 0, 0, 4));
-        body.addView(label("Manual copies are not encrypted and are never removed by retention.", 11, Color.rgb(222, 184, 112)), margins(0, 0, 0, 8));
+        body.addView(label("EXPORT A COPY", 10, muted), margins(0, 0, 0, 3));
+        body.addView(label("Manual copies are not encrypted and are never removed by retention.", 11, Color.rgb(222, 184, 112)), margins(0, 0, 0, v(8, 5)));
         LinearLayout exports = new LinearLayout(this); exports.setOrientation(LinearLayout.HORIZONTAL);
         Button csv = button("CSV", Color.rgb(28, 38, 55)); Button vcf = button("VCF", Color.rgb(28, 38, 55)); Button xls = button("Excel", Color.rgb(28, 38, 55));
         csv.setOnClickListener(v -> manualExport("csv")); vcf.setOnClickListener(v -> manualExport("vcf")); xls.setOnClickListener(v -> manualExport("xls"));
-        exports.addView(csv, new LinearLayout.LayoutParams(0, dp(48), 1)); LinearLayout.LayoutParams exportGap = new LinearLayout.LayoutParams(0, dp(48), 1); exportGap.setMargins(dp(8), 0, 0, 0); exports.addView(vcf, exportGap); LinearLayout.LayoutParams excelGap = new LinearLayout.LayoutParams(0, dp(48), 1); excelGap.setMargins(dp(8), 0, 0, 0); exports.addView(xls, excelGap); body.addView(exports, margins(0, 0, 0, 20));
+        exports.addView(csv, new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1)); LinearLayout.LayoutParams exportGap = new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1); exportGap.setMargins(dp(v(8, 5)), 0, 0, 0); exports.addView(vcf, exportGap); LinearLayout.LayoutParams excelGap = new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1); excelGap.setMargins(dp(v(8, 5)), 0, 0, 0); exports.addView(xls, excelGap); body.addView(exports, margins(0, 0, 0, v(20, 12)));
 
-        body.addView(label("BRING CONTACTS BACK", 10, muted), margins(0, 0, 0, 8));
+        body.addView(label("BRING CONTACTS BACK", 10, muted), margins(0, 0, 0, v(8, 5)));
         Button restore = button("Restore from backup  ›", Color.rgb(28, 38, 55)); restore.setTextColor(Color.rgb(211, 219, 235)); restore.setOnClickListener(v -> chooseFile());
-        LinearLayout.LayoutParams restoreParams = new LinearLayout.LayoutParams(-1, dp(48)); restoreParams.setMargins(0, 0, 0, dp(12)); body.addView(restore, restoreParams);
+        LinearLayout.LayoutParams restoreParams = new LinearLayout.LayoutParams(-1, dp(v(48, 42))); restoreParams.setMargins(0, 0, 0, dp(v(12, 7))); body.addView(restore, restoreParams);
         restoreStatus = label("No restore performed yet", 11, Color.rgb(103, 115, 136)); restoreStatus.setGravity(Gravity.CENTER); body.addView(restoreStatus, margins(0, 0, 0, 0));
-        LinearLayout footer = new LinearLayout(this); footer.setGravity(Gravity.CENTER); TextView footerText = label("Local by design  ·  Libre Contacts Backup  ·  ", 11, Color.rgb(103, 115, 136)); TextView about = label("About", 11, Color.rgb(190, 184, 255)); about.setPaintFlags(about.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG); about.setOnClickListener(v -> startActivity(new Intent(this, AboutActivity.class))); footer.addView(footerText); footer.addView(about); body.addView(footer, margins(0, 18, 0, 0));
+        LinearLayout footer = new LinearLayout(this); footer.setGravity(Gravity.CENTER); TextView footerText = label("Local by design  ·  Libre Contacts Backup  ·  ", 11, Color.rgb(103, 115, 136)); TextView about = label("About", 11, Color.rgb(190, 184, 255)); about.setPaintFlags(about.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG); about.setOnClickListener(v -> startActivity(new Intent(this, AboutActivity.class))); footer.addView(footerText); footer.addView(about); body.addView(footer, margins(0, v(18, 8), 0, 0));
         Space breathingRoom = new Space(this); body.addView(breathingRoom, new LinearLayout.LayoutParams(1, 0, 1)); load();
     }
 
     LinearLayout setting(String title, String subtitle, TextView value, boolean toggle, View.OnClickListener click) {
-        LinearLayout box = new LinearLayout(this); box.setGravity(Gravity.CENTER_VERTICAL); box.setPadding(dp(14), dp(12), dp(10), dp(12));
+        LinearLayout box = new LinearLayout(this); box.setGravity(Gravity.CENTER_VERTICAL); box.setPadding(dp(14), dp(v(12, 8)), dp(10), dp(v(12, 8)));
         box.setBackground(rounded(card, 15));
         LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
         words.addView(label(title, 15, Color.WHITE)); words.addView(label(subtitle, 11, muted));
@@ -115,8 +117,8 @@ public class MainActivity extends Activity {
             value.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL); value.setMaxLines(1); value.setEllipsize(TextUtils.TruncateAt.END); value.setPadding(0, 0, dp(8), 0);
             int widthDp = (int) (getResources().getDisplayMetrics().widthPixels / getResources().getDisplayMetrics().density);
             int valueWidth = widthDp < 360 ? 84 : widthDp < 420 ? 96 : 110;
-            box.addView(value, new LinearLayout.LayoutParams(dp(valueWidth), dp(42))); TextView arrow = label("›", 24, muted); arrow.setGravity(Gravity.CENTER); arrow.setPadding(dp(6), 0, 0, 0);
-            box.addView(arrow, new LinearLayout.LayoutParams(dp(28), dp(42))); box.setOnClickListener(click);
+            box.addView(value, new LinearLayout.LayoutParams(dp(valueWidth), dp(v(42, 36)))); TextView arrow = label("›", 24, muted); arrow.setGravity(Gravity.CENTER); arrow.setPadding(dp(6), 0, 0, 0);
+            box.addView(arrow, new LinearLayout.LayoutParams(dp(28), dp(v(42, 36)))); box.setOnClickListener(click);
         }
         return box;
     }
