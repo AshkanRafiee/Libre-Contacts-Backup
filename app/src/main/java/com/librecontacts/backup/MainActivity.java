@@ -74,7 +74,7 @@ public class MainActivity extends Activity {
         status = label("Ready for a fresh backup", 18, Color.WHITE); status.setMaxLines(1); status.setEllipsize(TextUtils.TruncateAt.END); status.setPadding(0, dp(5), 0, dp(2)); heroWords.addView(status);
         heroWords.addView(label(compact ? "Private & local." : "Private, local, and ready when you are.", 12, Color.rgb(201, 211, 230)));
         int widthDp = (int) (getResources().getDisplayMetrics().widthPixels / getResources().getDisplayMetrics().density);
-        int orbitDp = compact ? Math.max(76, Math.min(100, (int) (widthDp * .25f))) : Math.max(88, Math.min(132, (int) (widthDp * .28f)));
+        int orbitDp = compact ? Math.max(72, Math.min(82, (int) (widthDp * .23f))) : Math.max(88, Math.min(132, (int) (widthDp * .28f)));
         FrameLayout.LayoutParams wordsParams = new FrameLayout.LayoutParams(-1, -2); wordsParams.rightMargin = dp(orbitDp + 12); heroTop.addView(heroWords, wordsParams);
         heroTop.addView(new ContactOrbit(this), new FrameLayout.LayoutParams(dp(orbitDp), dp(orbitDp), Gravity.RIGHT | Gravity.TOP)); hero.addView(heroTop);
         Button backup = button("Back up now", mint); backup.setTextColor(background); backup.setOnClickListener(v -> backup());
@@ -99,7 +99,7 @@ public class MainActivity extends Activity {
         body.addView(label("BRING CONTACTS BACK", 10, muted), margins(0, 0, 0, v(8, 5)));
         Button restore = button("Restore from backup  ›", Color.rgb(28, 38, 55)); restore.setTextColor(Color.rgb(211, 219, 235)); restore.setOnClickListener(v -> chooseFile());
         LinearLayout.LayoutParams restoreParams = new LinearLayout.LayoutParams(-1, dp(v(48, 42))); restoreParams.setMargins(0, 0, 0, dp(v(12, 7))); body.addView(restore, restoreParams);
-        restoreStatus = label("No restore performed yet", 11, Color.rgb(103, 115, 136)); restoreStatus.setGravity(Gravity.CENTER); body.addView(restoreStatus, margins(0, 0, 0, 0));
+        restoreStatus = label("No restore performed yet", 11, Color.rgb(103, 115, 136)); restoreStatus.setGravity(Gravity.CENTER); if (compact) restoreStatus.setVisibility(View.GONE); body.addView(restoreStatus, margins(0, 0, 0, 0));
         LinearLayout footer = new LinearLayout(this); footer.setGravity(Gravity.CENTER); TextView footerText = label(compact ? "Libre Contacts Backup  ·  " : "Local by design  ·  Libre Contacts Backup  ·  ", 11, Color.rgb(103, 115, 136)); TextView about = label("About", 11, Color.rgb(190, 184, 255)); about.setPaintFlags(about.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG); about.setOnClickListener(v -> startActivity(new Intent(this, AboutActivity.class))); footer.addView(footerText); footer.addView(about); body.addView(footer, margins(0, v(18, 8), 0, 0));
         Space breathingRoom = new Space(this); body.addView(breathingRoom, new LinearLayout.LayoutParams(1, 0, 1)); load();
     }
@@ -108,7 +108,7 @@ public class MainActivity extends Activity {
         LinearLayout box = new LinearLayout(this); box.setGravity(Gravity.CENTER_VERTICAL); box.setPadding(dp(14), dp(v(12, 6)), dp(10), dp(v(12, 6)));
         box.setBackground(rounded(card, 15));
         LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
-        words.addView(label(title, 15, Color.WHITE)); words.addView(label(subtitle, 11, muted));
+        words.addView(label(title, compact ? 14 : 15, Color.WHITE)); words.addView(label(subtitle, compact ? 10 : 11, muted));
         LinearLayout.LayoutParams wordParams = new LinearLayout.LayoutParams(0, -2, 1); wordParams.setMargins(0, 0, dp(8), 0); box.addView(words, wordParams);
         if (toggle) {
             Switch sw = new Switch(this); encryptionSwitch = sw; sw.setChecked(BackupManager.prefs(this).getBoolean("encrypted", false));
@@ -132,7 +132,7 @@ public class MainActivity extends Activity {
         scheduleValue.setText(BackupManager.prefs(this).getString("schedule", "Off"));
         int keep = BackupManager.prefs(this).getInt("keep", 5); keepValue.setText(keep > 100 ? "All sets" : keep + " set" + (keep == 1 ? "" : "s"));
         long restored = BackupManager.prefs(this).getLong("lastRestore", 0); int restoredCount = BackupManager.prefs(this).getInt("lastRestoreCount", 0);
-        if (restored > 0) restoreStatus.setText("Restored " + restoredCount + " contacts  ·  " + new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(restored)));
+        if (restored > 0) { restoreStatus.setVisibility(View.VISIBLE); restoreStatus.setText("Restored " + restoredCount + " contacts  ·  " + new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(restored))); } else if (compact) restoreStatus.setVisibility(View.GONE);
     }
     void chooseFolder() { startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION), FOLDER); }
     void chooseFile() { startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("application/octet-stream").addCategory(Intent.CATEGORY_OPENABLE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), FILE); }
