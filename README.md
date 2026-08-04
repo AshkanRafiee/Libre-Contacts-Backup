@@ -2,6 +2,11 @@
 
 Libre Contacts Backup is an offline and encrypted native Android contact backup app with no third-party runtime dependencies.
 
+Created by Ashkan Rafiee. Suggestions: `librecontactsbackup.abstract692@passmail.net`.
+
+Source: https://github.com/AshkanRafiee/Libre-Contacts-Backup
+License: GNU General Public License v3.0
+
 ## Included
 
 - Android 8.0+ support, targeting Android API 35

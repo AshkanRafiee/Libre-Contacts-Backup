@@ -98,6 +98,7 @@ public class MainActivity extends Activity {
         Button restore = button("Restore from backup  ›", Color.rgb(28, 38, 55)); restore.setTextColor(Color.rgb(211, 219, 235)); restore.setOnClickListener(v -> chooseFile());
         LinearLayout.LayoutParams restoreParams = new LinearLayout.LayoutParams(-1, dp(48)); restoreParams.setMargins(0, 0, 0, dp(12)); body.addView(restore, restoreParams);
         restoreStatus = label("No restore performed yet", 11, Color.rgb(103, 115, 136)); restoreStatus.setGravity(Gravity.CENTER); body.addView(restoreStatus, margins(0, 0, 0, 0));
+        body.addView(setting("About", "Creator, source, license, and contact", label("Open", 13, Color.rgb(190, 184, 255)), false, v -> startActivity(new Intent(this, AboutActivity.class))), margins(0, 14, 0, 0));
         TextView footer = label("Local by design  ·  Libre Contacts Backup", 11, Color.rgb(103, 115, 136)); footer.setGravity(Gravity.CENTER); body.addView(footer, margins(0, 18, 0, 0));
         Space breathingRoom = new Space(this); body.addView(breathingRoom, new LinearLayout.LayoutParams(1, 0, 1)); load();
     }
