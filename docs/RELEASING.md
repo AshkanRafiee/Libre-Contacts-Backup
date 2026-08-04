@@ -88,7 +88,7 @@ The APK is for direct installation and F-Droid. The AAB is important for Google 
 
 For an already-published release whose workflow did not run, use **Actions -> Release Android APK and AAB -> Run workflow**, enter the existing tag, and start it manually.
 
-The debug CI workflow runs when a GitHub Release is published or manually from the Actions tab with **Run workflow**. It does not run on ordinary pushes, pull requests, or tag pushes alone.
+The debug CI workflow is manual-only and can be run from the Actions tab with **Run workflow**. It does not run on ordinary pushes, pull requests, tag pushes, or published releases.
 
 Increment `versionCode` in `app/build.gradle` for every future release.
 
