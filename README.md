@@ -28,3 +28,7 @@ License: GNU General Public License v3.0
 ```
 
 For a local signed release, copy `signing.properties.example` to `signing.properties` and provide your own keystore values. The keystore and signing file are intentionally ignored and never belong in the repository. Without them, `assembleRelease` still produces an unsigned release artifact.
+
+## Screenshot
+
+![Libre Contacts Backup main screen](screenshots/main-screen.png)
