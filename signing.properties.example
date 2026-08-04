@@ -1,0 +1,5 @@
+# Copy this file to signing.properties and replace these values for a release signature.
+storeFile=app/librecontacts-release.jks
+storePassword=replace-me
+keyAlias=librecontacts
+keyPassword=replace-me

@@ -1,0 +1,17 @@
+plugins { id 'com.android.application' }
+
+android { namespace 'com.librecontacts.backup'; compileSdk 35
+    defaultConfig { applicationId 'com.librecontacts.backup'; minSdk 26; targetSdk 35; versionCode 1; versionName '1.0' }
+    def signingFile = rootProject.file('signing.properties')
+    def signingValues = new Properties()
+    if (signingFile.exists()) signingFile.withInputStream { signingValues.load(it) }
+    signingConfigs { release {
+        if (signingValues['storeFile']) {
+            storeFile rootProject.file(signingValues['storeFile'])
+            storePassword signingValues['storePassword']
+            keyAlias signingValues['keyAlias']
+            keyPassword signingValues['keyPassword']
+        }
+    } }
+    buildTypes { release { if (signingValues['storeFile']) signingConfig signingConfigs.release; minifyEnabled false } }
+}
