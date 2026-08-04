@@ -98,10 +98,11 @@ F-Droid builds and signs the app itself. Do not give F-Droid your production key
 
 1. Push the source repository and a tagged release such as `v1.0.0`.
 2. Ensure the GPLv3 `LICENSE` file is present.
-3. Copy `fdroid/com.ashkanrafiee.librecontactsbackup.yml` into the `metadata/` directory of the `fdroiddata` repository.
+3. Copy `docs/fdroid-metadata.yml` into the `metadata/` directory of the `fdroiddata` repository, renaming it to `com.ashkanrafiee.librecontactsbackup.yml`.
+4. Copy `screenshots/main-screen.png` into `metadata/com.ashkanrafiee.librecontactsbackup/en-US/images/phoneScreenshots/` in `fdroiddata`.
    Replace the example build commit with the full commit hash of the exact release tag.
-4. Submit the metadata through the F-Droid issue tracker:
+5. Submit the metadata through the F-Droid issue tracker:
    `https://gitlab.com/fdroid/fdroiddata/-/issues`
-5. Respond to the F-Droid maintainer review and fix any metadata or reproducible-build findings.
+6. Respond to the F-Droid maintainer review and fix any metadata or reproducible-build findings.
 
 The F-Droid metadata uses the source tag and builds the unsigned source release. F-Droid applies its own signing process.
