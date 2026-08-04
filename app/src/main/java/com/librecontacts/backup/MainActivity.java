@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.*;
@@ -27,6 +28,7 @@ public class MainActivity extends Activity {
 
     int dp(float value) { return (int) (value * getResources().getDisplayMetrics().density + .5f); }
     int v(int normal, int small) { return compact ? small : normal; }
+    int[] windowPixels() { if (Build.VERSION.SDK_INT >= 30) { Rect bounds = getWindowManager().getCurrentWindowMetrics().getBounds(); return new int[]{bounds.width(), bounds.height()}; } android.util.DisplayMetrics metrics = new android.util.DisplayMetrics(); getWindowManager().getDefaultDisplay().getMetrics(metrics); return new int[]{metrics.widthPixels, metrics.heightPixels}; }
     TextView label(String value, float size, int color) {
         TextView view = new TextView(this);
         view.setText(value); view.setTextSize(size); view.setTextColor(color);
@@ -51,7 +53,8 @@ public class MainActivity extends Activity {
     }
 
     void build() {
-        int heightPixels = getResources().getDisplayMetrics().heightPixels; compact = heightPixels < 2700;
+        int[] window = windowPixels(); int widthPixels = window[0]; int heightPixels = window[1]; // Responsive breakpoint: narrow/short windows compact; large windows keep the spacious composition.
+        compact = widthPixels <= 1080 || heightPixels < 2700;
         LinearLayout root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(20), dp(v(14, 8)), dp(20), dp(v(14, 8))); root.setBackgroundColor(background);
         root.setOnApplyWindowInsetsListener((view, insets) -> { int top; int bottom; if (Build.VERSION.SDK_INT >= 30) { android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars()); top = bars.top; bottom = bars.bottom; } else { top = insets.getSystemWindowInsetTop(); bottom = insets.getSystemWindowInsetBottom(); } view.setPadding(dp(20), top + dp(v(14, 8)), dp(20), bottom + dp(v(14, 8))); return insets; });
