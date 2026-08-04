@@ -27,7 +27,7 @@ Repo: https://github.com/AshkanRafiee/Libre-Contacts-Backup.git
 Builds:
   - versionName: '1.0'
     versionCode: 1
-    commit: 51b33aa43b10eeb825e412c8d2c9c2001ba3f8ce
+    commit: a8d38db4e9c8b991262a1a9fbae95e3c59e5d449
     subdir: app
     gradle:
       - yes
