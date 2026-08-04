@@ -2,6 +2,8 @@ Categories:
   - Connectivity
 License: GPL-3.0-only
 AuthorName: Ashkan Rafiee
+AuthorEmail: librecontactsbackup.abstract692@passmail.net
+AuthorWebSite: https://github.com/AshkanRafiee/
 AutoName: Libre Contacts Backup
 Summary: Offline and encrypted contact backups
 Description: |
@@ -25,7 +27,11 @@ Repo: https://github.com/AshkanRafiee/Libre-Contacts-Backup.git
 Builds:
   - versionName: '1.0'
     versionCode: 1
-    commit: v1.0
+    commit: 51b33aa43b10eeb825e412c8d2c9c2001ba3f8ce
     subdir: app
     gradle:
       - yes
+    rm: gradle/wrapper/gradle-wrapper.jar
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+$
