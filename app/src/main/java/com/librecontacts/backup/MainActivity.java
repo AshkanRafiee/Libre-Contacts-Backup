@@ -72,7 +72,7 @@ public class MainActivity extends Activity {
         LinearLayout heroWords = new LinearLayout(this); heroWords.setOrientation(LinearLayout.VERTICAL);
         heroWords.addView(label("YOUR CONTACTS", 10, mint));
         status = label("Ready for a fresh backup", 18, Color.WHITE); status.setMaxLines(1); status.setEllipsize(TextUtils.TruncateAt.END); status.setPadding(0, dp(5), 0, dp(2)); heroWords.addView(status);
-        heroWords.addView(label("Private, local, and ready when you are.", 12, Color.rgb(201, 211, 230)));
+        heroWords.addView(label(compact ? "Private & local." : "Private, local, and ready when you are.", 12, Color.rgb(201, 211, 230)));
         int widthDp = (int) (getResources().getDisplayMetrics().widthPixels / getResources().getDisplayMetrics().density);
         int orbitDp = compact ? Math.max(76, Math.min(100, (int) (widthDp * .25f))) : Math.max(88, Math.min(132, (int) (widthDp * .28f)));
         FrameLayout.LayoutParams wordsParams = new FrameLayout.LayoutParams(-1, -2); wordsParams.rightMargin = dp(orbitDp + 12); heroTop.addView(heroWords, wordsParams);
@@ -90,7 +90,7 @@ public class MainActivity extends Activity {
         body.addView(setting("Encryption", "Protect exported files with AES", null, true, v -> {}), margins(0, 0, 0, v(20, 12)));
 
         body.addView(label("EXPORT A COPY", 10, muted), margins(0, 0, 0, 3));
-        body.addView(label("Manual copies are not encrypted and are never removed by retention.", 11, Color.rgb(222, 184, 112)), margins(0, 0, 0, v(8, 5)));
+        body.addView(label(compact ? "Manual copies: unencrypted, not retained." : "Manual copies are not encrypted and are never removed by retention.", 11, Color.rgb(222, 184, 112)), margins(0, 0, 0, v(8, 5)));
         LinearLayout exports = new LinearLayout(this); exports.setOrientation(LinearLayout.HORIZONTAL);
         Button csv = button("CSV", Color.rgb(28, 38, 55)); Button vcf = button("VCF", Color.rgb(28, 38, 55)); Button xls = button("Excel", Color.rgb(28, 38, 55));
         csv.setOnClickListener(v -> manualExport("csv")); vcf.setOnClickListener(v -> manualExport("vcf")); xls.setOnClickListener(v -> manualExport("xls"));
@@ -100,12 +100,12 @@ public class MainActivity extends Activity {
         Button restore = button("Restore from backup  ›", Color.rgb(28, 38, 55)); restore.setTextColor(Color.rgb(211, 219, 235)); restore.setOnClickListener(v -> chooseFile());
         LinearLayout.LayoutParams restoreParams = new LinearLayout.LayoutParams(-1, dp(v(48, 42))); restoreParams.setMargins(0, 0, 0, dp(v(12, 7))); body.addView(restore, restoreParams);
         restoreStatus = label("No restore performed yet", 11, Color.rgb(103, 115, 136)); restoreStatus.setGravity(Gravity.CENTER); body.addView(restoreStatus, margins(0, 0, 0, 0));
-        LinearLayout footer = new LinearLayout(this); footer.setGravity(Gravity.CENTER); TextView footerText = label("Local by design  ·  Libre Contacts Backup  ·  ", 11, Color.rgb(103, 115, 136)); TextView about = label("About", 11, Color.rgb(190, 184, 255)); about.setPaintFlags(about.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG); about.setOnClickListener(v -> startActivity(new Intent(this, AboutActivity.class))); footer.addView(footerText); footer.addView(about); body.addView(footer, margins(0, v(18, 8), 0, 0));
+        LinearLayout footer = new LinearLayout(this); footer.setGravity(Gravity.CENTER); TextView footerText = label(compact ? "Libre Contacts Backup  ·  " : "Local by design  ·  Libre Contacts Backup  ·  ", 11, Color.rgb(103, 115, 136)); TextView about = label("About", 11, Color.rgb(190, 184, 255)); about.setPaintFlags(about.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG); about.setOnClickListener(v -> startActivity(new Intent(this, AboutActivity.class))); footer.addView(footerText); footer.addView(about); body.addView(footer, margins(0, v(18, 8), 0, 0));
         Space breathingRoom = new Space(this); body.addView(breathingRoom, new LinearLayout.LayoutParams(1, 0, 1)); load();
     }
 
     LinearLayout setting(String title, String subtitle, TextView value, boolean toggle, View.OnClickListener click) {
-        LinearLayout box = new LinearLayout(this); box.setGravity(Gravity.CENTER_VERTICAL); box.setPadding(dp(14), dp(v(12, 8)), dp(10), dp(v(12, 8)));
+        LinearLayout box = new LinearLayout(this); box.setGravity(Gravity.CENTER_VERTICAL); box.setPadding(dp(14), dp(v(12, 6)), dp(10), dp(v(12, 6)));
         box.setBackground(rounded(card, 15));
         LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
         words.addView(label(title, 15, Color.WHITE)); words.addView(label(subtitle, 11, muted));
