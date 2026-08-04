@@ -51,7 +51,7 @@ jobs:
           EOF
 
       - name: Build signed release artifacts
-        run: ./gradlew clean assembleRelease bundleRelease
+        run: bash ./gradlew clean assembleRelease bundleRelease
 
       - name: Create checksums
         run: sha256sum app/build/outputs/apk/release/app-release.apk app/build/outputs/bundle/release/app-release.aab > SHA256SUMS
