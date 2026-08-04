@@ -8,6 +8,7 @@ Generate a new key once. Keep the keystore and both passwords offline and backed
 keytool -genkeypair \
   -v \
   -keystore app/librecontacts-release.jks \
+  -storetype JKS \
   -alias librecontacts \
   -keyalg RSA \
   -keysize 4096 \
@@ -18,6 +19,7 @@ Create the ignored local `signing.properties` file:
 
 ```properties
 storeFile=app/librecontacts-release.jks
+storeType=JKS
 storePassword=YOUR_KEYSTORE_PASSWORD
 keyAlias=librecontacts
 keyPassword=YOUR_KEY_PASSWORD
@@ -51,6 +53,26 @@ On macOS, use:
 
 ```bash
 base64 app/librecontacts-release.jks | tr -d '\n'
+```
+
+All four secrets must come from the same keystore. If GitHub reports `Given final block not properly padded`, replace the four secrets together. Verify the values locally first:
+
+```bash
+keytool -importkeystore -noprompt \
+  -srckeystore app/librecontacts-release.jks \
+  -srcstoretype JKS \
+  -srcstorepass YOUR_KEYSTORE_PASSWORD \
+  -srcalias librecontacts \
+  -srckeypass YOUR_KEY_PASSWORD \
+  -destkeystore /tmp/librecontacts-verified.jks \
+  -deststorepass validation-only \
+  -destkeypass validation-only
+```
+
+For PowerShell, create the base64 secret value with:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("app/librecontacts-release.jks"))
 ```
 
 The release workflow runs only when a GitHub Release is published. Create the release from a tag beginning with `v`:

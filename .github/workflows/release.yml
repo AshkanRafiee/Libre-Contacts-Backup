@@ -43,8 +43,19 @@ jobs:
           test -n "$KEY_ALIAS"
           test -n "$KEY_PASSWORD"
           printf '%s' "$KEYSTORE_BASE64" | base64 --decode > app/librecontacts-release.jks
+          rm -f /tmp/librecontacts-verified.jks
+          keytool -importkeystore -noprompt \
+            -srckeystore app/librecontacts-release.jks \
+            -srcstoretype JKS \
+            -srcstorepass "$KEYSTORE_PASSWORD" \
+            -srcalias "$KEY_ALIAS" \
+            -srckeypass "$KEY_PASSWORD" \
+            -destkeystore /tmp/librecontacts-verified.jks \
+            -deststorepass validation-only \
+            -destkeypass validation-only
           cat > signing.properties <<EOF
           storeFile=app/librecontacts-release.jks
+          storeType=JKS
           storePassword=$KEYSTORE_PASSWORD
           keyAlias=$KEY_ALIAS
           keyPassword=$KEY_PASSWORD

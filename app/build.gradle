@@ -8,6 +8,7 @@ android { namespace 'com.librecontacts.backup'; compileSdk 35
     signingConfigs { release {
         if (signingValues['storeFile']) {
             storeFile rootProject.file(signingValues['storeFile'])
+            if (signingValues['storeType']) storeType signingValues['storeType']
             storePassword signingValues['storePassword']
             keyAlias signingValues['keyAlias']
             keyPassword signingValues['keyPassword']
