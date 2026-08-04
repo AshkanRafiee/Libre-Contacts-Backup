@@ -24,7 +24,7 @@ public class MainActivity extends Activity {
     final int purple = Color.rgb(137, 125, 255), mint = Color.rgb(143, 240, 208), background = Color.rgb(10, 14, 24);
     final int card = Color.rgb(20, 27, 42), muted = Color.rgb(151, 161, 181);
     TextView status, folderValue, scheduleValue, keepValue, restoreStatus;
-    Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat; boolean compact;
+    Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat; boolean pendingBackup; boolean compact;
 
     int dp(float value) { return (int) (value * getResources().getDisplayMetrics().density + .5f); }
     int v(int normal, int small) { return compact ? small : normal; }
@@ -143,7 +143,7 @@ public class MainActivity extends Activity {
     void launchManualExport(String format) { int request = format.equals("csv") ? MANUAL_CSV : format.equals("vcf") ? MANUAL_VCF : MANUAL_XLS; String extension = format.equals("csv") ? ".csv" : format.equals("vcf") ? ".vcf" : ".xls"; String mime = format.equals("csv") ? "text/csv" : format.equals("vcf") ? "text/x-vcard" : "application/vnd.ms-excel"; String name = "manual_librecontacts_" + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(new Date()) + extension; startActivityForResult(new Intent(Intent.ACTION_CREATE_DOCUMENT).setType(mime).putExtra(Intent.EXTRA_TITLE, name).addCategory(Intent.CATEGORY_OPENABLE), request); }
     void backup() {
         if (BackupManager.folder(this).isEmpty()) { chooseFolder(); return; }
-        if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 21); return; }
+        if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingBackup = true; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 21); return; }
         new Thread(() -> { String result = BackupManager.runBackup(this, true); runOnUiThread(() -> status.setText(result)); }).start();
     }
     void scheduleDialog() {
@@ -164,7 +164,7 @@ public class MainActivity extends Activity {
             else { if (checkSelfPermission(Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED) { requestPermissions(new String[]{Manifest.permission.WRITE_CONTACTS}, 22); return; } restoreSelected(uri); }
         } catch (Exception e) { notice(this, "Could not open", e.getMessage()); }
     }
-    @Override public void onRequestPermissionsResult(int request, String[] permissions, int[] results) { super.onRequestPermissionsResult(request, permissions, results); if (request == 23 && results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED && pendingManualFormat != null) { String format = pendingManualFormat; pendingManualFormat = null; launchManualExport(format); } }
+    @Override public void onRequestPermissionsResult(int request, String[] permissions, int[] results) { super.onRequestPermissionsResult(request, permissions, results); if (request == 21) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; boolean resume = pendingBackup; pendingBackup = false; if (granted && resume) backup(); } else if (request == 23 && results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED && pendingManualFormat != null) { String format = pendingManualFormat; pendingManualFormat = null; launchManualExport(format); } }
     void configureEncryption(boolean enabled) {
         if (!enabled) { BackupManager.prefs(this).edit().putBoolean("encrypted", false).apply(); return; }
         BackupManager.prefs(this).edit().putBoolean("encrypted", true).apply();
