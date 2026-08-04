@@ -84,7 +84,7 @@ git push origin v1.0
 
 Then create and publish a GitHub Release for the `v1.0` tag. The workflow builds the signed APK and AAB, creates SHA-256 checksums, and uploads them to that published release. Ordinary pushes and tags do not publish release artifacts.
 
-The debug CI workflow is manual-only and does not run on ordinary pushes or pull requests. Run it from the GitHub Actions tab with **Run workflow** when you want a debug build check.
+The debug CI workflow runs when a GitHub Release is published or manually from the Actions tab with **Run workflow**. It does not run on ordinary pushes, pull requests, or tag pushes alone.
 
 Increment `versionCode` in `app/build.gradle` for every future release.
 
