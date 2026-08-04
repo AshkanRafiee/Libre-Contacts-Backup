@@ -7,8 +7,9 @@ AuthorWebSite: https://github.com/AshkanRafiee/
 AutoName: Libre Contacts Backup
 Summary: Offline and encrypted contact backups
 Description: |
-  Libre Contacts Backup is a FLOSS native Android contact backup app that works 
-  entirely offline, encrypts your backups, and has no third-party runtime dependencies.
+  Libre Contacts Backup is a FLOSS native Android contact backup app that works
+  entirely offline, encrypts your backups, and has no third-party runtime
+  dependencies.
 
   Features:
   * Scheduled daily, weekly, monthly, and custom-time backups
