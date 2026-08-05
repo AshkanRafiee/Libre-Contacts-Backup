@@ -4,25 +4,15 @@ License: GPL-3.0-only
 AuthorName: Ashkan Rafiee
 AuthorEmail: librecontactsbackup.abstract692@passmail.net
 AuthorWebSite: https://github.com/AshkanRafiee/
-AutoName: Libre Contacts Backup
-Summary: Offline and encrypted contact backups
-Description: |
-  Libre Contacts Backup is a FLOSS native Android contact backup app that works
-  entirely offline, encrypts your backups, and has no third-party runtime
-  dependencies.
-
-  Features:
-  * Scheduled daily, weekly, monthly, and custom-time backups
-  * Single-file LCB archives containing VCF, JSON, and CSV data
-  * Optional password-protected encryption
-  * Restore with visible progress
-  * Manual CSV, VCF, and Excel-compatible exports
-  * User-controlled retention for automatic backup archives
-
 WebSite: https://github.com/AshkanRafiee/Libre-Contacts-Backup
 SourceCode: https://github.com/AshkanRafiee/Libre-Contacts-Backup
 IssueTracker: https://github.com/AshkanRafiee/Libre-Contacts-Backup/issues
 Changelog: https://github.com/AshkanRafiee/Libre-Contacts-Backup/releases
+
+AutoName: Libre Contacts Backup
+
+Binaries: https://github.com/AshkanRafiee/Libre-Contacts-Backup/releases/download/v1.0.0/Libre-Contacts-Backup-v1.0.0.apk
+AllowedAPKSigningKeys: e90d878e33ab6f41dd841b4209311ec3fa816aeea7ca75687354e28401415e55
 
 RepoType: git
 Repo: https://github.com/AshkanRafiee/Libre-Contacts-Backup.git
@@ -38,3 +28,5 @@ Builds:
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
+CurrentVersion: 1.0.0
+CurrentVersionCode: 1

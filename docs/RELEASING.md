@@ -98,8 +98,8 @@ F-Droid builds and signs the app itself. Do not give F-Droid your production key
 
 1. Push the source repository and a tagged release such as `v1.0.0`.
 2. Ensure the GPLv3 `LICENSE` file is present.
-3. Copy `docs/fdroid-metadata.yml` into the `metadata/` directory of the `fdroiddata` repository, renaming it to `com.ashkanrafiee.librecontactsbackup.yml`.
-4. Copy `screenshots/main-screen.png` into `metadata/com.ashkanrafiee.librecontactsbackup/en-US/images/phoneScreenshots/` in `fdroiddata`.
+3. The upstream repository includes Fastlane metadata and its main screenshot under `fastlane/`.
+4. Copy `docs/fdroid-metadata.yml` into the `metadata/` directory of the `fdroiddata` repository, renaming it to `com.ashkanrafiee.librecontactsbackup.yml`.
    Replace the example build commit with the full commit hash of the exact release tag.
 5. Submit the metadata through the F-Droid issue tracker:
    `https://gitlab.com/fdroid/fdroiddata/-/issues`
