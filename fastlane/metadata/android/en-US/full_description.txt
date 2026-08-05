@@ -8,4 +8,3 @@ Features:
 * Manual CSV, VCF, and Excel-compatible exports
 * User-controlled retention for automatic backup archives
 
-Created by Ashkan Rafiee.
