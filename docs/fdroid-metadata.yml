@@ -35,8 +35,7 @@ Builds:
     rm:
       - gradle/wrapper/gradle-wrapper.jar
 
-AllowedAPKSigningKeys: 
-  e90d878e33ab6f41dd841b4209311ec3fa816aeea7ca75687354e28401415e55
+AllowedAPKSigningKeys: e90d878e33ab6f41dd841b4209311ec3fa816aeea7ca75687354e28401415e55
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
