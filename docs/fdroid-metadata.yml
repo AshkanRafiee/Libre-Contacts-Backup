@@ -35,9 +35,18 @@ Builds:
     rm:
       - gradle/wrapper/gradle-wrapper.jar
 
+  - versionName: 1.2.0
+    versionCode: 3
+    commit: ff47f9ff24e12fb2cf18b26f12c3820018bf5e55
+    subdir: app
+    gradle:
+      - yes
+    rm:
+      - gradle/wrapper/gradle-wrapper.jar
+
 AllowedAPKSigningKeys: e90d878e33ab6f41dd841b4209311ec3fa816aeea7ca75687354e28401415e55
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
-CurrentVersion: 1.1.0
-CurrentVersionCode: 2
+CurrentVersion: 1.2.0
+CurrentVersionCode: 3
