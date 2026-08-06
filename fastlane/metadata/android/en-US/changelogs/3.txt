@@ -1,0 +1,2 @@
+- Reworked scheduling: daily backups at your chosen time, made reliable across reboots and app updates
+- Show the real app version in About

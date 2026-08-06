@@ -132,7 +132,7 @@ public class MainActivity extends Activity {
         folderValue.setText(BackupManager.folderLabel(this));
         long last = BackupManager.prefs(this).getLong("last", 0);
         if (last > 0) status.setText("Last backup " + new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(last)));
-        scheduleValue.setText(BackupManager.prefs(this).getString("schedule", "Off"));
+        scheduleValue.setText(AlarmScheduler.displayLabel(this));
         int keep = BackupManager.prefs(this).getInt("keep", 5); keepValue.setText(keep > 100 ? "All sets" : keep + " set" + (keep == 1 ? "" : "s"));
         long restored = BackupManager.prefs(this).getLong("lastRestore", 0); int restoredCount = BackupManager.prefs(this).getInt("lastRestoreCount", 0);
         if (restored > 0) { restoreStatus.setVisibility(View.VISIBLE); restoreStatus.setText("Restored " + restoredCount + " contacts  ·  " + new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(restored))); } else if (compact) restoreStatus.setVisibility(View.GONE);
@@ -147,10 +147,9 @@ public class MainActivity extends Activity {
         new Thread(() -> { String result = BackupManager.runBackup(this, true); runOnUiThread(() -> status.setText(result)); }).start();
     }
     void scheduleDialog() {
-        String[] options = {"Off", "Daily", "Weekly", "Monthly", "At a specific time..."};
-        new AlertDialog.Builder(this).setTitle("Backup schedule").setItems(options, (dialog, which) -> {
-            if (which == 4) new TimePickerDialog(this, (view, hour, minute) -> { String s = String.format(Locale.getDefault(), "Daily at %02d:%02d", hour, minute); BackupManager.prefs(this).edit().putString("schedule", s).putInt("hour", hour).putInt("minute", minute).apply(); scheduleValue.setText(s); AlarmScheduler.setAtTime(this, hour, minute); }, 9, 0, true).show();
-            else { String s = options[which]; BackupManager.prefs(this).edit().putString("schedule", s).apply(); scheduleValue.setText(s); AlarmScheduler.set(this, s); }
+        new AlertDialog.Builder(this).setTitle("Backup schedule").setItems(new String[]{"Off", "Daily at a specific time..."}, (dialog, which) -> {
+            if (which == 0) { BackupManager.prefs(this).edit().putString("schedule", "Off").apply(); scheduleValue.setText("Off"); AlarmScheduler.set(this, "Off"); }
+            else new TimePickerDialog(this, (view, hour, minute) -> { String s = String.format(Locale.getDefault(), "Daily at %02d:%02d", hour, minute); BackupManager.prefs(this).edit().putString("schedule", s).putInt("hour", hour).putInt("minute", minute).apply(); scheduleValue.setText(s); AlarmScheduler.setAtTime(this, hour, minute); }, 9, 0, true).show();
         }).show();
     }
     void retentionDialog() {

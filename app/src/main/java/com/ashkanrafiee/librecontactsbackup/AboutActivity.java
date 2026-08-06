@@ -31,7 +31,8 @@ public class AboutActivity extends Activity {
         body.addView(info("Source code", "github.com/AshkanRafiee/Libre-Contacts-Backup", v -> open("https://github.com/AshkanRafiee/Libre-Contacts-Backup")), margins(0, 0, 0, 8));
         body.addView(info("GitHub profile", "github.com/AshkanRafiee", v -> open("https://github.com/AshkanRafiee/")), margins(0, 0, 0, 8));
         body.addView(info("Suggestions", "librecontactsbackup.abstract692@passmail.net", v -> email()), margins(0, 0, 0, 20));
-        TextView footer = text("Libre Contacts Backup · Version 1.0", 11, Color.rgb(103, 115, 136)); footer.setGravity(Gravity.CENTER); body.addView(footer);
+        String version = "1.0"; try { version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception ignored) { }
+        TextView footer = text("Libre Contacts Backup · Version " + version, 11, Color.rgb(103, 115, 136)); footer.setGravity(Gravity.CENTER); body.addView(footer);
     }
     TextView section(String heading, String body) { TextView v = text(heading + "\n" + body, 12, muted); v.setLineSpacing(2, 1.05f); return v; }
     LinearLayout info(String heading, String value, View.OnClickListener click) { LinearLayout box = new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL); box.setPadding(dp(16), dp(13), dp(16), dp(13)); box.setBackground(rounded(card, 15)); TextView h = text(heading, 12, muted); box.addView(h); TextView v = text(value, 14, click == null ? Color.WHITE : Color.rgb(190, 184, 255)); v.setPadding(0, dp(5), 0, 0); v.setMaxLines(2); v.setEllipsize(TextUtils.TruncateAt.END); if (click != null) { v.setPaintFlags(v.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG); box.setOnClickListener(click); } box.addView(v); return box; }
