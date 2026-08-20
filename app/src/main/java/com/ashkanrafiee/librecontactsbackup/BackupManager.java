@@ -23,6 +23,18 @@ import android.security.keystore.KeyProperties;
 public final class BackupManager {
     private static final String PREFS = "librecontacts", KEY_URI = "folder", KEY_ALIAS = "LibreContactsPasswordKey";
     private static final byte[] MAGIC = "LIBRECB1".getBytes(StandardCharsets.US_ASCII);
+    private static final String MIME_PHONE = "vnd.android.cursor.item/phone_v2";
+    private static final String MIME_EMAIL = "vnd.android.cursor.item/email_v2";
+    private static final String MIME_POSTAL = "vnd.android.cursor.item/postal-address";
+    private static final String MIME_ORG = "vnd.android.cursor.item/organization";
+    private static final String MIME_NICK = "vnd.android.cursor.item/nickname";
+    private static final String MIME_NOTE = "vnd.android.cursor.item/note";
+    private static final String MIME_EVENT = "vnd.android.cursor.item/contact_event";
+    private static final String MIME_IM = "vnd.android.cursor.item/im";
+    private static final String MIME_WEB = "vnd.android.cursor.item/website";
+    private static final String MIME_REL = "vnd.android.cursor.item/relation";
+    private static final String MIME_PHOTO = "vnd.android.cursor.item/photo";
+    private static final String MIME_NAME = "vnd.android.cursor.item/name";
     public static SharedPreferences prefs(Context c) { return c.getSharedPreferences(PREFS, Context.MODE_PRIVATE); }
     public static String folder(Context c) { return prefs(c).getString(KEY_URI, ""); }
     public static String folderLabel(Context c) {
@@ -84,6 +96,14 @@ public final class BackupManager {
             int d5 = cur.getColumnIndex(ContactsContract.Data.DATA5), d6 = cur.getColumnIndex(ContactsContract.Data.DATA6), d7 = cur.getColumnIndex(ContactsContract.Data.DATA7), d8 = cur.getColumnIndex(ContactsContract.Data.DATA8);
             int d9 = cur.getColumnIndex(ContactsContract.Data.DATA9), d10 = cur.getColumnIndex(ContactsContract.Data.DATA10);
             int d15 = cur.getColumnIndex(ContactsContract.Data.DATA15);
+            int iPobox = cur.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.POBOX);
+            int iStreet = cur.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.STREET);
+            int iCity = cur.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.CITY);
+            int iRegion = cur.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.REGION);
+            int iPostcode = cur.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE);
+            int iCountry = cur.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY);
+            int iPostalType = cur.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.TYPE);
+            int iPostalLabel = cur.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.LABEL);
             while (cur.moveToNext()) {
                 String rawId = cur.getString(iId);
                 Person p = map.get(rawId); if (p == null) { p = new Person(cur.getString(iName)); map.put(rawId, p); }
@@ -91,28 +111,39 @@ public final class BackupManager {
                 String v1 = cur.getString(d1), v2 = cur.getString(d2), v3 = cur.getString(d3), v4 = cur.getString(d4);
                 String v5 = cur.getString(d5), v6 = cur.getString(d6), v7 = cur.getString(d7), v8 = cur.getString(d8);
                 String v9 = cur.getString(d9), v10 = cur.getString(d10);
-                if (mime.equals(ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)) {
+                if (mime.equals(MIME_PHONE)) {
                     if (v1 != null && !v1.isEmpty()) p.phones.add(new Field(v1, typeLabel(v2, v3)));
-                } else if (mime.equals(ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE)) {
+                } else if (mime.equals(MIME_EMAIL)) {
                     if (v1 != null && !v1.isEmpty()) p.emails.add(new Field(v1, typeLabel(v2, v3)));
-                } else if (mime.equals(ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE)) {
-                    p.addresses.add(new Address(v2, v5, v6, v7, v8, typeLabel(v9, v10)));
-                } else if (mime.equals(ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE)) {
+                } else if (mime.equals(MIME_POSTAL)) {
+                    String pobox = iPobox >= 0 ? cur.getString(iPobox) : null;
+                    String street = iStreet >= 0 ? cur.getString(iStreet) : null;
+                    String city = iCity >= 0 ? cur.getString(iCity) : null;
+                    String region = iRegion >= 0 ? cur.getString(iRegion) : null;
+                    String postcode = iPostcode >= 0 ? cur.getString(iPostcode) : null;
+                    String country = iCountry >= 0 ? cur.getString(iCountry) : null;
+                    String postalType = iPostalType >= 0 ? cur.getString(iPostalType) : null;
+                    String postalLabel = iPostalLabel >= 0 ? cur.getString(iPostalLabel) : null;
+                    if ((street == null || street.isEmpty()) && (city == null || city.isEmpty()) && (region == null || region.isEmpty()) && (postcode == null || postcode.isEmpty()) && (country == null || country.isEmpty()) && v1 != null && !v1.isEmpty()) {
+                        street = v1;
+                    }
+                    p.addresses.add(new Address(pobox, "", street, city, region, postcode, country, typeLabel(postalType, postalLabel)));
+                } else if (mime.equals(MIME_ORG)) {
                     if (v1 != null && !v1.isEmpty()) p.organization = v1;
                     if (v4 != null && !v4.isEmpty()) p.title = v4;
-                } else if (mime.equals(ContactsContract.CommonDataKinds.Nickname.CONTENT_ITEM_TYPE)) {
+                } else if (mime.equals(MIME_NICK)) {
                     if (v1 != null && !v1.isEmpty()) p.nicknames.add(v1);
-                } else if (mime.equals(ContactsContract.CommonDataKinds.Note.CONTENT_ITEM_TYPE)) {
+                } else if (mime.equals(MIME_NOTE)) {
                     if (v1 != null && !v1.isEmpty()) p.notes = v1;
-                } else if (mime.equals(ContactsContract.CommonDataKinds.Event.CONTENT_ITEM_TYPE)) {
+                } else if (mime.equals(MIME_EVENT)) {
                     if (v1 != null && !v1.isEmpty()) p.events.add(new Field(v1, eventTypeLabel(v2)));
-                } else if (mime.equals(ContactsContract.CommonDataKinds.Im.CONTENT_ITEM_TYPE)) {
-                    if (v1 != null && !v1.isEmpty()) p.ims.add(new Field(v1, imProtocolLabel(v2)));
-                } else if (mime.equals(ContactsContract.CommonDataKinds.Website.CONTENT_ITEM_TYPE)) {
+                } else if (mime.equals(MIME_IM)) {
+                    if (v1 != null && !v1.isEmpty()) p.ims.add(new Field(v1, imProtocolLabel(v5)));
+                } else if (mime.equals(MIME_WEB)) {
                     if (v1 != null && !v1.isEmpty()) p.websites.add(new Field(v1, typeLabel(v2, v3)));
-                } else if (mime.equals(ContactsContract.CommonDataKinds.Relation.CONTENT_ITEM_TYPE)) {
+                } else if (mime.equals(MIME_REL)) {
                     if (v1 != null && !v1.isEmpty()) p.relations.add(new Field(v1, relationTypeLabel(v2)));
-                } else if (mime.equals(ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE)) {
+                } else if (mime.equals(MIME_PHOTO)) {
                     byte[] photo = cur.getBlob(d15);
                     if (photo != null && photo.length > 0) { p.photo = photo; p.photoType = detectPhotoType(photo); }
                 }
@@ -137,7 +168,7 @@ public final class BackupManager {
             b.append("BEGIN:VCARD\nVERSION:3.0\nFN:").append(esc(p.name)).append('\n');
             for (Field f : p.phones) b.append("TEL").append(typeParam(f.type)).append(':').append(esc(f.value)).append('\n');
             for (Field f : p.emails) b.append("EMAIL").append(typeParam(f.type)).append(':').append(esc(f.value)).append('\n');
-            for (Address a : p.addresses) b.append("ADR").append(typeParam(a.type)).append(":;;").append(esc(a.street)).append(';').append(esc(a.city)).append(';').append(esc(a.region)).append(';').append(esc(a.postcode)).append(';').append(esc(a.country)).append('\n');
+            for (Address a : p.addresses) b.append("ADR").append(typeParam(a.type)).append(':').append(esc(a.pobox)).append(';').append(esc(a.neighborhood)).append(';').append(esc(a.street)).append(';').append(esc(a.city)).append(';').append(esc(a.region)).append(';').append(esc(a.postcode)).append(';').append(esc(a.country)).append('\n');
             if (!p.organization.isEmpty()) b.append("ORG:").append(esc(p.organization)).append('\n');
             if (!p.title.isEmpty()) b.append("TITLE:").append(esc(p.title)).append('\n');
             for (String n : p.nicknames) b.append("NICKNAME:").append(esc(n)).append('\n');
@@ -164,7 +195,7 @@ public final class BackupManager {
     private static String jsonArrAddr(ArrayList<Address> list) {
         StringBuilder b = new StringBuilder("[");
         for (int j = 0; j < list.size(); j++) { if (j > 0) b.append(','); Address a = list.get(j);
-            b.append("{\"street\":\"").append(jsonEsc(a.street)).append("\",\"city\":\"").append(jsonEsc(a.city)).append("\",\"region\":\"").append(jsonEsc(a.region)).append("\",\"postcode\":\"").append(jsonEsc(a.postcode)).append("\",\"country\":\"").append(jsonEsc(a.country)).append("\",\"type\":\"").append(jsonEsc(a.type)).append("\"}"); }
+            b.append("{\"pobox\":\"").append(jsonEsc(a.pobox)).append("\",\"neighborhood\":\"").append(jsonEsc(a.neighborhood)).append("\",\"street\":\"").append(jsonEsc(a.street)).append("\",\"city\":\"").append(jsonEsc(a.city)).append("\",\"region\":\"").append(jsonEsc(a.region)).append("\",\"postcode\":\"").append(jsonEsc(a.postcode)).append("\",\"country\":\"").append(jsonEsc(a.country)).append("\",\"type\":\"").append(jsonEsc(a.type)).append("\"}"); }
         return b.append(']').toString();
     }
     private static String json(ArrayList<Person> ps) {
@@ -200,7 +231,7 @@ public final class BackupManager {
     }
     private static String joinAddr(ArrayList<Address> list) {
         StringBuilder b = new StringBuilder();
-        for (int i = 0; i < list.size(); i++) { if (i > 0) b.append("; "); Address a = list.get(i); if (!a.type.isEmpty()) b.append(a.type).append(":"); b.append(a.street).append(", ").append(a.city).append(", ").append(a.region).append(" ").append(a.postcode).append(", ").append(a.country); }
+        for (int i = 0; i < list.size(); i++) { if (i > 0) b.append("; "); Address a = list.get(i); if (!a.type.isEmpty()) b.append(a.type).append(":"); if (!a.pobox.isEmpty()) b.append(a.pobox).append(", "); b.append(a.street).append(", "); if (!a.neighborhood.isEmpty()) b.append(a.neighborhood).append(", "); b.append(a.city).append(", ").append(a.region).append(" ").append(a.postcode).append(", ").append(a.country); }
         return b.toString();
     }
     private static String csv(ArrayList<Person> ps) {
@@ -285,6 +316,14 @@ public final class BackupManager {
         if (type == null || type.isEmpty()) return 0;
         switch (type.toLowerCase(Locale.US)) { case "birthday": return 1; case "anniversary": return 2; default: return 3; }
     }
+    private static int imProtocolToInt(String proto) {
+        if (proto == null || proto.isEmpty()) return 0;
+        switch (proto.toLowerCase(Locale.US)) { case "aim": return 0; case "msn": return 1; case "yahoo": return 2; case "skype": return 3; case "qq": return 4; case "icq": return 5; case "jabber": return 6; case "irc": return 7; default: return 0; }
+    }
+    private static int relationTypeToInt(String type) {
+        if (type == null || type.isEmpty()) return 0;
+        switch (type.toLowerCase(Locale.US)) { case "assistant": return 1; case "brother": return 2; case "child": return 3; case "partner": return 4; case "father": return 5; case "friend": return 6; case "manager": return 7; case "mother": return 8; case "parent": return 9; case "domestic partner": return 10; case "sister": return 11; case "spouse": return 12; case "relative": return 13; default: return 0; }
+    }
 
     public static void restore(Context c, Uri file, String password, RestoreProgress progress) throws Exception {
         progress.update("Opening backup", 0, 0); byte[] data; try (InputStream in = c.getContentResolver().openInputStream(file)) { data = readAll(in); } progress.update("Decrypting backup", 0, 0); data = decryptArchive(data, password);
@@ -307,7 +346,7 @@ public final class BackupManager {
                 if (trimmed.startsWith("FN:")) name = unesc(trimmed.substring(3).replace("\\n", "\n"));
                 else if (trimmed.toUpperCase(Locale.US).startsWith("TEL")) { String r = parseVcardType(trimmed, "TEL"); if (r != null) { String[] p = r.split("\t", 2); phones.add(new String[]{unesc(p[0]), p.length > 1 ? p[1] : ""}); } }
                 else if (trimmed.toUpperCase(Locale.US).startsWith("EMAIL")) { String r = parseVcardType(trimmed, "EMAIL"); if (r != null) { String[] p = r.split("\t", 2); emails.add(new String[]{unesc(p[0]), p.length > 1 ? p[1] : ""}); } }
-                else if (trimmed.toUpperCase(Locale.US).startsWith("ADR")) { String r = parseVcardType(trimmed, "ADR"); if (r != null) { String[] p = r.split("\t", 2); String aType = p.length > 1 ? p[1] : ""; String[] parts = unesc(p[0]).split(";", -1); if (parts.length >= 7) { addresses.add(new String[]{parts[2], parts[3], parts[4], parts[5], parts[6], aType}); } } }
+                else if (trimmed.toUpperCase(Locale.US).startsWith("ADR")) { String r = parseVcardType(trimmed, "ADR"); if (r != null) { String[] p = r.split("\t", 2); String aType = p.length > 1 ? p[1] : ""; String[] parts = unesc(p[0]).split(";", -1); if (parts.length >= 7) { addresses.add(new String[]{parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], aType}); } } }
                 else if (trimmed.startsWith("ORG:")) org = unesc(trimmed.substring(4));
                 else if (trimmed.startsWith("TITLE:")) title = unesc(trimmed.substring(6));
                 else if (trimmed.startsWith("NICKNAME:")) nickname = unesc(trimmed.substring(9));
@@ -323,24 +362,24 @@ public final class BackupManager {
                 current++; progress.update("Restoring " + current + " of " + total, current, total);
                 ArrayList<ContentProviderOperation> ops = new ArrayList<>();
                 ops.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI).withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null).withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null).build());
-                ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name).build());
-                for (String[] phone : phones) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phone[0]); int t = typeToInt(phone[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Phone.TYPE, t); else b.withValue(ContactsContract.CommonDataKinds.Phone.LABEL, phone[1]); ops.add(b.build()); }
-                for (String[] email : emails) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.Email.ADDRESS, email[0]); int t = typeToInt(email[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Email.TYPE, t); else b.withValue(ContactsContract.CommonDataKinds.Email.LABEL, email[1]); ops.add(b.build()); }
-                for (String[] addr : addresses) { if (addr[0] != null && !addr[0].isEmpty() || addr[1] != null && !addr[1].isEmpty() || addr[2] != null && !addr[2].isEmpty() || addr[3] != null && !addr[3].isEmpty() || addr[4] != null && !addr[4].isEmpty()) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE); if (addr[0] != null && !addr[0].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.STREET, addr[0]); if (addr[1] != null && !addr[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.CITY, addr[1]); if (addr[2] != null && !addr[2].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.REGION, addr[2]); if (addr[3] != null && !addr[3].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE, addr[3]); if (addr[4] != null && !addr[4].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY, addr[4]); int t = typeToInt(addr[5]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.TYPE, t); else if (addr[5] != null && !addr[5].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.LABEL, addr[5]); ops.add(b.build()); } }
-                if (org != null && !org.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.Organization.COMPANY, org).build());
-                if (title != null && !title.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.Organization.TITLE, title).build());
-                if (nickname != null && !nickname.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Nickname.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.Nickname.NAME, nickname).build());
-                if (notes != null && !notes.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Note.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.Note.NOTE, notes).build());
-                for (String[] ev : events) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Event.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.Event.START_DATE, ev[0]); int t = eventtypeToInt(ev[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Event.TYPE, t); ops.add(b.build()); }
-                for (String[] w : websites) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Website.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.Website.URL, w[0]).build());
-                for (String[] im : ims) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Im.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.Im.DATA, im[0]).build());
-                for (String[] rel : relations) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Relation.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.Relation.NAME, rel[0]).build());
-                if (photoBytes != null && photoBytes.length > 0) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, photoBytes).build());
+                ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_NAME).withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name).build());
+                for (String[] phone : phones) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_PHONE).withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phone[0]); int t = typeToInt(phone[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Phone.TYPE, t); else b.withValue(ContactsContract.CommonDataKinds.Phone.LABEL, phone[1]); ops.add(b.build()); }
+                for (String[] email : emails) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_EMAIL).withValue(ContactsContract.CommonDataKinds.Email.ADDRESS, email[0]); int t = typeToInt(email[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Email.TYPE, t); else b.withValue(ContactsContract.CommonDataKinds.Email.LABEL, email[1]); ops.add(b.build()); }
+                for (String[] addr : addresses) { if (addr[0] != null && !addr[0].isEmpty() || addr[1] != null && !addr[1].isEmpty() || addr[2] != null && !addr[2].isEmpty() || addr[3] != null && !addr[3].isEmpty() || addr[4] != null && !addr[4].isEmpty() || addr[5] != null && !addr[5].isEmpty() || addr[6] != null && !addr[6].isEmpty()) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_POSTAL); if (addr[0] != null && !addr[0].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.POBOX, addr[0]); if (addr[1] != null && !addr[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.NEIGHBORHOOD, addr[1]); if (addr[2] != null && !addr[2].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.STREET, addr[2]); if (addr[3] != null && !addr[3].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.CITY, addr[3]); if (addr[4] != null && !addr[4].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.REGION, addr[4]); if (addr[5] != null && !addr[5].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE, addr[5]); if (addr[6] != null && !addr[6].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY, addr[6]); int t = typeToInt(addr[7]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.TYPE, t); else if (addr[7] != null && !addr[7].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.LABEL, addr[7]); ops.add(b.build()); } }
+                if (org != null && !org.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_ORG).withValue(ContactsContract.CommonDataKinds.Organization.COMPANY, org).build());
+                if (title != null && !title.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_ORG).withValue(ContactsContract.CommonDataKinds.Organization.TITLE, title).build());
+                if (nickname != null && !nickname.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_NICK).withValue(ContactsContract.CommonDataKinds.Nickname.NAME, nickname).build());
+                if (notes != null && !notes.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_NOTE).withValue(ContactsContract.CommonDataKinds.Note.NOTE, notes).build());
+                for (String[] ev : events) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_EVENT).withValue(ContactsContract.CommonDataKinds.Event.START_DATE, ev[0]); int t = eventtypeToInt(ev[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Event.TYPE, t); ops.add(b.build()); }
+                for (String[] w : websites) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_WEB).withValue(ContactsContract.CommonDataKinds.Website.URL, w[0]); int t = typeToInt(w[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Website.TYPE, t); else if (w[1] != null && !w[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Website.LABEL, w[1]); ops.add(b.build()); }
+                for (String[] im : ims) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_IM).withValue(ContactsContract.CommonDataKinds.Im.DATA, im[0]); int t = imProtocolToInt(im[1]); if (t >= 0) b.withValue(ContactsContract.CommonDataKinds.Im.PROTOCOL, t); else if (im[1] != null && !im[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Im.CUSTOM_PROTOCOL, im[1]); ops.add(b.build()); }
+                for (String[] rel : relations) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_REL).withValue(ContactsContract.CommonDataKinds.Relation.NAME, rel[0]); int t = relationTypeToInt(rel[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Relation.TYPE, t); else if (rel[1] != null && !rel[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Relation.LABEL, rel[1]); ops.add(b.build()); }
+                if (photoBytes != null && photoBytes.length > 0) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_PHOTO).withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, photoBytes).build());
                 try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, ops); added++; } catch (Exception e) {
                     try {
                         ArrayList<ContentProviderOperation> single = new ArrayList<>();
                         single.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI).withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null).withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null).build());
-                        single.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name).build());
+                        single.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_NAME).withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name).build());
                         c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, single);
                         added++;
                         for (int i = 2; i < ops.size(); i++) { try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, new ArrayList<>(Collections.singletonList(ops.get(i)))); } catch (Exception ignored) {} }
@@ -360,7 +399,7 @@ public final class BackupManager {
     private static byte[] readAll(InputStream input) throws IOException { ByteArrayOutputStream output = new ByteArrayOutputStream(); byte[] buffer = new byte[8192]; int n; while ((n = input.read(buffer)) > 0) output.write(buffer, 0, n); return output.toByteArray(); }
 
     private static class Field { String value, type; Field(String v, String t) { value = v == null ? "" : v; type = t == null ? "" : t; } }
-    private static class Address { String street, city, region, postcode, country, type; Address(String s, String c, String r, String p, String co, String t) { street = s == null ? "" : s; city = c == null ? "" : c; region = r == null ? "" : r; postcode = p == null ? "" : p; country = co == null ? "" : co; type = t == null ? "" : t; } }
+    private static class Address { String pobox, neighborhood, street, city, region, postcode, country, type; Address(String po, String nb, String s, String c, String r, String p, String co, String t) { pobox = po == null ? "" : po; neighborhood = nb == null ? "" : nb; street = s == null ? "" : s; city = c == null ? "" : c; region = r == null ? "" : r; postcode = p == null ? "" : p; country = co == null ? "" : co; type = t == null ? "" : t; } }
     private static class Person {
         String name; String organization = ""; String title = ""; String notes = ""; String photoType = "jpeg"; byte[] photo = null;
         ArrayList<Field> phones = new ArrayList<>(); ArrayList<Field> emails = new ArrayList<>();

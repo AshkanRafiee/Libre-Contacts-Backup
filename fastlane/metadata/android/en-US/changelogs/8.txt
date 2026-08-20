@@ -1,0 +1,1 @@
+Fix IM protocol type preservation in restore. Fix relation type labels.
