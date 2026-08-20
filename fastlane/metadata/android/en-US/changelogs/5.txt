@@ -1,0 +1,4 @@
+- Back up all contact fields: phones, emails, addresses, organizations, titles, nicknames, notes, events, websites, IM handles, relationships, and contact photos
+- Preserve contact field types/labels (Home, Work, Mobile, etc.)
+- Structured address backup (street, city, region, postcode, country)
+- Full contact data restored from backups including all fields, labels, and photos
