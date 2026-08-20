@@ -1,0 +1,2 @@
+- Redesigned app icon to be larger and more impactful
+- Added Gradle wrapper SHA256 checksum for reproducible builds
