@@ -1,10 +1,9 @@
 Categories:
-  - Connectivity
+  - Contact
 License: GPL-3.0-only
 AuthorName: Ashkan Rafiee
 AuthorEmail: librecontactsbackup.abstract692@passmail.net
 AuthorWebSite: https://github.com/AshkanRafiee/
-WebSite: https://github.com/AshkanRafiee/Libre-Contacts-Backup
 SourceCode: https://github.com/AshkanRafiee/Libre-Contacts-Backup
 IssueTracker: https://github.com/AshkanRafiee/Libre-Contacts-Backup/issues
 Changelog: https://github.com/AshkanRafiee/Libre-Contacts-Backup/releases
@@ -17,36 +16,16 @@ Binaries:
   https://github.com/AshkanRafiee/Libre-Contacts-Backup/releases/download/v%v/Libre-Contacts-Backup-v%v.apk
 
 Builds:
-  - versionName: 1.0.0
-    versionCode: 1
-    commit: 66c275ba929bf82783edbfa7d1e02124ddba38a6
+  - versionName: 1.4.0
+    versionCode: 5
+    commit: c8940db44873962682fa79bfe548f12084a86528
     subdir: app
     gradle:
       - yes
-    rm:
-      - gradle/wrapper/gradle-wrapper.jar
-
-  - versionName: 1.1.0
-    versionCode: 2
-    commit: 93e47247a28561fbe7630f1c83955d270295e52a
-    subdir: app
-    gradle:
-      - yes
-    rm:
-      - gradle/wrapper/gradle-wrapper.jar
-
-  - versionName: 1.2.0
-    versionCode: 3
-    commit: ff47f9ff24e12fb2cf18b26f12c3820018bf5e55
-    subdir: app
-    gradle:
-      - yes
-    rm:
-      - gradle/wrapper/gradle-wrapper.jar
 
 AllowedAPKSigningKeys: e90d878e33ab6f41dd841b4209311ec3fa816aeea7ca75687354e28401415e55
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
-CurrentVersion: 1.2.0
-CurrentVersionCode: 3
+CurrentVersion: 1.4.0
+CurrentVersionCode: 5

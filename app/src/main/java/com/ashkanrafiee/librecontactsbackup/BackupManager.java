@@ -123,6 +123,7 @@ public final class BackupManager {
     }
 
     private static String esc(String s) { return s == null ? "" : s.replace("\\", "\\\\").replace("\n", "\\n").replace(",", "\\,"); }
+    private static String unesc(String s) { if (s == null || s.isEmpty()) return s; StringBuilder b = new StringBuilder(); for (int i = 0; i < s.length(); i++) { char c = s.charAt(i); if (c == '\\' && i + 1 < s.length()) { char next = s.charAt(++i); if (next == 'n') b.append('\n'); else if (next == ',') b.append(','); else if (next == '\\') b.append('\\'); else { b.append('\\'); b.append(next); } } else b.append(c); } return b.toString(); }
     private static String jsonEsc(String s) { return s == null ? "" : s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n"); }
     private static String typeParam(String type) { return type.isEmpty() ? "" : ";TYPE=" + type.toUpperCase(Locale.US); }
     private static String detectPhotoType(byte[] data) {
@@ -288,7 +289,11 @@ public final class BackupManager {
     public static void restore(Context c, Uri file, String password, RestoreProgress progress) throws Exception {
         progress.update("Opening backup", 0, 0); byte[] data; try (InputStream in = c.getContentResolver().openInputStream(file)) { data = readAll(in); } progress.update("Decrypting backup", 0, 0); data = decryptArchive(data, password);
         ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(data)); String vcard = null; ZipEntry entry; while ((entry = zip.getNextEntry()) != null) { if (entry.getName().equals("contacts.vcf")) vcard = new String(readAll(zip), StandardCharsets.UTF_8); zip.closeEntry(); } zip.close();
-        if (vcard == null) throw new IOException("Choose a Libre Contacts Backup file"); int added = 0;
+        if (vcard == null) throw new IOException("Choose a Libre Contacts Backup file");
+        StringBuilder unfolded = new StringBuilder();
+        for (String rawLine : vcard.split("\r?\n")) { String line = rawLine.replaceAll("\\s+$", ""); if (unfolded.length() > 0 && !line.isEmpty() && (line.charAt(0) == ' ' || line.charAt(0) == '\t')) { unfolded.setLength(unfolded.length() - 1); unfolded.append(line.substring(1)); } else unfolded.append(line).append('\n'); }
+        vcard = unfolded.toString();
+        int added = 0;
         String[] cards = vcard.split("BEGIN:VCARD"); int total = 0; for (String card : cards) if (card.contains("FN:")) total++; progress.update("Restoring contacts", 0, total);
         int current = 0; for (String card : cards) {
             String name = null; ArrayList<String[]> phones = new ArrayList<>(); ArrayList<String[]> emails = new ArrayList<>();
@@ -299,14 +304,14 @@ public final class BackupManager {
             byte[] photoBytes = null;
             for (String line : card.split("\n")) {
                 String trimmed = line.trim();
-                if (trimmed.startsWith("FN:")) name = trimmed.substring(3).replace("\\n", "\n");
-                else if (trimmed.toUpperCase(Locale.US).startsWith("TEL")) { String r = parseVcardType(trimmed, "TEL"); if (r != null) { String[] p = r.split("\t", 2); phones.add(new String[]{p[0], p.length > 1 ? p[1] : ""}); } }
-                else if (trimmed.toUpperCase(Locale.US).startsWith("EMAIL")) { String r = parseVcardType(trimmed, "EMAIL"); if (r != null) { String[] p = r.split("\t", 2); emails.add(new String[]{p[0], p.length > 1 ? p[1] : ""}); } }
-                else if (trimmed.toUpperCase(Locale.US).startsWith("ADR")) { String r = parseVcardType(trimmed, "ADR"); if (r != null) { String[] p = r.split("\t", 2); addrType = p.length > 1 ? p[1] : ""; String[] parts = p[0].split(";", -1); if (parts.length >= 7) { addrStreet = parts[2]; addrCity = parts[3]; addrRegion = parts[4]; addrPostcode = parts[5]; addrCountry = parts[6]; } } }
-                else if (trimmed.startsWith("ORG:")) org = trimmed.substring(4);
-                else if (trimmed.startsWith("TITLE:")) title = trimmed.substring(6);
-                else if (trimmed.startsWith("NICKNAME:")) nickname = trimmed.substring(9);
-                else if (trimmed.startsWith("NOTE:")) notes = trimmed.substring(5);
+                if (trimmed.startsWith("FN:")) name = unesc(trimmed.substring(3).replace("\\n", "\n"));
+                else if (trimmed.toUpperCase(Locale.US).startsWith("TEL")) { String r = parseVcardType(trimmed, "TEL"); if (r != null) { String[] p = r.split("\t", 2); phones.add(new String[]{unesc(p[0]), p.length > 1 ? p[1] : ""}); } }
+                else if (trimmed.toUpperCase(Locale.US).startsWith("EMAIL")) { String r = parseVcardType(trimmed, "EMAIL"); if (r != null) { String[] p = r.split("\t", 2); emails.add(new String[]{unesc(p[0]), p.length > 1 ? p[1] : ""}); } }
+                else if (trimmed.toUpperCase(Locale.US).startsWith("ADR")) { String r = parseVcardType(trimmed, "ADR"); if (r != null) { String[] p = r.split("\t", 2); addrType = p.length > 1 ? p[1] : ""; String[] parts = unesc(p[0]).split(";", -1); if (parts.length >= 7) { addrStreet = parts[2]; addrCity = parts[3]; addrRegion = parts[4]; addrPostcode = parts[5]; addrCountry = parts[6]; } } }
+                else if (trimmed.startsWith("ORG:")) org = unesc(trimmed.substring(4));
+                else if (trimmed.startsWith("TITLE:")) title = unesc(trimmed.substring(6));
+                else if (trimmed.startsWith("NICKNAME:")) nickname = unesc(trimmed.substring(9));
+                else if (trimmed.startsWith("NOTE:")) notes = unesc(trimmed.substring(5));
                 else if (trimmed.startsWith("BDAY:")) events.add(new String[]{trimmed.substring(5), "birthday"});
                 else if (trimmed.startsWith("X-ANNIVERSARY:")) events.add(new String[]{trimmed.substring(14), "anniversary"});
                 else if (trimmed.toUpperCase(Locale.US).startsWith("URL")) { String r = parseVcardType(trimmed, "URL"); if (r != null) { String[] p = r.split("\t", 2); websites.add(new String[]{p[0], p.length > 1 ? p[1] : ""}); } }
@@ -340,7 +345,16 @@ public final class BackupManager {
                 for (String[] im : ims) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Im.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.Im.DATA, im[0]).build());
                 for (String[] rel : relations) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Relation.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.Relation.NAME, rel[0]).build());
                 if (photoBytes != null && photoBytes.length > 0) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, photoBytes).build());
-                try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, ops); added++; } catch (Exception ignored) {}
+                try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, ops); added++; } catch (Exception e) {
+                    try {
+                        ArrayList<ContentProviderOperation> single = new ArrayList<>();
+                        single.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI).withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null).withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null).build());
+                        single.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name).build());
+                        c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, single);
+                        added++;
+                        for (int i = 2; i < ops.size(); i++) { try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, new ArrayList<>(Collections.singletonList(ops.get(i)))); } catch (Exception ignored) {} }
+                    } catch (Exception ignored) {}
+                }
             }
         }
         prefs(c).edit().putLong("lastRestore", System.currentTimeMillis()).putInt("lastRestoreCount", added).apply(); MainActivity.notice(c, "Restore complete", "Added " + added + " contacts");
