@@ -1,0 +1,1 @@
+Smart merge: restored contacts now merge into existing ones instead of creating duplicates. Fix first-time restore permission handling. All contact fields preserved through round-trips.

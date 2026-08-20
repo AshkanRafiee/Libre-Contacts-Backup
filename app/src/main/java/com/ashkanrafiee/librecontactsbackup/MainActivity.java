@@ -25,6 +25,7 @@ public class MainActivity extends Activity {
     final int card = Color.rgb(20, 27, 42), muted = Color.rgb(151, 161, 181);
     TextView status, folderValue, scheduleValue, keepValue, restoreStatus;
     Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat; boolean pendingBackup; boolean compact;
+    Uri pendingRestoreUri;
 
     int dp(float value) { return (int) (value * getResources().getDisplayMetrics().density + .5f); }
     int v(int normal, int small) { return compact ? small : normal; }
@@ -160,10 +161,10 @@ public class MainActivity extends Activity {
         super.onActivityResult(request, result, data); if (result != RESULT_OK || data == null) { if (request == FOLDER) pendingBackup = false; return; } Uri uri = data.getData();
         try { if (request == MANUAL_CSV || request == MANUAL_VCF || request == MANUAL_XLS) { String format = request == MANUAL_CSV ? "csv" : request == MANUAL_VCF ? "vcf" : "xls"; new Thread(() -> { try { BackupManager.writeManualExport(this, uri, format); } catch (Exception e) { notice(this, "Export failed", e.getMessage()); } }).start(); }
             else if (request == FOLDER) { getContentResolver().takePersistableUriPermission(uri, data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION)); BackupManager.prefs(this).edit().putString("folder", uri.toString()).apply(); load(); if (pendingBackup) backup(); }
-            else { if (checkSelfPermission(Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED) { requestPermissions(new String[]{Manifest.permission.WRITE_CONTACTS}, 22); return; } restoreSelected(uri); }
+            else { if (checkSelfPermission(Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingRestoreUri = uri; requestPermissions(new String[]{Manifest.permission.WRITE_CONTACTS}, 22); return; } restoreSelected(uri); }
         } catch (Exception e) { notice(this, "Could not open", e.getMessage()); }
     }
-    @Override public void onRequestPermissionsResult(int request, String[] permissions, int[] results) { super.onRequestPermissionsResult(request, permissions, results); if (request == 21) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; boolean resume = pendingBackup; pendingBackup = false; if (granted && resume) backup(); } else if (request == 23 && results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED && pendingManualFormat != null) { String format = pendingManualFormat; pendingManualFormat = null; launchManualExport(format); } }
+    @Override public void onRequestPermissionsResult(int request, String[] permissions, int[] results) { super.onRequestPermissionsResult(request, permissions, results); if (request == 21) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; boolean resume = pendingBackup; pendingBackup = false; if (granted && resume) backup(); } else if (request == 22) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; Uri uri = pendingRestoreUri; pendingRestoreUri = null; if (granted && uri != null) restoreSelected(uri); } else if (request == 23 && results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED && pendingManualFormat != null) { String format = pendingManualFormat; pendingManualFormat = null; launchManualExport(format); } }
     void configureEncryption(boolean enabled) {
         if (!enabled) { BackupManager.prefs(this).edit().putBoolean("encrypted", false).apply(); return; }
         BackupManager.prefs(this).edit().putBoolean("encrypted", true).apply();

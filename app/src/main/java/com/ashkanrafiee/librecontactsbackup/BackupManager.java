@@ -325,6 +325,96 @@ public final class BackupManager {
         switch (type.toLowerCase(Locale.US)) { case "assistant": return 1; case "brother": return 2; case "child": return 3; case "partner": return 4; case "father": return 5; case "friend": return 6; case "manager": return 7; case "mother": return 8; case "parent": return 9; case "domestic partner": return 10; case "sister": return 11; case "spouse": return 12; case "relative": return 13; default: return 0; }
     }
 
+    private static String normalizeName(String n) { return n == null ? "" : n.trim().toLowerCase(Locale.US).replaceAll("\\s+", " "); }
+    private static Set<String> existingPhones(String rawId, Context c) {
+        Set<String> s = new HashSet<>(); Cursor cur = c.getContentResolver().query(ContactsContract.Data.CONTENT_URI, new String[]{ContactsContract.Data.DATA1}, ContactsContract.Data.RAW_CONTACT_ID + "=? AND " + ContactsContract.Data.MIMETYPE + "=?", new String[]{rawId, MIME_PHONE}, null);
+        if (cur != null) { while (cur.moveToNext()) { String v = cur.getString(0); if (v != null && !v.isEmpty()) s.add(v.replaceAll("\\s+", "")); } cur.close(); } return s;
+    }
+    private static Set<String> existingEmails(String rawId, Context c) {
+        Set<String> s = new HashSet<>(); Cursor cur = c.getContentResolver().query(ContactsContract.Data.CONTENT_URI, new String[]{ContactsContract.Data.DATA1}, ContactsContract.Data.RAW_CONTACT_ID + "=? AND " + ContactsContract.Data.MIMETYPE + "=?", new String[]{rawId, MIME_EMAIL}, null);
+        if (cur != null) { while (cur.moveToNext()) { String v = cur.getString(0); if (v != null && !v.isEmpty()) s.add(v.toLowerCase(Locale.US)); } cur.close(); } return s;
+    }
+    private static boolean hasPhoneOrEmail(String rawId, ArrayList<String[]> phones, ArrayList<String[]> emails, Context c) {
+        Set<String> ep = existingPhones(rawId, c); Set<String> ee = existingEmails(rawId, c);
+        for (String[] ph : phones) { String norm = ph[0].replaceAll("\\s+", ""); if (ep.contains(norm)) return true; }
+        for (String[] em : emails) { if (ee.contains(em[0].toLowerCase(Locale.US))) return true; }
+        return false;
+    }
+    private static void addPhone(String rawId, String[] phone, Context c) {
+        ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+            .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId).withValue(ContactsContract.Data.MIMETYPE, MIME_PHONE)
+            .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phone[0]);
+        int t = typeToInt(phone[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Phone.TYPE, t); else b.withValue(ContactsContract.CommonDataKinds.Phone.LABEL, phone[1]);
+        try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, new ArrayList<>(Collections.singletonList(b.build()))); } catch (Exception ignored) {}
+    }
+    private static void addEmail(String rawId, String[] email, Context c) {
+        ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+            .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId).withValue(ContactsContract.Data.MIMETYPE, MIME_EMAIL)
+            .withValue(ContactsContract.CommonDataKinds.Email.ADDRESS, email[0]);
+        int t = typeToInt(email[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Email.TYPE, t); else b.withValue(ContactsContract.CommonDataKinds.Email.LABEL, email[1]);
+        try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, new ArrayList<>(Collections.singletonList(b.build()))); } catch (Exception ignored) {}
+    }
+    private static void addAddress(String rawId, String[] addr, Context c) {
+        if (addr[0].isEmpty() && addr[1].isEmpty() && addr[2].isEmpty() && addr[3].isEmpty() && addr[4].isEmpty() && addr[5].isEmpty() && addr[6].isEmpty()) return;
+        ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+            .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId).withValue(ContactsContract.Data.MIMETYPE, MIME_POSTAL);
+        if (!addr[0].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.POBOX, addr[0]);
+        if (!addr[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.NEIGHBORHOOD, addr[1]);
+        if (!addr[2].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.STREET, addr[2]);
+        if (!addr[3].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.CITY, addr[3]);
+        if (!addr[4].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.REGION, addr[4]);
+        if (!addr[5].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE, addr[5]);
+        if (!addr[6].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY, addr[6]);
+        int t = typeToInt(addr[7]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.TYPE, t); else if (!addr[7].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.LABEL, addr[7]);
+        try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, new ArrayList<>(Collections.singletonList(b.build()))); } catch (Exception ignored) {}
+    }
+    private static String querySingle(String rawId, String mime, String column, Context c) {
+        Cursor cur = c.getContentResolver().query(ContactsContract.Data.CONTENT_URI, new String[]{column}, ContactsContract.Data.RAW_CONTACT_ID + "=? AND " + ContactsContract.Data.MIMETYPE + "=?", new String[]{rawId, mime}, null);
+        String val = null; if (cur != null) { if (cur.moveToFirst()) val = cur.getString(0); cur.close(); } return val;
+    }
+    private static void setIfEmpty(String rawId, String mime, String column, String value, Context c) {
+        if (value == null || value.isEmpty()) return; String existing = querySingle(rawId, mime, column, c);
+        if (existing != null && !existing.isEmpty()) return;
+        ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+            .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId).withValue(ContactsContract.Data.MIMETYPE, mime).withValue(column, value);
+        try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, new ArrayList<>(Collections.singletonList(b.build()))); } catch (Exception ignored) {}
+    }
+    private static void addEvent(String rawId, String[] ev, Context c) {
+        ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+            .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId).withValue(ContactsContract.Data.MIMETYPE, MIME_EVENT)
+            .withValue(ContactsContract.CommonDataKinds.Event.START_DATE, ev[0]);
+        int t = eventtypeToInt(ev[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Event.TYPE, t);
+        try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, new ArrayList<>(Collections.singletonList(b.build()))); } catch (Exception ignored) {}
+    }
+    private static void addWebsite(String rawId, String[] w, Context c) {
+        ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+            .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId).withValue(ContactsContract.Data.MIMETYPE, MIME_WEB)
+            .withValue(ContactsContract.CommonDataKinds.Website.URL, w[0]);
+        int t = typeToInt(w[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Website.TYPE, t); else if (w[1] != null && !w[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Website.LABEL, w[1]);
+        try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, new ArrayList<>(Collections.singletonList(b.build()))); } catch (Exception ignored) {}
+    }
+    private static void addIm(String rawId, String[] im, Context c) {
+        ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+            .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId).withValue(ContactsContract.Data.MIMETYPE, MIME_IM)
+            .withValue(ContactsContract.CommonDataKinds.Im.DATA, im[0]);
+        int t = imProtocolToInt(im[1]); if (t >= 0) b.withValue(ContactsContract.CommonDataKinds.Im.PROTOCOL, t); else if (im[1] != null && !im[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Im.CUSTOM_PROTOCOL, im[1]);
+        try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, new ArrayList<>(Collections.singletonList(b.build()))); } catch (Exception ignored) {}
+    }
+    private static void addRelation(String rawId, String[] rel, Context c) {
+        ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+            .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId).withValue(ContactsContract.Data.MIMETYPE, MIME_REL)
+            .withValue(ContactsContract.CommonDataKinds.Relation.NAME, rel[0]);
+        int t = relationTypeToInt(rel[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Relation.TYPE, t); else if (rel[1] != null && !rel[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Relation.LABEL, rel[1]);
+        try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, new ArrayList<>(Collections.singletonList(b.build()))); } catch (Exception ignored) {}
+    }
+    private static String createRawContact(String name, Context c) throws Exception {
+        ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+        ops.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI).withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null).withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null).build());
+        ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_NAME).withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name).build());
+        ContentProviderResult[] results = c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, ops);
+        return results[0].uri.getLastPathSegment();
+    }
+
     public static void restore(Context c, Uri file, String password, RestoreProgress progress) throws Exception {
         progress.update("Opening backup", 0, 0); byte[] data; try (InputStream in = c.getContentResolver().openInputStream(file)) { data = readAll(in); } progress.update("Decrypting backup", 0, 0); data = decryptArchive(data, password);
         ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(data)); String vcard = null; ZipEntry entry; while ((entry = zip.getNextEntry()) != null) { if (entry.getName().equals("contacts.vcf")) vcard = new String(readAll(zip), StandardCharsets.UTF_8); zip.closeEntry(); } zip.close();
@@ -332,7 +422,14 @@ public final class BackupManager {
         StringBuilder unfolded = new StringBuilder();
         for (String rawLine : vcard.split("\r?\n")) { String line = rawLine.replaceAll("\\s+$", ""); if (unfolded.length() > 0 && !line.isEmpty() && (line.charAt(0) == ' ' || line.charAt(0) == '\t')) { unfolded.setLength(unfolded.length() - 1); unfolded.append(line.substring(1)); } else unfolded.append(line).append('\n'); }
         vcard = unfolded.toString();
-        int added = 0;
+
+        ArrayList<Person> existing = read(c);
+        LinkedHashMap<String, ArrayList<String>> existingByNormName = new LinkedHashMap<>();
+        Cursor rawCursor = c.getContentResolver().query(ContactsContract.Data.CONTENT_URI, new String[]{ContactsContract.Data.RAW_CONTACT_ID, ContactsContract.Data.DISPLAY_NAME}, ContactsContract.Data.MIMETYPE + "=?", new String[]{MIME_NAME}, ContactsContract.Data.DISPLAY_NAME + " ASC");
+        LinkedHashMap<String, String> rawIdToDisplayName = new LinkedHashMap<>();
+        if (rawCursor != null) { while (rawCursor.moveToNext()) { String rid = rawCursor.getString(0); String dn = rawCursor.getString(1); if (rid != null && dn != null) { rawIdToDisplayName.put(rid, dn); String key = normalizeName(dn); existingByNormName.computeIfAbsent(key, k -> new ArrayList<>()).add(rid); } } rawCursor.close(); }
+
+        int added = 0, merged = 0;
         String[] cards = vcard.split("BEGIN:VCARD"); int total = 0; for (String card : cards) if (card.contains("FN:")) total++; progress.update("Restoring contacts", 0, total);
         int current = 0; for (String card : cards) {
             String name = null; ArrayList<String[]> phones = new ArrayList<>(); ArrayList<String[]> emails = new ArrayList<>();
@@ -358,36 +455,57 @@ public final class BackupManager {
                 else if (trimmed.toUpperCase(Locale.US).startsWith("X-RELATION")) { String r = parseVcardType(trimmed, "X-RELATION"); if (r != null) { String[] p = r.split("\t", 2); relations.add(new String[]{p[0], p.length > 1 ? p[1] : ""}); } }
                 else if (trimmed.toUpperCase(Locale.US).startsWith("PHOTO")) { String r = parseVcardType(trimmed, "PHOTO"); if (r != null) { String[] p = r.split("\t", 2); try { photoBytes = Base64.decode(p[0], Base64.NO_WRAP); } catch (Exception ignored) {} } }
             }
-            if (name != null) {
-                current++; progress.update("Restoring " + current + " of " + total, current, total);
-                ArrayList<ContentProviderOperation> ops = new ArrayList<>();
-                ops.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI).withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null).withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null).build());
-                ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_NAME).withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name).build());
-                for (String[] phone : phones) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_PHONE).withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phone[0]); int t = typeToInt(phone[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Phone.TYPE, t); else b.withValue(ContactsContract.CommonDataKinds.Phone.LABEL, phone[1]); ops.add(b.build()); }
-                for (String[] email : emails) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_EMAIL).withValue(ContactsContract.CommonDataKinds.Email.ADDRESS, email[0]); int t = typeToInt(email[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Email.TYPE, t); else b.withValue(ContactsContract.CommonDataKinds.Email.LABEL, email[1]); ops.add(b.build()); }
-                for (String[] addr : addresses) { if (addr[0] != null && !addr[0].isEmpty() || addr[1] != null && !addr[1].isEmpty() || addr[2] != null && !addr[2].isEmpty() || addr[3] != null && !addr[3].isEmpty() || addr[4] != null && !addr[4].isEmpty() || addr[5] != null && !addr[5].isEmpty() || addr[6] != null && !addr[6].isEmpty()) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_POSTAL); if (addr[0] != null && !addr[0].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.POBOX, addr[0]); if (addr[1] != null && !addr[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.NEIGHBORHOOD, addr[1]); if (addr[2] != null && !addr[2].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.STREET, addr[2]); if (addr[3] != null && !addr[3].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.CITY, addr[3]); if (addr[4] != null && !addr[4].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.REGION, addr[4]); if (addr[5] != null && !addr[5].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE, addr[5]); if (addr[6] != null && !addr[6].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY, addr[6]); int t = typeToInt(addr[7]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.TYPE, t); else if (addr[7] != null && !addr[7].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.LABEL, addr[7]); ops.add(b.build()); } }
-                if (org != null && !org.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_ORG).withValue(ContactsContract.CommonDataKinds.Organization.COMPANY, org).build());
-                if (title != null && !title.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_ORG).withValue(ContactsContract.CommonDataKinds.Organization.TITLE, title).build());
-                if (nickname != null && !nickname.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_NICK).withValue(ContactsContract.CommonDataKinds.Nickname.NAME, nickname).build());
-                if (notes != null && !notes.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_NOTE).withValue(ContactsContract.CommonDataKinds.Note.NOTE, notes).build());
-                for (String[] ev : events) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_EVENT).withValue(ContactsContract.CommonDataKinds.Event.START_DATE, ev[0]); int t = eventtypeToInt(ev[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Event.TYPE, t); ops.add(b.build()); }
-                for (String[] w : websites) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_WEB).withValue(ContactsContract.CommonDataKinds.Website.URL, w[0]); int t = typeToInt(w[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Website.TYPE, t); else if (w[1] != null && !w[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Website.LABEL, w[1]); ops.add(b.build()); }
-                for (String[] im : ims) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_IM).withValue(ContactsContract.CommonDataKinds.Im.DATA, im[0]); int t = imProtocolToInt(im[1]); if (t >= 0) b.withValue(ContactsContract.CommonDataKinds.Im.PROTOCOL, t); else if (im[1] != null && !im[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Im.CUSTOM_PROTOCOL, im[1]); ops.add(b.build()); }
-                for (String[] rel : relations) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_REL).withValue(ContactsContract.CommonDataKinds.Relation.NAME, rel[0]); int t = relationTypeToInt(rel[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Relation.TYPE, t); else if (rel[1] != null && !rel[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Relation.LABEL, rel[1]); ops.add(b.build()); }
-                if (photoBytes != null && photoBytes.length > 0) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_PHOTO).withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, photoBytes).build());
-                try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, ops); added++; } catch (Exception e) {
-                    try {
-                        ArrayList<ContentProviderOperation> single = new ArrayList<>();
-                        single.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI).withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null).withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null).build());
-                        single.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_NAME).withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name).build());
-                        c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, single);
-                        added++;
-                        for (int i = 2; i < ops.size(); i++) { try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, new ArrayList<>(Collections.singletonList(ops.get(i)))); } catch (Exception ignored) {} }
-                    } catch (Exception ignored) {}
+            if (name == null) continue;
+            current++; progress.update("Restoring " + current + " of " + total, current, total);
+            String nameKey = normalizeName(name);
+            ArrayList<String> candidates = existingByNormName.get(nameKey);
+            String matchRawId = null;
+            if (candidates != null) {
+                for (String rid : candidates) {
+                    if (hasPhoneOrEmail(rid, phones, emails, c)) { matchRawId = rid; break; }
+                }
+                if (matchRawId == null && !candidates.isEmpty()) matchRawId = candidates.get(0);
+            }
+            if (matchRawId != null) {
+                merged++;
+                Set<String> ep = existingPhones(matchRawId, c);
+                for (String[] ph : phones) { String norm = ph[0].replaceAll("\\s+", ""); if (!ep.contains(norm)) addPhone(matchRawId, ph, c); }
+                Set<String> ee = existingEmails(matchRawId, c);
+                for (String[] em : emails) { if (!ee.contains(em[0].toLowerCase(Locale.US))) addEmail(matchRawId, em, c); }
+                for (String[] addr : addresses) addAddress(matchRawId, addr, c);
+                setIfEmpty(matchRawId, MIME_ORG, ContactsContract.CommonDataKinds.Organization.COMPANY, org, c);
+                setIfEmpty(matchRawId, MIME_ORG, ContactsContract.CommonDataKinds.Organization.TITLE, title, c);
+                setIfEmpty(matchRawId, MIME_NICK, ContactsContract.CommonDataKinds.Nickname.NAME, nickname, c);
+                setIfEmpty(matchRawId, MIME_NOTE, ContactsContract.CommonDataKinds.Note.NOTE, notes, c);
+                for (String[] ev : events) addEvent(matchRawId, ev, c);
+                for (String[] w : websites) addWebsite(matchRawId, w, c);
+                for (String[] im : ims) addIm(matchRawId, im, c);
+                for (String[] rel : relations) addRelation(matchRawId, rel, c);
+                if (photoBytes != null && photoBytes.length > 0) { String existingPhoto = querySingle(matchRawId, MIME_PHOTO, ContactsContract.Data.DATA15, c); if (existingPhoto == null || existingPhoto.isEmpty()) { ContentProviderOperation b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValue(ContactsContract.Data.RAW_CONTACT_ID, matchRawId).withValue(ContactsContract.Data.MIMETYPE, MIME_PHOTO).withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, photoBytes).build(); try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, new ArrayList<>(Collections.singletonList(b))); } catch (Exception ignored) {} } }
+            } else {
+                try {
+                    ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+                    ops.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI).withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null).withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null).build());
+                    ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_NAME).withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name).build());
+                    for (String[] phone : phones) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_PHONE).withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phone[0]); int t = typeToInt(phone[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Phone.TYPE, t); else b.withValue(ContactsContract.CommonDataKinds.Phone.LABEL, phone[1]); ops.add(b.build()); }
+                    for (String[] email : emails) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_EMAIL).withValue(ContactsContract.CommonDataKinds.Email.ADDRESS, email[0]); int t = typeToInt(email[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Email.TYPE, t); else b.withValue(ContactsContract.CommonDataKinds.Email.LABEL, email[1]); ops.add(b.build()); }
+                    for (String[] addr : addresses) { if (addr[0] != null && !addr[0].isEmpty() || addr[1] != null && !addr[1].isEmpty() || addr[2] != null && !addr[2].isEmpty() || addr[3] != null && !addr[3].isEmpty() || addr[4] != null && !addr[4].isEmpty() || addr[5] != null && !addr[5].isEmpty() || addr[6] != null && !addr[6].isEmpty()) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_POSTAL); if (addr[0] != null && !addr[0].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.POBOX, addr[0]); if (addr[1] != null && !addr[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.NEIGHBORHOOD, addr[1]); if (addr[2] != null && !addr[2].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.STREET, addr[2]); if (addr[3] != null && !addr[3].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.CITY, addr[3]); if (addr[4] != null && !addr[4].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.REGION, addr[4]); if (addr[5] != null && !addr[5].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE, addr[5]); if (addr[6] != null && !addr[6].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY, addr[6]); int t = typeToInt(addr[7]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.TYPE, t); else if (addr[7] != null && !addr[7].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.LABEL, addr[7]); ops.add(b.build()); } }
+                    if (org != null && !org.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_ORG).withValue(ContactsContract.CommonDataKinds.Organization.COMPANY, org).build());
+                    if (title != null && !title.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_ORG).withValue(ContactsContract.CommonDataKinds.Organization.TITLE, title).build());
+                    if (nickname != null && !nickname.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_NICK).withValue(ContactsContract.CommonDataKinds.Nickname.NAME, nickname).build());
+                    if (notes != null && !notes.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_NOTE).withValue(ContactsContract.CommonDataKinds.Note.NOTE, notes).build());
+                    for (String[] ev : events) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_EVENT).withValue(ContactsContract.CommonDataKinds.Event.START_DATE, ev[0]); int t = eventtypeToInt(ev[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Event.TYPE, t); ops.add(b.build()); }
+                    for (String[] w : websites) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_WEB).withValue(ContactsContract.CommonDataKinds.Website.URL, w[0]); int t = typeToInt(w[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Website.TYPE, t); else if (w[1] != null && !w[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Website.LABEL, w[1]); ops.add(b.build()); }
+                    for (String[] im : ims) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_IM).withValue(ContactsContract.CommonDataKinds.Im.DATA, im[0]); int t = imProtocolToInt(im[1]); if (t >= 0) b.withValue(ContactsContract.CommonDataKinds.Im.PROTOCOL, t); else if (im[1] != null && !im[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Im.CUSTOM_PROTOCOL, im[1]); ops.add(b.build()); }
+                    for (String[] rel : relations) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_REL).withValue(ContactsContract.CommonDataKinds.Relation.NAME, rel[0]); int t = relationTypeToInt(rel[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Relation.TYPE, t); else if (rel[1] != null && !rel[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Relation.LABEL, rel[1]); ops.add(b.build()); }
+                    if (photoBytes != null && photoBytes.length > 0) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_PHOTO).withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, photoBytes).build());
+                    c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, ops); added++;
+                } catch (Exception e) {
+                    try { String rid = createRawContact(name, c); added++; for (String[] ph : phones) addPhone(rid, ph, c); for (String[] em : emails) addEmail(rid, em, c); for (String[] addr : addresses) addAddress(rid, addr, c); setIfEmpty(rid, MIME_ORG, ContactsContract.CommonDataKinds.Organization.COMPANY, org, c); setIfEmpty(rid, MIME_ORG, ContactsContract.CommonDataKinds.Organization.TITLE, title, c); setIfEmpty(rid, MIME_NICK, ContactsContract.CommonDataKinds.Nickname.NAME, nickname, c); setIfEmpty(rid, MIME_NOTE, ContactsContract.CommonDataKinds.Note.NOTE, notes, c); for (String[] ev : events) addEvent(rid, ev, c); for (String[] w : websites) addWebsite(rid, w, c); for (String[] im : ims) addIm(rid, im, c); for (String[] rel : relations) addRelation(rid, rel, c); } catch (Exception ignored) {}
                 }
             }
         }
-        prefs(c).edit().putLong("lastRestore", System.currentTimeMillis()).putInt("lastRestoreCount", added).apply(); MainActivity.notice(c, "Restore complete", "Added " + added + " contacts");
+        prefs(c).edit().putLong("lastRestore", System.currentTimeMillis()).putInt("lastRestoreCount", added + merged).apply(); MainActivity.notice(c, "Restore complete", "Added " + added + ", merged " + merged + " contacts");
     }
 
     private static void trim(Context c, Uri tree) throws Exception {
