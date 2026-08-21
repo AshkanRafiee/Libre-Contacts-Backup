@@ -1,0 +1,10 @@
+Fixes:
+- Custom event types (other) now export correctly via X-EVENT VCF tag
+- Custom relation types (type 0) now preserve TYPE=0 instead of becoming NULL
+- Custom address types (type 0) now preserve TYPE=0 instead of becoming NULL
+- All type-0 fields (phone, email, address, event, relation, website) now always set TYPE column explicitly
+- Custom labels preserved through backup/restore round-trip for all field types
+
+Added:
+- X-EVENT VCF tag support for custom event types (e.g. "other")
+- Custom relation labels read from LABEL column and exported to VCF

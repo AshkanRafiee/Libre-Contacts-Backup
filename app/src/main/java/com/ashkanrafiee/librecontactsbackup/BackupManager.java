@@ -137,13 +137,13 @@ public final class BackupManager {
                 } else if (mime.equals(MIME_NOTE)) {
                     if (v1 != null && !v1.isEmpty()) p.notes = v1;
                 } else if (mime.equals(MIME_EVENT)) {
-                    if (v1 != null && !v1.isEmpty()) p.events.add(new Field(v1, eventTypeLabel(v2)));
+                    if (v1 != null && !v1.isEmpty()) { String etype = eventTypeLabel(v2); if (etype.equals("other") && v3 != null && !v3.isEmpty()) etype = v3.toLowerCase(Locale.US); p.events.add(new Field(v1, etype)); }
                 } else if (mime.equals(MIME_IM)) {
                     if (v1 != null && !v1.isEmpty()) p.ims.add(new Field(v1, imProtocolLabel(v5)));
                 } else if (mime.equals(MIME_WEB)) {
                     if (v1 != null && !v1.isEmpty()) p.websites.add(new Field(v1, typeLabel(v2, v3)));
                 } else if (mime.equals(MIME_REL)) {
-                    if (v1 != null && !v1.isEmpty()) p.relations.add(new Field(v1, relationTypeLabel(v2)));
+                    if (v1 != null && !v1.isEmpty()) { String rtype = relationTypeLabel(v2); if (rtype.isEmpty() && v3 != null && !v3.isEmpty()) rtype = v3.toLowerCase(Locale.US); p.relations.add(new Field(v1, rtype)); }
                 } else if (mime.equals(MIME_PHOTO)) {
                     byte[] photo = cur.getBlob(d15);
                     if (photo != null && photo.length > 0) { p.photo = photo; p.photoType = detectPhotoType(photo); }
@@ -174,7 +174,7 @@ public final class BackupManager {
             if (!p.title.isEmpty()) b.append("TITLE:").append(esc(p.title)).append('\n');
             for (String n : p.nicknames) b.append("NICKNAME:").append(esc(n)).append('\n');
             if (!p.notes.isEmpty()) b.append("NOTE:").append(esc(p.notes)).append('\n');
-            for (Field f : p.events) { if (f.type.equals("anniversary")) b.append("X-ANNIVERSARY:"); else b.append("BDAY:"); b.append(esc(f.value)).append('\n'); }
+            for (Field f : p.events) { if (f.type.equals("anniversary")) b.append("X-ANNIVERSARY:"); else if (f.type.equals("birthday")) b.append("BDAY:"); else { b.append("X-EVENT").append(typeParam(f.type)).append(':'); } b.append(esc(f.value)).append('\n'); }
             for (Field f : p.websites) b.append("URL").append(typeParam(f.type)).append(':').append(esc(f.value)).append('\n');
             for (Field f : p.ims) b.append("IMPP").append(typeParam(f.type)).append(':').append(esc(f.value)).append('\n');
             for (Field f : p.relations) b.append("X-RELATION").append(typeParam(f.type)).append(':').append(esc(f.value)).append('\n');
@@ -315,7 +315,7 @@ public final class BackupManager {
     }
     private static int eventtypeToInt(String type) {
         if (type == null || type.isEmpty()) return 0;
-        switch (type.toLowerCase(Locale.US)) { case "birthday": return 1; case "anniversary": return 2; default: return 3; }
+        switch (type.toLowerCase(Locale.US)) { case "birthday": return 1; case "anniversary": return 2; case "other": return 3; default: return 0; }
     }
     private static int imProtocolToInt(String proto) {
         if (proto == null || proto.isEmpty()) return 0;
@@ -366,7 +366,7 @@ public final class BackupManager {
         if (!addr[4].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.REGION, addr[4]);
         if (!addr[5].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE, addr[5]);
         if (!addr[6].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY, addr[6]);
-        int t = typeToInt(addr[7]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.TYPE, t); else if (!addr[7].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.LABEL, addr[7]);
+        int t = typeToInt(addr[7]); b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.TYPE, t); if (t == 0 && !addr[7].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.LABEL, addr[7]);
         try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, new ArrayList<>(Collections.singletonList(b.build()))); } catch (Exception ignored) {}
     }
     private static String querySingle(String rawId, String mime, String column, Context c) {
@@ -384,14 +384,15 @@ public final class BackupManager {
         ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
             .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId).withValue(ContactsContract.Data.MIMETYPE, MIME_EVENT)
             .withValue(ContactsContract.CommonDataKinds.Event.START_DATE, ev[0]);
-        int t = eventtypeToInt(ev[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Event.TYPE, t);
+        int t = eventtypeToInt(ev[1]); b.withValue(ContactsContract.CommonDataKinds.Event.TYPE, t);
+        if (t == 0 && ev[1] != null && !ev[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Event.LABEL, ev[1]);
         try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, new ArrayList<>(Collections.singletonList(b.build()))); } catch (Exception ignored) {}
     }
     private static void addWebsite(String rawId, String[] w, Context c) {
         ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
             .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId).withValue(ContactsContract.Data.MIMETYPE, MIME_WEB)
             .withValue(ContactsContract.CommonDataKinds.Website.URL, w[0]);
-        int t = typeToInt(w[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Website.TYPE, t); else if (w[1] != null && !w[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Website.LABEL, w[1]);
+        int t = typeToInt(w[1]); b.withValue(ContactsContract.CommonDataKinds.Website.TYPE, t); if (t == 0 && w[1] != null && !w[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Website.LABEL, w[1]);
         try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, new ArrayList<>(Collections.singletonList(b.build()))); } catch (Exception ignored) {}
     }
     private static void addIm(String rawId, String[] im, Context c) {
@@ -405,7 +406,8 @@ public final class BackupManager {
         ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
             .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId).withValue(ContactsContract.Data.MIMETYPE, MIME_REL)
             .withValue(ContactsContract.CommonDataKinds.Relation.NAME, rel[0]);
-        int t = relationTypeToInt(rel[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Relation.TYPE, t); else if (rel[1] != null && !rel[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Relation.LABEL, rel[1]);
+        int t = relationTypeToInt(rel[1]); b.withValue(ContactsContract.CommonDataKinds.Relation.TYPE, t);
+        if (t == 0 && rel[1] != null && !rel[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Relation.LABEL, rel[1]);
         try { c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, new ArrayList<>(Collections.singletonList(b.build()))); } catch (Exception ignored) {}
     }
     private static String createRawContact(String name, Context c) throws Exception {
@@ -451,6 +453,7 @@ public final class BackupManager {
                 else if (trimmed.startsWith("NOTE:")) notes = unesc(trimmed.substring(5));
                 else if (trimmed.startsWith("BDAY:")) events.add(new String[]{trimmed.substring(5), "birthday"});
                 else if (trimmed.startsWith("X-ANNIVERSARY:")) events.add(new String[]{trimmed.substring(14), "anniversary"});
+                else if (trimmed.toUpperCase(Locale.US).startsWith("X-EVENT")) { String r = parseVcardType(trimmed, "X-EVENT"); if (r != null) { String[] p = r.split("\t", 2); events.add(new String[]{p[0], p.length > 1 ? p[1] : ""}); } }
                 else if (trimmed.toUpperCase(Locale.US).startsWith("URL")) { String r = parseVcardType(trimmed, "URL"); if (r != null) { String[] p = r.split("\t", 2); websites.add(new String[]{p[0], p.length > 1 ? p[1] : ""}); } }
                 else if (trimmed.toUpperCase(Locale.US).startsWith("IMPP")) { String r = parseVcardType(trimmed, "IMPP"); if (r != null) { String[] p = r.split("\t", 2); ims.add(new String[]{p[0], p.length > 1 ? p[1] : ""}); } }
                 else if (trimmed.toUpperCase(Locale.US).startsWith("X-RELATION")) { String r = parseVcardType(trimmed, "X-RELATION"); if (r != null) { String[] p = r.split("\t", 2); relations.add(new String[]{p[0], p.length > 1 ? p[1] : ""}); } }
@@ -490,14 +493,14 @@ public final class BackupManager {
                     ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_NAME).withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name).build());
                     for (String[] phone : phones) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_PHONE).withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phone[0]); int t = typeToInt(phone[1]); b.withValue(ContactsContract.CommonDataKinds.Phone.TYPE, t); if (t == 0 && phone[1] != null && !phone[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Phone.LABEL, phone[1]); ops.add(b.build()); }
                     for (String[] email : emails) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_EMAIL).withValue(ContactsContract.CommonDataKinds.Email.ADDRESS, email[0]); int t = typeToInt(email[1]); b.withValue(ContactsContract.CommonDataKinds.Email.TYPE, t); if (t == 0 && email[1] != null && !email[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Email.LABEL, email[1]); ops.add(b.build()); }
-                    for (String[] addr : addresses) { if (addr[0] != null && !addr[0].isEmpty() || addr[1] != null && !addr[1].isEmpty() || addr[2] != null && !addr[2].isEmpty() || addr[3] != null && !addr[3].isEmpty() || addr[4] != null && !addr[4].isEmpty() || addr[5] != null && !addr[5].isEmpty() || addr[6] != null && !addr[6].isEmpty()) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_POSTAL); if (addr[0] != null && !addr[0].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.POBOX, addr[0]); if (addr[1] != null && !addr[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.NEIGHBORHOOD, addr[1]); if (addr[2] != null && !addr[2].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.STREET, addr[2]); if (addr[3] != null && !addr[3].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.CITY, addr[3]); if (addr[4] != null && !addr[4].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.REGION, addr[4]); if (addr[5] != null && !addr[5].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE, addr[5]); if (addr[6] != null && !addr[6].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY, addr[6]); int t = typeToInt(addr[7]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.TYPE, t); else if (addr[7] != null && !addr[7].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.LABEL, addr[7]); ops.add(b.build()); } }
+                    for (String[] addr : addresses) { if (addr[0] != null && !addr[0].isEmpty() || addr[1] != null && !addr[1].isEmpty() || addr[2] != null && !addr[2].isEmpty() || addr[3] != null && !addr[3].isEmpty() || addr[4] != null && !addr[4].isEmpty() || addr[5] != null && !addr[5].isEmpty() || addr[6] != null && !addr[6].isEmpty()) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_POSTAL); if (addr[0] != null && !addr[0].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.POBOX, addr[0]); if (addr[1] != null && !addr[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.NEIGHBORHOOD, addr[1]); if (addr[2] != null && !addr[2].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.STREET, addr[2]); if (addr[3] != null && !addr[3].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.CITY, addr[3]); if (addr[4] != null && !addr[4].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.REGION, addr[4]); if (addr[5] != null && !addr[5].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE, addr[5]); if (addr[6] != null && !addr[6].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY, addr[6]); int t = typeToInt(addr[7]); b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.TYPE, t); if (t == 0 && addr[7] != null && !addr[7].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.StructuredPostal.LABEL, addr[7]); ops.add(b.build()); } }
                     if (org != null && !org.isEmpty()) { ContentProviderOperation.Builder ob = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_ORG).withValue(ContactsContract.CommonDataKinds.Organization.COMPANY, org); if (title != null && !title.isEmpty()) ob.withValue(ContactsContract.CommonDataKinds.Organization.TITLE, title); ops.add(ob.build()); } else if (title != null && !title.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_ORG).withValue(ContactsContract.CommonDataKinds.Organization.TITLE, title).build());
                     if (nickname != null && !nickname.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_NICK).withValue(ContactsContract.CommonDataKinds.Nickname.NAME, nickname).build());
                     if (notes != null && !notes.isEmpty()) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_NOTE).withValue(ContactsContract.CommonDataKinds.Note.NOTE, notes).build());
-                    for (String[] ev : events) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_EVENT).withValue(ContactsContract.CommonDataKinds.Event.START_DATE, ev[0]); int t = eventtypeToInt(ev[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Event.TYPE, t); ops.add(b.build()); }
-                    for (String[] w : websites) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_WEB).withValue(ContactsContract.CommonDataKinds.Website.URL, w[0]); int t = typeToInt(w[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Website.TYPE, t); else if (w[1] != null && !w[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Website.LABEL, w[1]); ops.add(b.build()); }
+                    for (String[] ev : events) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_EVENT).withValue(ContactsContract.CommonDataKinds.Event.START_DATE, ev[0]); int t = eventtypeToInt(ev[1]); b.withValue(ContactsContract.CommonDataKinds.Event.TYPE, t); if (t == 0 && ev[1] != null && !ev[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Event.LABEL, ev[1]); ops.add(b.build()); }
+                    for (String[] w : websites) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_WEB).withValue(ContactsContract.CommonDataKinds.Website.URL, w[0]); int t = typeToInt(w[1]); b.withValue(ContactsContract.CommonDataKinds.Website.TYPE, t); if (t == 0 && w[1] != null && !w[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Website.LABEL, w[1]); ops.add(b.build()); }
                     for (String[] im : ims) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_IM).withValue(ContactsContract.CommonDataKinds.Im.DATA, im[0]); int t = imProtocolToInt(im[1]); if (t >= 0) b.withValue(ContactsContract.CommonDataKinds.Im.PROTOCOL, t); else if (im[1] != null && !im[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Im.CUSTOM_PROTOCOL, im[1]); ops.add(b.build()); }
-                    for (String[] rel : relations) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_REL).withValue(ContactsContract.CommonDataKinds.Relation.NAME, rel[0]); int t = relationTypeToInt(rel[1]); if (t != 0) b.withValue(ContactsContract.CommonDataKinds.Relation.TYPE, t); else if (rel[1] != null && !rel[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Relation.LABEL, rel[1]); ops.add(b.build()); }
+                    for (String[] rel : relations) { ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_REL).withValue(ContactsContract.CommonDataKinds.Relation.NAME, rel[0]); int t = relationTypeToInt(rel[1]); b.withValue(ContactsContract.CommonDataKinds.Relation.TYPE, t); if (t == 0 && rel[1] != null && !rel[1].isEmpty()) b.withValue(ContactsContract.CommonDataKinds.Relation.LABEL, rel[1]); ops.add(b.build()); }
                     if (photoBytes != null && photoBytes.length > 0) ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, MIME_PHOTO).withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, photoBytes).build());
                     c.getContentResolver().applyBatch(ContactsContract.AUTHORITY, ops); added++;
                 } catch (Exception e) {
