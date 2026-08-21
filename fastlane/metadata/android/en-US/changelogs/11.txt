@@ -1,0 +1,7 @@
+Fixes:
+- Custom phone/email type (0) now restores correctly (was NULL after VCF round-trip)
+- Title field combined with organization into single row during restore (was lost)
+- Address backup/restore with postal-address_v2 MIME type for SDK 35
+
+Added:
+- Comprehensive 100-scenario automated test suite covering all contact fields
