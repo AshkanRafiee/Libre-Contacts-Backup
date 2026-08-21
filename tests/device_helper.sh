@@ -72,7 +72,8 @@ case "$1" in
         ;;
 
     insert-addr)
-        $CONTENT insert --uri "$URI_DATA" --bind raw_contact_id:i:$2 --bind mimetype:s:vnd.android.cursor.item/postal-address --bind "data1:s:$3 $4" --bind data2:i:$7 --bind "data4:s:$3" --bind "data7:s:$4" --bind "data8:s:$5" --bind "data9:s:$6" --bind "data10:s:$7" 2>/dev/null
+        # args: raw_id street city region postcode country type
+        $CONTENT insert --uri "$URI_DATA" --bind raw_contact_id:i:$2 --bind mimetype:s:vnd.android.cursor.item/postal-address --bind "data1:s:$3 $4" --bind data2:i:$8 --bind "data4:s:$3" --bind "data7:s:$4" --bind "data8:s:$5" --bind "data9:s:$6" --bind "data10:s:$7" 2>/dev/null
         echo "ok"
         ;;
 
@@ -89,7 +90,7 @@ case "$1" in
         ;;
 
     query-addr-street)
-        $CONTENT query --uri "$URI_DATA" --projection data4 --where "raw_contact_id=$2 AND mimetype='vnd.android.cursor.item/postal-address'" 2>/dev/null | sed 's/.*data4=//' | sed 's/,.*//' | tr '\n' '|'
+        $CONTENT query --uri "$URI_DATA" --projection data4 --where "raw_contact_id=$2 AND (mimetype='vnd.android.cursor.item/postal-address' OR mimetype='vnd.android.cursor.item/postal-address_v2')" 2>/dev/null | sed 's/.*data4=//' | sed 's/,.*//' | tr '\n' '|'
         ;;
 
     query-count)
