@@ -30,6 +30,7 @@ public class AboutActivity extends Activity {
         body.addView(info("License", "GNU General Public License v3.0", v -> open("https://github.com/AshkanRafiee/Libre-Contacts-Backup/blob/main/LICENSE")), margins(0, 0, 0, 8));
         body.addView(info("Source code", "github.com/AshkanRafiee/Libre-Contacts-Backup", v -> open("https://github.com/AshkanRafiee/Libre-Contacts-Backup")), margins(0, 0, 0, 8));
         body.addView(info("GitHub profile", "github.com/AshkanRafiee", v -> open("https://github.com/AshkanRafiee/")), margins(0, 0, 0, 8));
+        body.addView(info("Website", "AshkanRafiee.com", v -> open("https://AshkanRafiee.com")), margins(0, 0, 0, 8));
         body.addView(info("Suggestions", "librecontactsbackup.abstract692@passmail.net", v -> email()), margins(0, 0, 0, 20));
         String version = "1.0"; try { version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception ignored) { }
         TextView footer = text("Libre Contacts Backup · Version " + version, 11, Color.rgb(103, 115, 136)); footer.setGravity(Gravity.CENTER); body.addView(footer);

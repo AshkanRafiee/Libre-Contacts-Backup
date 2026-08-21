@@ -1,0 +1,6 @@
+Changes:
+- Added website link (AshkanRafiee.com) to About page
+- Fixed app icon not filling the circle in launcher
+- Added proper adaptive icon resources (mipmap-anydpi-v26)
+- Foreground content now stays within the safe zone
+- Solid background fills edge-to-edge (no white/empty space)
