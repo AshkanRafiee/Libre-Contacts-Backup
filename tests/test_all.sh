@@ -9,6 +9,29 @@ PASS=0
 FAIL=0
 TOTAL=0
 
+# Strip CR characters emitted by newer adb shell versions and re-quote arguments,
+# because modern adb joins multi-argument shell commands without preserving quoting.
+adb() {
+    if [ "$1" = "shell" ]; then
+        shift
+        local joined="" arg
+        for arg in "$@"; do
+            case "$arg" in
+                *[!A-Za-z0-9_@%+=:,./-]*)
+                    arg=$(printf '%s' "$arg" | sed "s/'/'\\\\''/g")
+                    joined="$joined '$arg'"
+                    ;;
+                *)
+                    joined="$joined $arg"
+                    ;;
+            esac
+        done
+        command adb shell "$joined" | tr -d '\r'
+    else
+        command adb "$@"
+    fi
+}
+
 green() { printf "\033[32m%s\033[0m\n" "$1"; }
 red()   { printf "\033[31m%s\033[0m\n" "$1"; }
 info()  { printf "\033[36m%s\033[0m\n" "$1"; }
@@ -52,12 +75,12 @@ assert_not_contains() {
 cleanup_contacts() {
     info "  Cleaning all contacts..."
     adb shell content delete --uri content://com.android.contacts/raw_contacts 2>/dev/null || true
-    local count=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id 2>/dev/null | grep -c "Row:" || echo "0")
+    local count=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id 2>/dev/null | (grep -c "Row:" || true))
     assert_eq "Contacts cleaned" "0" "$count"
 }
 
 count_raw_contacts() {
-    adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id 2>/dev/null | grep -c "Row:" || echo "0"
+    adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id 2>/dev/null | (grep -c "Row:" || true)
 }
 
 query_field() {
@@ -82,16 +105,17 @@ cleanup_contacts
 info ""
 info "=== TEST 1: Basic backup - phones, emails, addresses ==="
 
-adb shell content insert --uri content://com.android.contacts/raw_contacts
-RAW=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | grep -oP '(?<=_id=)\d+')
+adb shell content insert --uri content://com.android.contacts/raw_contacts --bind deleted:i:0
+RAW=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | (grep -oP '(?<=_id=)\d+' || true))
 
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW --bind mimetype:s:vnd.android.cursor.item/name --bind "data1:s:Test User"
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW --bind mimetype:s:vnd.android.cursor.item/phone_v2 --bind "data1:s:+15551234567" --bind data2:i:1
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW --bind mimetype:s:vnd.android.cursor.item/email_v2 --bind "data1:s:test@example.com" --bind data2:i:2
+adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW --bind mimetype:s:vnd.android.cursor.item/nickname --bind "data1:s:Tester"
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW --bind mimetype:s:vnd.android.cursor.item/organization --bind "data1:s:TestCorp" --bind data4:s:Manager
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW --bind mimetype:s:vnd.android.cursor.item/note --bind "data1:s:Important note"
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW --bind mimetype:s:vnd.android.cursor.item/contact_event --bind "data1:s:1990-05-15" --bind data2:i:1
-adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW --bind mimetype:s:vnd.android.cursor.item/website --bind "data1:s:https://example.com" --bind data2:i:1
+adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW --bind mimetype:s:vnd.android.cursor.item/website --bind "data1:s:www.example.com" --bind data2:i:1
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW --bind mimetype:s:vnd.android.cursor.item/relation --bind "data1:s:Jane Doe" --bind data2:i:12
 
 info "  Created Test User (raw_id=$RAW)"
@@ -150,16 +174,23 @@ cd -
 # ============================================================
 info ""
 info "=== TEST 2: Restore from .lcb file ==="
-cleanup_contacts
+# NOTE: contacts are intentionally NOT wiped here so TEST 3 can verify the
+# fixtures created in TEST 1. Wiping happens at the start of TEST 6.
 
 info "  Opening file picker via intent..."
 # We can't automate the UI restore, so we test the restore via a test harness
 # For now, verify the backup file exists and is valid
-EXISTS=$(adb shell ls /sdcard/Documents/test_backup.lcb 2>&1 | grep -c "test_backup.lcb" || echo "0")
+EXISTS=$(adb shell ls /sdcard/Documents/test_backup.lcb 2>&1 | grep -c "test_backup.lcb" || true)
 assert_eq "Backup file exists on device" "1" "$EXISTS"
 
 FILE_SIZE=$(adb shell stat -c%s /sdcard/Documents/test_backup.lcb 2>/dev/null || adb shell ls -la /sdcard/Documents/test_backup.lcb 2>/dev/null | awk '{print $5}')
-assert_not_contains "Backup file has content" "$FILE_SIZE" "0"
+if [ -n "$FILE_SIZE" ] && [ "$FILE_SIZE" -gt 0 ] 2>/dev/null; then
+    green "  PASS: Backup file has content ($FILE_SIZE bytes)"
+    PASS=$((PASS+1)); TOTAL=$((TOTAL+1))
+else
+    red "  FAIL: Backup file has content (size='$FILE_SIZE')"
+    FAIL=$((FAIL+1)); TOTAL=$((TOTAL+1))
+fi
 
 # ============================================================
 # TEST 3: Round-trip test - read contacts, verify all fields
@@ -168,31 +199,31 @@ info ""
 info "=== TEST 3: Verify contact data after creation ==="
 
 # Verify Test User fields
-NAME=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/name'" 2>/dev/null | grep -oP '(?<=data1=)[^,]*')
+NAME=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/name'" 2>/dev/null | (grep -oP '(?<=data1=)[^,]*' || true))
 assert_eq "Test User name" "Test User" "$NAME"
 
-PHONE=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/phone_v2'" 2>/dev/null | grep -oP '(?<=data1=)[^,]*')
+PHONE=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/phone_v2'" 2>/dev/null | (grep -oP '(?<=data1=)[^,]*' || true))
 assert_eq "Test User phone" "+15551234567" "$PHONE"
 
-EMAIL=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/email_v2'" 2>/dev/null | grep -oP '(?<=data1=)[^,]*')
+EMAIL=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/email_v2'" 2>/dev/null | (grep -oP '(?<=data1=)[^,]*' || true))
 assert_eq "Test User email" "test@example.com" "$EMAIL"
 
-ORG=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/organization'" 2>/dev/null | grep -oP '(?<=data1=)[^,]*')
+ORG=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/organization'" 2>/dev/null | (grep -oP '(?<=data1=)[^,]*' || true))
 assert_eq "Test User org" "TestCorp" "$ORG"
 
-NOTE=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/note'" 2>/dev/null | grep -oP '(?<=data1=)[^,]*')
+NOTE=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/note'" 2>/dev/null | (grep -oP '(?<=data1=)[^,]*' || true))
 assert_eq "Test User note" "Important note" "$NOTE"
 
-NICK=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/nickname'" 2>/dev/null | grep -oP '(?<=data1=)[^,]*')
+NICK=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/nickname'" 2>/dev/null | (grep -oP '(?<=data1=)[^,]*' || true))
 assert_eq "Test User nickname" "Tester" "$NICK"
 
-EVENT=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/contact_event'" 2>/dev/null | grep -oP '(?<=data1=)[^,]*')
+EVENT=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/contact_event'" 2>/dev/null | (grep -oP '(?<=data1=)[^,]*' || true))
 assert_eq "Test User birthday" "1990-05-15" "$EVENT"
 
-WEB=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/website'" 2>/dev/null | grep -oP '(?<=data1=)[^,]*')
-assert_eq "Test User website" "https://example.com" "$WEB"
+WEB=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/website'" 2>/dev/null | (grep -oP '(?<=data1=)[^,]*' || true))
+assert_eq "Test User website" "www.example.com" "$WEB"
 
-REL=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/relation'" 2>/dev/null | grep -oP '(?<=data1=)[^,]*')
+REL=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW AND mimetype='vnd.android.cursor.item/relation'" 2>/dev/null | (grep -oP '(?<=data1=)[^,]*' || true))
 assert_eq "Test User relation" "Jane Doe" "$REL"
 
 # ============================================================
@@ -200,24 +231,32 @@ assert_eq "Test User relation" "Jane Doe" "$REL"
 # ============================================================
 info ""
 info "=== TEST 4: Multi-field contact ==="
-RAW2=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --where "display_name='Multi Phone'" 2>/dev/null | head -1 | grep -oP '(?<=_id=)\d+')
-PHONE_COUNT=$(adb shell content query --uri content://com.android.contacts/data --projection _id --where "raw_contact_id=$RAW2 AND mimetype='vnd.android.cursor.item/phone_v2'" 2>/dev/null | grep -c "Row:" || echo "0")
+RAW2=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --where "display_name='Multi Phone'" 2>/dev/null | head -1 | (grep -oP '(?<=_id=)\d+' || true))
+if [ -n "$RAW2" ]; then
+PHONE_COUNT=$(adb shell content query --uri content://com.android.contacts/data --projection _id --where "raw_contact_id=$RAW2 AND mimetype='vnd.android.cursor.item/phone_v2'" 2>/dev/null | (grep -c "Row:" || true))
 assert_eq "Multi Phone has 2 phones" "2" "$PHONE_COUNT"
 
-EMAIL_COUNT=$(adb shell content query --uri content://com.android.contacts/data --projection _id --where "raw_contact_id=$RAW2 AND mimetype='vnd.android.cursor.item/email_v2'" 2>/dev/null | grep -c "Row:" || echo "0")
+EMAIL_COUNT=$(adb shell content query --uri content://com.android.contacts/data --projection _id --where "raw_contact_id=$RAW2 AND mimetype='vnd.android.cursor.item/email_v2'" 2>/dev/null | (grep -c "Row:" || true))
 assert_eq "Multi Phone has 2 emails" "2" "$EMAIL_COUNT"
 
-ADDR_COUNT=$(adb shell content query --uri content://com.android.contacts/data --projection _id --where "raw_contact_id=$RAW2 AND mimetype='vnd.android.cursor.item/postal-address'" 2>/dev/null | grep -c "Row:" || echo "0")
+ADDR_COUNT=$(adb shell content query --uri content://com.android.contacts/data --projection _id --where "raw_contact_id=$RAW2 AND mimetype='vnd.android.cursor.item/postal-address'" 2>/dev/null | (grep -c "Row:" || true))
 assert_eq "Multi Phone has 2 addresses" "2" "$ADDR_COUNT"
+else
+    info "  SKIP: 'Multi Phone' only exists after a manual UI restore of test_backup.lcb"
+fi
 
 # ============================================================
 # TEST 5: Empty fields contact
 # ============================================================
 info ""
 info "=== TEST 5: Minimal contact (only phone) ==="
-RAW3=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --where "display_name='Empty Fields'" 2>/dev/null | head -1 | grep -oP '(?<=_id=)\d+')
+RAW3=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --where "display_name='Empty Fields'" 2>/dev/null | head -1 | (grep -oP '(?<=_id=)\d+' || true))
+if [ -n "$RAW3" ]; then
 assert_not_contains "Empty Fields has no email" "$(adb shell content query --uri content://com.android.contacts/data --projection _id --where "raw_contact_id=$RAW3 AND mimetype='vnd.android.cursor.item/email_v2'" 2>/dev/null)" "Row:"
 assert_not_contains "Empty Fields has no address" "$(adb shell content query --uri content://com.android.contacts/data --projection _id --where "raw_contact_id=$RAW3 AND mimetype='vnd.android.cursor.item/postal-address'" 2>/dev/null)" "Row:"
+else
+    info "  SKIP: 'Empty Fields' only exists after a manual UI restore of test_backup.lcb"
+fi
 
 # ============================================================
 # TEST 6: Address field mapping (SDK 35)
@@ -226,24 +265,24 @@ info ""
 info "=== TEST 6: Address field mapping ==="
 # Create contact with full address
 cleanup_contacts
-adb shell content insert --uri content://com.android.contacts/raw_contacts
-RAW4=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | grep -oP '(?<=_id=)\d+')
+adb shell content insert --uri content://com.android.contacts/raw_contacts --bind deleted:i:0
+RAW4=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | (grep -oP '(?<=_id=)\d+' || true))
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW4 --bind mimetype:s:vnd.android.cursor.item/name --bind "data1:s:Address Test"
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW4 --bind mimetype:s:vnd.android.cursor.item/postal-address --bind "data1:s:Formatted" --bind data2:i:1 --bind "data4:s:100 Main St" --bind "data7:s:Springfield" --bind "data8:s:IL" --bind "data9:s:62704" --bind "data10:s:USA"
 
-STREET=$(adb shell content query --uri content://com.android.contacts/data --projection data4 --where "raw_contact_id=$RAW4 AND mimetype='vnd.android.cursor.item/postal-address'" 2>/dev/null | grep -oP '(?<=data4=)[^,]*')
+STREET=$(adb shell content query --uri content://com.android.contacts/data --projection data4 --where "raw_contact_id=$RAW4 AND mimetype='vnd.android.cursor.item/postal-address'" 2>/dev/null | (grep -oP '(?<=data4=)[^,]*' || true))
 assert_eq "Address street" "100 Main St" "$STREET"
 
-CITY=$(adb shell content query --uri content://com.android.contacts/data --projection data7 --where "raw_contact_id=$RAW4 AND mimetype='vnd.android.cursor.item/postal-address'" 2>/dev/null | grep -oP '(?<=data7=)[^,]*')
+CITY=$(adb shell content query --uri content://com.android.contacts/data --projection data7 --where "raw_contact_id=$RAW4 AND mimetype='vnd.android.cursor.item/postal-address'" 2>/dev/null | (grep -oP '(?<=data7=)[^,]*' || true))
 assert_eq "Address city" "Springfield" "$CITY"
 
-REGION=$(adb shell content query --uri content://com.android.contacts/data --projection data8 --where "raw_contact_id=$RAW4 AND mimetype='vnd.android.cursor.item/postal-address'" 2>/dev/null | grep -oP '(?<=data8=)[^,]*')
+REGION=$(adb shell content query --uri content://com.android.contacts/data --projection data8 --where "raw_contact_id=$RAW4 AND mimetype='vnd.android.cursor.item/postal-address'" 2>/dev/null | (grep -oP '(?<=data8=)[^,]*' || true))
 assert_eq "Address region" "IL" "$REGION"
 
-POSTCODE=$(adb shell content query --uri content://com.android.contacts/data --projection data9 --where "raw_contact_id=$RAW4 AND mimetype='vnd.android.cursor.item/postal-address'" 2>/dev/null | grep -oP '(?<=data9=)[^,]*')
+POSTCODE=$(adb shell content query --uri content://com.android.contacts/data --projection data9 --where "raw_contact_id=$RAW4 AND mimetype='vnd.android.cursor.item/postal-address'" 2>/dev/null | (grep -oP '(?<=data9=)[^,]*' || true))
 assert_eq "Address postcode" "62704" "$POSTCODE"
 
-COUNTRY=$(adb shell content query --uri content://com.android.contacts/data --projection data10 --where "raw_contact_id=$RAW4 AND mimetype='vnd.android.cursor.item/postal-address'" 2>/dev/null | grep -oP '(?<=data10=)[^,]*')
+COUNTRY=$(adb shell content query --uri content://com.android.contacts/data --projection data10 --where "raw_contact_id=$RAW4 AND mimetype='vnd.android.cursor.item/postal-address'" 2>/dev/null | (grep -oP '(?<=data10=)[^,]*' || true))
 assert_eq "Address country" "USA" "$COUNTRY"
 
 # ============================================================
@@ -252,13 +291,13 @@ assert_eq "Address country" "USA" "$COUNTRY"
 info ""
 info "=== TEST 7: Special characters in names ==="
 cleanup_contacts
-adb shell content insert --uri content://com.android.contacts/raw_contacts
-RAW5=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | grep -oP '(?<=_id=)\d+')
+adb shell content insert --uri content://com.android.contacts/raw_contacts --bind deleted:i:0
+RAW5=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | (grep -oP '(?<=_id=)\d+' || true))
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW5 --bind mimetype:s:vnd.android.cursor.item/name --bind 'data1:s:O'\''Brien Jr.'
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW5 --bind mimetype:s:vnd.android.cursor.item/phone_v2 --bind 'data1:s:+1-555-0123'
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW5 --bind mimetype:s:vnd.android.cursor.item/note --bind 'data1:s:Line1\nLine2'
 
-NAME7=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW5 AND mimetype='vnd.android.cursor.item/name'" 2>/dev/null | grep -oP '(?<=data1=)[^,]*')
+NAME7=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW5 AND mimetype='vnd.android.cursor.item/name'" 2>/dev/null | (grep -oP '(?<=data1=)[^,]*' || true))
 info "  Name with apostrophe: '$NAME7'"
 
 # ============================================================
@@ -267,14 +306,14 @@ info "  Name with apostrophe: '$NAME7'"
 info ""
 info "=== TEST 8: Multiple address types ==="
 cleanup_contacts
-adb shell content insert --uri content://com.android.contacts/raw_contacts
-RAW6=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | grep -oP '(?<=_id=)\d+')
+adb shell content insert --uri content://com.android.contacts/raw_contacts --bind deleted:i:0
+RAW6=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | (grep -oP '(?<=_id=)\d+' || true))
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW6 --bind mimetype:s:vnd.android.cursor.item/name --bind "data1:s:Addr Types"
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW6 --bind mimetype:s:vnd.android.cursor.item/postal-address --bind "data1:s:HomeFormatted" --bind data2:i:1 --bind "data4:s:Home St"
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW6 --bind mimetype:s:vnd.android.cursor.item/postal-address --bind "data1:s:WorkFormatted" --bind data2:i:2 --bind "data4:s:Work Ave"
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW6 --bind mimetype:s:vnd.android.cursor.item/postal-address --bind "data1:s:OtherFormatted" --bind data2:i:3 --bind "data4:s:Other Blvd"
 
-ADDR_COUNT8=$(adb shell content query --uri content://com.android.contacts/data --projection _id --where "raw_contact_id=$RAW6 AND mimetype='vnd.android.cursor.item/postal-address'" 2>/dev/null | grep -c "Row:" || echo "0")
+ADDR_COUNT8=$(adb shell content query --uri content://com.android.contacts/data --projection _id --where "raw_contact_id=$RAW6 AND mimetype='vnd.android.cursor.item/postal-address'" 2>/dev/null | (grep -c "Row:" || true))
 assert_eq "3 address entries" "3" "$ADDR_COUNT8"
 
 # ============================================================
@@ -283,14 +322,14 @@ assert_eq "3 address entries" "3" "$ADDR_COUNT8"
 info ""
 info "=== TEST 9: Unicode contacts ==="
 cleanup_contacts
-adb shell content insert --uri content://com.android.contacts/raw_contacts
-RAW7=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | grep -oP '(?<=_id=)\d+')
+adb shell content insert --uri content://com.android.contacts/raw_contacts --bind deleted:i:0
+RAW7=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | (grep -oP '(?<=_id=)\d+' || true))
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW7 --bind mimetype:s:vnd.android.cursor.item/name --bind "data1:s:日本太郎"
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW7 --bind mimetype:s:vnd.android.cursor.item/phone_v2 --bind "data1:s:+81-90-1234-5678"
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW7 --bind mimetype:s:vnd.android.cursor.item/email_v2 --bind "data1:s:taro@example.jp"
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW7 --bind mimetype:s:vnd.android.cursor.item/note --bind "data1:s:日本語テスト"
 
-NAME9=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW7 AND mimetype='vnd.android.cursor.item/name'" 2>/dev/null | grep -oP '(?<=data1=)[^,]*')
+NAME9=$(adb shell content query --uri content://com.android.contacts/data --projection data1 --where "raw_contact_id=$RAW7 AND mimetype='vnd.android.cursor.item/name'" 2>/dev/null | (grep -oP '(?<=data1=)[^,]*' || true))
 assert_eq "Unicode name" "日本太郎" "$NAME9"
 
 # ============================================================
@@ -300,8 +339,8 @@ info ""
 info "=== TEST 10: Bulk contacts (20) ==="
 cleanup_contacts
 for i in $(seq 1 20); do
-    adb shell content insert --uri content://com.android.contacts/raw_contacts
-    RAW_BULK=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | grep -oP '(?<=_id=)\d+')
+    adb shell content insert --uri content://com.android.contacts/raw_contacts --bind deleted:i:0
+    RAW_BULK=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | (grep -oP '(?<=_id=)\d+' || true))
     adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW_BULK --bind mimetype:s:vnd.android.cursor.item/name --bind "data1:s:Bulk Contact $i"
     adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW_BULK --bind mimetype:s:vnd.android.cursor.item/phone_v2 --bind "data1:s:+15550000$(printf '%04d' $i)"
 done
@@ -315,13 +354,13 @@ info ""
 info "=== TEST 11: Duplicate contact detection (same name + phone) ==="
 cleanup_contacts
 # Create two contacts with same name but different phones
-adb shell content insert --uri content://com.android.contacts/raw_contacts
-RAW_A=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | grep -oP '(?<=_id=)\d+')
+adb shell content insert --uri content://com.android.contacts/raw_contacts --bind deleted:i:0
+RAW_A=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | (grep -oP '(?<=_id=)\d+' || true))
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW_A --bind mimetype:s:vnd.android.cursor.item/name --bind "data1:s:Duplicate Test"
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW_A --bind mimetype:s:vnd.android.cursor.item/phone_v2 --bind "data1:s:+15550001111" --bind data2:i:1
 
-adb shell content insert --uri content://com.android.contacts/raw_contacts
-RAW_B=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | grep -oP '(?<=_id=)\d+')
+adb shell content insert --uri content://com.android.contacts/raw_contacts --bind deleted:i:0
+RAW_B=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | (grep -oP '(?<=_id=)\d+' || true))
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW_B --bind mimetype:s:vnd.android.cursor.item/name --bind "data1:s:Duplicate Test"
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW_B --bind mimetype:s:vnd.android.cursor.item/phone_v2 --bind "data1:s:+15550001111" --bind data2:i:1
 
@@ -348,8 +387,8 @@ info "  6. Verify only ONE MergeTest contact exists"
 info ""
 info "=== TEST 13: Edge cases ==="
 cleanup_contacts
-adb shell content insert --uri content://com.android.contacts/raw_contacts
-RAW_EDGE=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | grep -oP '(?<=_id=)\d+')
+adb shell content insert --uri content://com.android.contacts/raw_contacts --bind deleted:i:0
+RAW_EDGE=$(adb shell content query --uri content://com.android.contacts/raw_contacts --projection _id --sort "_id DESC" 2>/dev/null | head -1 | (grep -oP '(?<=_id=)\d+' || true))
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW_EDGE --bind mimetype:s:vnd.android.cursor.item/name --bind "data1:s:Edge"
 adb shell content insert --uri content://com.android.contacts/data --bind raw_contact_id:i:$RAW_EDGE --bind mimetype:s:vnd.android.cursor.item/phone_v2 --bind "data1:s:+10000000000"
 

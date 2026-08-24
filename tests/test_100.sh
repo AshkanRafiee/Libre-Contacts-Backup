@@ -16,7 +16,7 @@ count_rows() {
 
 # Create raw contact and return ID
 new_contact() {
-    $CONTENT insert --uri "$URI_RAW" --bind account_type:n: 2>/dev/null
+    $CONTENT insert --uri "$URI_RAW" --bind deleted:i:0 2>/dev/null
     $CONTENT query --uri "$URI_RAW" --projection _id --sort "_id DESC" 2>/dev/null | head -1 | sed 's/.*_id=//' | sed 's/,.*//'
 }
 
