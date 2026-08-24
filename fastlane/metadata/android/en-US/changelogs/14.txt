@@ -1,0 +1,7 @@
+Changes:
+- Fixed contacts being split into duplicate entries when backing up: a contact aggregated from multiple raw contacts (e.g. Google + WhatsApp) is now exported as a single vCard
+- Fixed restoring the same backup twice creating duplicate contacts; same-name cards now merge into the existing contact
+- Merging no longer duplicates phones, emails, addresses, events, relations, nicknames, notes, websites or IM handles, and fills in empty fields of the existing contact
+- Multiple nicknames and notes per contact are now preserved instead of keeping only the last one
+- Backup and restore now handle phone numbers that differ only by spacing/case without creating duplicates
+- Test suite portability fixes for modern adb and Android releases
