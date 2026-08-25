@@ -42,24 +42,56 @@ public final class NormalizedJsonExporter {
 
     /**
      * Exports the snapshot as a canonical lossless JSON representation.
-     * This preserves every row, every column, and every piece of binary data.
+     * This preserves every row, every column, and every piece of binary data,
+     * including the Groups table needed to restore group_membership rows.
+     *
+     * Format is an object: { "contacts": [...], "groups": [...] }.
      */
     public static String exportCanonical(AndroidContactsSnapshot snapshot) throws JSONException {
-        JSONArray arr = new JSONArray();
+        JSONObject root = new JSONObject();
+        JSONArray contactsArr = new JSONArray();
         for (AndroidContactSnapshot contact : snapshot.contacts) {
-            arr.put(contact.toJson());
+            contactsArr.put(contact.toJson());
         }
-        return arr.toString(2);
+        root.put("contacts", contactsArr);
+
+        JSONArray groupsArr = new JSONArray();
+        for (AndroidContactsSnapshot.GroupSnapshot group : snapshot.groups) {
+            groupsArr.put(group.toJson());
+        }
+        root.put("groups", groupsArr);
+
+        return root.toString(2);
     }
 
     /**
      * Imports a canonical lossless JSON representation back into a snapshot.
+     * Accepts both the current object format ({"contacts":[...],"groups":[...]})
+     * and the legacy bare-array format (schemaVersion 2 archives written before
+     * groups were captured), for backward compatibility with older .lcb files.
      */
     public static AndroidContactsSnapshot importCanonical(String json) throws JSONException {
         AndroidContactsSnapshot snapshot = new AndroidContactsSnapshot();
-        JSONArray arr = new JSONArray(json);
-        for (int i = 0; i < arr.length(); i++) {
-            snapshot.addContact(AndroidContactSnapshot.fromJson(arr.getJSONObject(i)));
+        String trimmed = json.trim();
+
+        JSONArray contactsArr;
+        JSONArray groupsArr = null;
+        if (trimmed.startsWith("[")) {
+            contactsArr = new JSONArray(trimmed);
+        } else {
+            JSONObject root = new JSONObject(trimmed);
+            contactsArr = root.optJSONArray("contacts");
+            if (contactsArr == null) contactsArr = new JSONArray();
+            groupsArr = root.optJSONArray("groups");
+        }
+
+        for (int i = 0; i < contactsArr.length(); i++) {
+            snapshot.addContact(AndroidContactSnapshot.fromJson(contactsArr.getJSONObject(i)));
+        }
+        if (groupsArr != null) {
+            for (int i = 0; i < groupsArr.length(); i++) {
+                snapshot.addGroup(AndroidContactsSnapshot.GroupSnapshot.fromJson(groupsArr.getJSONObject(i)));
+            }
         }
         return snapshot;
     }

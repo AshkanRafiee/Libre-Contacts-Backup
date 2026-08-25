@@ -149,23 +149,6 @@ public final class BackupManager {
     }
 
     /**
-     * Legacy-compatible restore method called by MainActivity.
-     * Wraps restoreWithResult and stores results in SharedPreferences.
-     */
-    public static void restore(Context c, Uri file, String password, RestoreProgress progress) throws Exception {
-        RestoreResult result = restoreWithResult(c, file, password, progress);
-        prefs(c).edit()
-                .putLong("lastRestore", System.currentTimeMillis())
-                .putInt("lastRestoreCount", result.contactsCreated)
-                .apply();
-        String message = result.briefSummary();
-        if (result.hasErrors()) {
-            message += "\n" + result.errors.size() + " errors occurred";
-        }
-        MainActivity.notice(c, "Restore complete", message);
-    }
-
-    /**
      * Legacy restore from VCF content. Used as fallback for old .lcb files.
      */
     private static RestoreResult restoreFromVcf(Context c, String vcfContent, RestoreProgress progress) throws Exception {

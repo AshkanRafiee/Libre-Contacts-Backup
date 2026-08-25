@@ -1,7 +1,7 @@
 plugins { id 'com.android.application' }
 
-android { namespace 'com.ashkanrafiee.librecontactsbackup'; compileSdk 35
-    defaultConfig { applicationId 'com.ashkanrafiee.librecontactsbackup'; minSdk 26; targetSdk 35; versionCode 15; versionName '2.0.0'
+android { namespace = 'com.ashkanrafiee.librecontactsbackup'; compileSdk 35
+    defaultConfig { applicationId 'com.ashkanrafiee.librecontactsbackup'; minSdk 26; targetSdk 35; versionCode 16; versionName '2.1.0'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     dependenciesInfo { includeInApk = false; includeInBundle = false }
@@ -18,12 +18,12 @@ android { namespace 'com.ashkanrafiee.librecontactsbackup'; compileSdk 35
         }
     } }
     buildTypes { release { if (signingValues['storeFile']) signingConfig signingConfigs.release; minifyEnabled false } }
-    testOptions { managedDevices { localDevices { "pixel_6" { apiLevel 34 } } } }
+    testOptions { managedDevices { localDevices { "pixel_6" { apiLevel = 34 } } } }
 }
 
 dependencies {
-    androidTestImplementation 'androidx.test:runner:1.6.2'
-    androidTestImplementation 'androidx.test:rules:1.6.1'
-    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
-    androidTestImplementation 'androidx.test.ext:junit-ktx:1.2.1'
+    androidTestImplementation 'androidx.test:runner:1.7.0'
+    androidTestImplementation 'androidx.test:rules:1.7.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.3.0'
+    androidTestImplementation 'androidx.test.ext:junit-ktx:1.3.0'
 }

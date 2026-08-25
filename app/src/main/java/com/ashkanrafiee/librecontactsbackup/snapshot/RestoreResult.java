@@ -11,17 +11,25 @@ import java.util.ArrayList;
  */
 public final class RestoreResult {
 
+    // Source-side counts (what the backup contained).
     public int contactsRead;
     public int rawContactsRead;
     public int dataRowsRead;
 
+    // Target-side counts (what restore produced).
     public int contactsCreated;
     public int rawContactsCreated;
     public int dataRowsRestored;
     public int binaryItemsRestored;
 
+    // Intentional transformations (allowed, not data loss).
+    public int mergedRawContacts;      // RawContacts folded into their source Contact's single target RawContact
+    public int deduplicatedDataRows;   // genuinely identical rows collapsed into one
+
+    // Data that could not be carried over, despite being present in the source.
     public int dataRowsSkipped;
     public int dataRowsFailed;
+    public int groupMembershipsUnrestored;
 
     public final ArrayList<String> warnings = new ArrayList<>();
     public final ArrayList<String> errors = new ArrayList<>();
@@ -48,12 +56,21 @@ public final class RestoreResult {
 
     public String summary() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Contacts: ").append(contactsRead).append("\n");
-        sb.append("Raw contacts: ").append(rawContactsRead).append("\n");
-        sb.append("Data rows: ").append(dataRowsRead).append("\n");
-        sb.append("Restored: ").append(dataRowsRestored).append("\n");
+        sb.append("Source:\n");
+        sb.append("  Contacts: ").append(contactsRead).append("\n");
+        sb.append("  Raw contacts: ").append(rawContactsRead).append("\n");
+        sb.append("  Data rows: ").append(dataRowsRead).append("\n");
+        sb.append("Restored:\n");
+        sb.append("  Contacts: ").append(contactsCreated).append("\n");
+        sb.append("  Data rows: ").append(dataRowsRestored).append("\n");
         if (binaryItemsRestored > 0) {
-            sb.append("Binary items restored: ").append(binaryItemsRestored).append("\n");
+            sb.append("  Binary items: ").append(binaryItemsRestored).append("\n");
+        }
+        if (mergedRawContacts > 0) {
+            sb.append("Merged: ").append(mergedRawContacts).append(" raw contacts into their source contacts\n");
+        }
+        if (deduplicatedDataRows > 0) {
+            sb.append("Deduplicated: ").append(deduplicatedDataRows).append(" identical rows\n");
         }
         if (dataRowsSkipped > 0) {
             sb.append("Skipped: ").append(dataRowsSkipped).append("\n");
@@ -61,23 +78,26 @@ public final class RestoreResult {
         if (dataRowsFailed > 0) {
             sb.append("Failed: ").append(dataRowsFailed).append("\n");
         }
-        if (!warnings.isEmpty()) {
-            sb.append("Warnings: ").append(warnings.size()).append("\n");
+        if (groupMembershipsUnrestored > 0) {
+            sb.append("Group memberships not restored: ").append(groupMembershipsUnrestored).append("\n");
         }
-        if (!errors.isEmpty()) {
-            sb.append("Errors: ").append(errors.size()).append("\n");
-        }
+        sb.append("Warnings: ").append(warnings.size()).append("\n");
+        sb.append("Errors: ").append(errors.size()).append("\n");
         return sb.toString();
     }
 
+    /**
+     * Short, callable-facing description of the outcome, without restating
+     * "restore complete" — callers already show that as the notification title.
+     */
     public String briefSummary() {
         if (hasErrors()) {
-            return "Restore completed with issues: " + dataRowsRestored + " restored, " + dataRowsFailed + " failed";
+            return dataRowsRestored + " restored, " + dataRowsFailed + " failed";
         }
         if (hasWarnings()) {
-            return "Restore completed with warnings: " + dataRowsRestored + " restored";
+            return dataRowsRestored + " data rows restored, with warnings";
         }
-        return "Restore complete: " + contactsCreated + " contacts, " + dataRowsRestored + " data rows";
+        return contactsCreated + " contacts, " + dataRowsRestored + " data rows restored";
     }
 
     public static final class FailedRow {

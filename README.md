@@ -1,69 +1,45 @@
 # Libre Contacts Backup
 
-Libre Contacts Backup is a FLOSS native Android contact backup app that works entirely offline, encrypts your backups, and has no third-party runtime dependencies.
+A free, open-source, native Android app that backs up your contacts — fully offline, fully local, fully yours.
 
-Suggestions: `librecontactsbackup.abstract692@passmail.net`.
+- **Libre & open source** — GPLv3, no proprietary bits, buildable from source, [available on F-Droid](https://github.com/AshkanRafiee/Libre-Contacts-Backup).
+- **Private by design** — no account, no cloud, no analytics, no network permission at all. Contacts are only read when a backup runs.
+- **Local by design** — backups are written to a folder you choose on your own device (or SD card); nothing is ever uploaded anywhere.
+- **Scheduled backups** — set a daily time and it runs automatically in the background, entirely on-device.
+- **Lossless** — preserves the full Contact → RawContact → Data hierarchy (every field, every account, every custom type), not a lossy flattened copy.
+- **Optional encryption** — AES-256-GCM with a password, key wrapped by Android Keystore.
 
-Source: https://github.com/AshkanRafiee/Libre-Contacts-Backup
-License: GNU General Public License v3.0
+## Backup format
 
-## Included
+Each backup is a single timestamped `.lcb` archive containing:
 
-- Android 8.0+ support
-- Reads contacts through `READ_CONTACTS` only when a backup starts
-- User-selected folder through the Storage Access Framework
-- Daily schedules using `AlarmManager`
-- Timestamped single-file `.lcb` archives containing:
-  - `android-contacts.json` — lossless canonical snapshot (Contact → RawContact → Data)
-  - `contacts.vcf` — universal vCard for interoperability
-  - `contacts.json` — normalized JSON export
-  - `contacts.csv` — spreadsheet-compatible export
-  - `manifest.json` — archive metadata and checksums
-- Optional password-protected AES-256-GCM archive encryption
-- Encryption passwords are wrapped with Android Keystore for scheduled backups
-- Retention choices for the last 1, 3, 5, 10, or all backups
-- Scheduled alarms are restored after device reboot
-- Scheduled runs post a success or failure notification when notifications are allowed
+| File | Purpose |
+|------|---------|
+| `android-contacts.json` | Canonical lossless snapshot — what restore reads from |
+| `contacts.vcf` | Standard vCard, for use with other apps |
+| `contacts.json` / `contacts.csv` | Human-readable exports |
+| `manifest.json` | Checksums and format version |
 
-## Backup Formats
-
-| Format | Purpose | Preserves hierarchy? |
-|--------|---------|---------------------|
-| `android-contacts.json` | Lossless restore | Yes — Contact → RawContact → Data |
-| `contacts.vcf` | Interoperability (GrapheneOS, other apps) | No — flattened per raw contact |
-| `contacts.json` | Machine-readable normalized export | No — flattened per contact |
-| `contacts.csv` | Spreadsheet / Excel | No — one row per contact |
-
-## Security
-
-- AES-256-GCM encryption with PBKDF2 key derivation
-- Encryption keys stored in Android Keystore (hardware-backed when available)
-- No PII logged to logcat in production builds
-- `android:allowBackup="false"` prevents cloud extraction of encrypted data
-- BackupAlarmReceiver restricted to system broadcasts only
-- All source builds reproducible; no committed binaries or proprietary dependencies
+On restore, contacts that originally belonged together (e.g. synced from Google *and* stored locally) are merged back into one contact — without ever merging two different people who just happen to share a name.
 
 ## Build
 
 ```bash
-./gradlew assembleDebug
-./gradlew assembleRelease
+./gradlew assembleDebug     # unsigned debug build
+./gradlew assembleRelease   # unsigned release build
 ```
 
-For a local signed release, create the ignored `signing.properties` file with your own keystore values as described in [`docs/RELEASING.md`](docs/RELEASING.md). The keystore and signing file are intentionally ignored and never belong in the repository. Without them, `assembleRelease` still produces an unsigned release artifact.
+To produce a signed release, add your own keystore details in a `signing.properties` file (see [`docs/RELEASING.md`](docs/RELEASING.md)). It's gitignored and never belongs in the repo.
 
-## Testing
+## Test
 
 ```bash
-# Instrumented tests (requires emulator or device)
-./gradlew connectedDebugAndroidTest
-
-# Device test scripts (requires adb connection)
-bash tests/test_all.sh
-bash tests/test_100.sh
-bash tests/test_edge_cases.sh
-bash tests/test_roundtrip.sh
+./gradlew connectedDebugAndroidTest   # instrumented tests, needs a device/emulator
 ```
+
+## License
+
+GPL-3.0. Source: https://github.com/AshkanRafiee/Libre-Contacts-Backup
 
 ## Screenshot
 

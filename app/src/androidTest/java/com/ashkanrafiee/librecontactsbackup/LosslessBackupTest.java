@@ -220,7 +220,7 @@ public class LosslessBackupTest {
 
         String json = NormalizedJsonExporter.exportCanonical(snapshot);
         assertNotNull("Canonical JSON should not be null", json);
-        assertTrue("Should be valid JSON", json.startsWith("["));
+        assertTrue("Should be valid JSON object", json.trim().startsWith("{"));
 
         // Import back
         AndroidContactsSnapshot imported = NormalizedJsonExporter.importCanonical(json);

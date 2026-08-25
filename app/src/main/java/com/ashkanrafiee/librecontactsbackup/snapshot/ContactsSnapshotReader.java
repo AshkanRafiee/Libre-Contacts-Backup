@@ -71,6 +71,16 @@ public final class ContactsSnapshotReader {
             ContactsContract.Data.TIMES_USED
     };
 
+    private static final String[] GROUP_PROJECTION = {
+            ContactsContract.Groups._ID,
+            ContactsContract.Groups.TITLE,
+            ContactsContract.Groups.ACCOUNT_NAME,
+            ContactsContract.Groups.ACCOUNT_TYPE,
+            ContactsContract.Groups.DATA_SET,
+            ContactsContract.Groups.SOURCE_ID,
+            ContactsContract.Groups.DELETED
+    };
+
     private ContactsSnapshotReader() {}
 
     /**
@@ -94,9 +104,61 @@ public final class ContactsSnapshotReader {
         readContacts(resolver, contactMap);
         readRawContacts(resolver, contactMap, rawContactMap);
         readDataRows(resolver, rawContactMap, contactMap);
+        readGroups(resolver, snapshot);
 
-        snapshot.contacts.addAll(contactMap.values());
+        // A Contact whose only RawContact(s) were soft-deleted (or any other
+        // provider edge case) can end up with zero live RawContacts attached.
+        // Such a ghost carries no user data and must not be counted.
+        for (AndroidContactSnapshot contact : contactMap.values()) {
+            if (!contact.rawContacts.isEmpty()) {
+                snapshot.contacts.add(contact);
+            }
+        }
         return snapshot;
+    }
+
+    /**
+     * Reads the Groups table so that group_membership Data rows (which
+     * reference a group by row ID) can be restored losslessly instead of
+     * being silently dropped.
+     */
+    private static void readGroups(ContentResolver resolver, AndroidContactsSnapshot snapshot) {
+        Cursor cursor;
+        try {
+            cursor = resolver.query(
+                    ContactsContract.Groups.CONTENT_URI,
+                    GROUP_PROJECTION,
+                    null, null, null
+            );
+        } catch (Exception e) {
+            return;
+        }
+        if (cursor == null) return;
+
+        try {
+            int idxId = cursor.getColumnIndex(ContactsContract.Groups._ID);
+            int idxTitle = cursor.getColumnIndex(ContactsContract.Groups.TITLE);
+            int idxAccountName = cursor.getColumnIndex(ContactsContract.Groups.ACCOUNT_NAME);
+            int idxAccountType = cursor.getColumnIndex(ContactsContract.Groups.ACCOUNT_TYPE);
+            int idxDataSet = cursor.getColumnIndex(ContactsContract.Groups.DATA_SET);
+            int idxSourceId = cursor.getColumnIndex(ContactsContract.Groups.SOURCE_ID);
+            int idxDeleted = cursor.getColumnIndex(ContactsContract.Groups.DELETED);
+
+            while (cursor.moveToNext()) {
+                if (idxDeleted >= 0 && safeInt(cursor, idxDeleted) != 0) continue;
+
+                AndroidContactsSnapshot.GroupSnapshot group = new AndroidContactsSnapshot.GroupSnapshot();
+                group.groupId = cursor.getLong(idxId);
+                group.title = safeString(cursor, idxTitle);
+                group.accountName = safeString(cursor, idxAccountName);
+                group.accountType = safeString(cursor, idxAccountType);
+                group.dataSet = safeString(cursor, idxDataSet);
+                group.sourceId = safeString(cursor, idxSourceId);
+                snapshot.addGroup(group);
+            }
+        } finally {
+            cursor.close();
+        }
     }
 
     /**
@@ -137,10 +199,16 @@ public final class ContactsSnapshotReader {
                                          LinkedHashMap<Long, AndroidContactSnapshot> contactMap,
                                          LinkedHashMap<Long, AndroidContactSnapshot.RawContactSnapshot> rawContactMap) {
 
+        // RawContacts.CONTENT_URI does NOT filter out soft-deleted rows by
+        // default (sync adapters rely on seeing the deletion queue), so a
+        // raw contact the platform is still in the process of purging can
+        // otherwise show up here with DELETED=1 and CONTACT_ID=NULL — which
+        // would get miscounted as a phantom, un-named Contact. Exclude them.
         Cursor cursor = resolver.query(
                 ContactsContract.RawContacts.CONTENT_URI,
                 RAW_CONTACT_PROJECTION,
-                null, null,
+                ContactsContract.RawContacts.DELETED + "=0",
+                null,
                 ContactsContract.RawContacts.CONTACT_ID + " ASC"
         );
 

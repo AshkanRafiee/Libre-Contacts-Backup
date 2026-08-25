@@ -209,8 +209,10 @@ public class MainActivity extends Activity {
                 });
                 BackupManager.prefs(this).edit().putLong("lastRestore", System.currentTimeMillis())
                     .putInt("lastRestoreCount", result.contactsCreated).apply();
+                final String title = result.hasErrors() ? "Restore completed with issues"
+                        : result.hasWarnings() ? "Restore completed with warnings" : "Restore complete";
                 final String briefMsg = result.briefSummary();
-                runOnUiThread(() -> { hideRestoreProgress(); load(); notice(this, "Restore complete", briefMsg); });
+                runOnUiThread(() -> { hideRestoreProgress(); load(); notice(this, title, briefMsg); });
             } catch (Exception e) {
                 runOnUiThread(() -> { hideRestoreProgress(); notice(this, "Restore failed", "Wrong password or invalid backup"); });
             }

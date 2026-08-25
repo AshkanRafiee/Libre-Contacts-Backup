@@ -1,0 +1,8 @@
+Changes:
+- Contact groups/labels are now restored instead of being dropped
+- Two different people who happen to share the same name are no longer merged into one contact on restore
+- Postal addresses no longer restore with the street and PO box swapped
+- Restoring a contact assembled from multiple accounts (e.g. Google + a local contact) now merges them correctly instead of leaving one behind
+- Fixed the restore completion message repeating itself ("Restore complete: Restore complete...")
+- Fixed a white flash on the loading screen on Android 12+; it's dark now, matching the rest of the app
+- General reliability improvements to backup and restore, verified against datasets of up to 500 contacts
