@@ -2,7 +2,7 @@
 
 A free, open-source, native Android app that backs up your contacts — fully offline, fully local, fully yours.
 
-- **Libre & open source** — GPLv3, no proprietary bits, buildable from source, [available on F-Droid](https://github.com/AshkanRafiee/Libre-Contacts-Backup).
+- **Libre & open source** — GPLv3, no proprietary bits, buildable from source, [available on F-Droid](https://f-droid.org/en/packages/com.ashkanrafiee.librecontactsbackup/).
 - **Private by design** — no account, no cloud, no analytics, no network permission at all. Contacts are only read when a backup runs.
 - **Local by design** — backups are written to a folder you choose on your own device (or SD card); nothing is ever uploaded anywhere.
 - **Scheduled backups** — set a daily time and it runs automatically in the background, entirely on-device.
