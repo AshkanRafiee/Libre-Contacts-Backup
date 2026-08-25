@@ -7,10 +7,6 @@ Suggestions: `librecontactsbackup.abstract692@passmail.net`.
 Source: https://github.com/AshkanRafiee/Libre-Contacts-Backup
 License: GNU General Public License v3.0
 
-## What's New in v2.0.0
-
-**Lossless backup architecture.** Previous versions backed up via VCF, which loses raw contact structure, binary data precision, and custom MIME types. v2.0.0 reads the full Contact → RawContact → Data hierarchy directly from the Android Contacts Provider and stores it as a canonical JSON snapshot. Restore reconstructs this hierarchy exactly, with automatic merging of multiple raw contacts per contact.
-
 ## Included
 
 - Android 8.0+ support
