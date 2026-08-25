@@ -1,0 +1,26 @@
+Lossless backup architecture (v2.0.0):
+
+Added:
+- Lossless backup preserving full Contact → RawContact → Data hierarchy via JSON snapshot
+- All MIME types captured including photos (binary), custom types, and unknown fields
+- Raw contact merging during restore — prevents duplicate contacts from multiple sync accounts
+- Name synthesis fallback (raw contact display name → parent contact display name)
+- Restore progress dialog with per-contact status
+- Backup animation (spinner) while backup is running
+- Race condition guard prevents concurrent backups from rapid button taps
+
+Fixed:
+- Restore result now shown to user after restore completes
+- Contacts no longer multiply during restore (758 → 3297 issue resolved)
+- "(No name)" contacts during restore — name synthesis now uses 3-tier fallback
+- group_membership rows skipped during restore (prevents batch failures on fresh devices)
+
+Security:
+- No PII (names, phone numbers, emails) logged to logcat
+- android:allowBackup="false" prevents cloud extraction of encrypted data
+- BackupAlarmReceiver restricted to system broadcasts only (exported=false)
+
+Changed:
+- BackupArchive now contains: manifest.json, android-contacts.json, contacts.vcf, contacts.json, contacts.csv
+- Schema version 2 with automatic migration from legacy v1 backups
+- 11 instrumented tests passing (LosslessBackupTest + EndToEndRoundTripTest)
