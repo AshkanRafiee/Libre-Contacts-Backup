@@ -1,7 +1,9 @@
 plugins { id 'com.android.application' }
 
 android { namespace 'com.ashkanrafiee.librecontactsbackup'; compileSdk 35
-    defaultConfig { applicationId 'com.ashkanrafiee.librecontactsbackup'; minSdk 26; targetSdk 35; versionCode 14; versionName '1.6.0' }
+    defaultConfig { applicationId 'com.ashkanrafiee.librecontactsbackup'; minSdk 26; targetSdk 35; versionCode 14; versionName '1.6.0'
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
     dependenciesInfo { includeInApk = false; includeInBundle = false }
     def signingFile = rootProject.file('signing.properties')
     def signingValues = new Properties()
@@ -16,4 +18,12 @@ android { namespace 'com.ashkanrafiee.librecontactsbackup'; compileSdk 35
         }
     } }
     buildTypes { release { if (signingValues['storeFile']) signingConfig signingConfigs.release; minifyEnabled false } }
+    testOptions { managedDevices { localDevices { "pixel_6" { apiLevel 34 } } } }
+}
+
+dependencies {
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test:rules:1.6.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test.ext:junit-ktx:1.2.1'
 }

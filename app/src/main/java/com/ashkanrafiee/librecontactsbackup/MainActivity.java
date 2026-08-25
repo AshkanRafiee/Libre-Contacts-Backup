@@ -16,6 +16,9 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.*;
 import android.widget.*;
+
+import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreResult;
+
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -25,6 +28,9 @@ public class MainActivity extends Activity {
     final int card = Color.rgb(20, 27, 42), muted = Color.rgb(151, 161, 181);
     TextView status, folderValue, scheduleValue, keepValue, restoreStatus;
     Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat; boolean pendingBackup; boolean compact;
+    Button backupButton;
+    ProgressBar backupProgress;
+    boolean backupRunning;
     Uri pendingRestoreUri;
 
     int dp(float value) { return (int) (value * getResources().getDisplayMetrics().density + .5f); }
@@ -76,12 +82,19 @@ public class MainActivity extends Activity {
         LinearLayout heroWords = new LinearLayout(this); heroWords.setOrientation(LinearLayout.VERTICAL);
         heroWords.addView(label("YOUR CONTACTS", 10, mint));
         status = label("Ready for a fresh backup", 18, Color.WHITE); status.setMaxLines(1); status.setEllipsize(TextUtils.TruncateAt.END); status.setPadding(0, dp(5), 0, dp(2)); heroWords.addView(status);
+        backupProgress = new ProgressBar(this);
+        backupProgress.setIndeterminate(true);
+        backupProgress.setVisibility(View.GONE);
+        LinearLayout.LayoutParams progressParams = new LinearLayout.LayoutParams(dp(20), dp(20));
+        progressParams.setMargins(0, dp(4), 0, 0);
+        heroWords.addView(backupProgress, progressParams);
         heroWords.addView(label(compact ? "Private & local." : "Private, local, and ready when you are.", 12, Color.rgb(201, 211, 230)));
         int widthDp = (int) (getResources().getDisplayMetrics().widthPixels / getResources().getDisplayMetrics().density);
         int orbitDp = compact ? Math.max(72, Math.min(82, (int) (widthDp * .23f))) : Math.max(88, Math.min(132, (int) (widthDp * .28f)));
         FrameLayout.LayoutParams wordsParams = new FrameLayout.LayoutParams(-1, -2); wordsParams.rightMargin = dp(orbitDp + 12); heroTop.addView(heroWords, wordsParams);
         heroTop.addView(new ContactOrbit(this), new FrameLayout.LayoutParams(dp(orbitDp), dp(orbitDp), Gravity.RIGHT | Gravity.TOP)); hero.addView(heroTop);
         Button backup = button("Back up now", mint); backup.setTextColor(background); backup.setOnClickListener(v -> backup());
+        backupButton = backup;
         LinearLayout.LayoutParams actionParams = new LinearLayout.LayoutParams(-1, dp(v(48, 44))); actionParams.setMargins(0, dp(v(15, 10)), 0, 0); hero.addView(backup, actionParams); body.addView(hero, margins(0, 0, 0, v(22, 14)));
 
         body.addView(label("KEEP IT IN YOUR POCKET", 10, muted), margins(0, 0, 0, v(8, 5)));
@@ -145,7 +158,12 @@ public class MainActivity extends Activity {
     void backup() {
         if (BackupManager.folder(this).isEmpty()) { pendingBackup = true; chooseFolder(); return; }
         if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingBackup = true; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 21); return; }
-        new Thread(() -> { String result = BackupManager.runBackup(this, true); runOnUiThread(() -> status.setText(result)); }).start();
+        if (backupRunning) return;
+        backupRunning = true;
+        backupButton.setEnabled(false);
+        backupProgress.setVisibility(View.VISIBLE);
+        status.setText("Backing up...");
+        new Thread(() -> { String result = BackupManager.runBackup(this, true); runOnUiThread(() -> { status.setText(result); backupButton.setEnabled(true); backupProgress.setVisibility(View.GONE); backupRunning = false; }); }).start();
     }
     void scheduleDialog() {
         new AlertDialog.Builder(this).setTitle("Backup schedule").setItems(new String[]{"Off", "Daily at a specific time..."}, (dialog, which) -> {
@@ -182,7 +200,22 @@ public class MainActivity extends Activity {
     void restoreSelected(Uri uri) {
         showRestoreProgress("Checking backup"); new Thread(() -> { try { boolean encrypted = BackupManager.isEncrypted(this, uri); runOnUiThread(() -> { hideRestoreProgress(); if (encrypted) passwordDialog("Unlock encrypted backup", false, password -> restoreWithPassword(uri, password)); else restoreWithPassword(uri, null); }); } catch (Exception e) { hideRestoreProgress(); notice(this, "Restore failed", e.getMessage()); } }).start();
     }
-    void restoreWithPassword(Uri uri, String password) { showRestoreProgress("Preparing restore"); new Thread(() -> { try { BackupManager.restore(this, uri, password, (message, current, total) -> { runOnUiThread(() -> { if (restoreProgressText != null) restoreProgressText.setText(message); }); }); runOnUiThread(() -> { hideRestoreProgress(); load(); }); } catch (Exception e) { runOnUiThread(() -> { hideRestoreProgress(); notice(this, "Restore failed", "Wrong password or invalid backup"); }); } }).start(); }
+    void restoreWithPassword(Uri uri, String password) {
+        showRestoreProgress("Preparing restore");
+        new Thread(() -> {
+            try {
+                RestoreResult result = BackupManager.restoreWithResult(this, uri, password, (message, current, total) -> {
+                    runOnUiThread(() -> { if (restoreProgressText != null) restoreProgressText.setText(message); });
+                });
+                BackupManager.prefs(this).edit().putLong("lastRestore", System.currentTimeMillis())
+                    .putInt("lastRestoreCount", result.contactsCreated).apply();
+                final String briefMsg = result.briefSummary();
+                runOnUiThread(() -> { hideRestoreProgress(); load(); notice(this, "Restore complete", briefMsg); });
+            } catch (Exception e) {
+                runOnUiThread(() -> { hideRestoreProgress(); notice(this, "Restore failed", "Wrong password or invalid backup"); });
+            }
+        }).start();
+    }
     void showRestoreProgress(String message) {
         if (restoreProgress != null && restoreProgress.isShowing()) { restoreProgressText.setText(message); return; }
         LinearLayout panel = new LinearLayout(this); panel.setOrientation(LinearLayout.VERTICAL); panel.setGravity(Gravity.CENTER_HORIZONTAL); panel.setPadding(dp(28), dp(26), dp(28), dp(26)); panel.setBackground(rounded(card, 22));
