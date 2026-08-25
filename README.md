@@ -12,7 +12,7 @@ License: GNU General Public License v3.0
 - Android 8.0+ support
 - Reads contacts through `READ_CONTACTS` only when a backup starts
 - User-selected folder through the Storage Access Framework
-- Daily, weekly, monthly, or custom-time schedules using `AlarmManager`
+- Daily schedules using `AlarmManager`
 - Timestamped single-file `.lcb` archives containing:
   - `android-contacts.json` — lossless canonical snapshot (Contact → RawContact → Data)
   - `contacts.vcf` — universal vCard for interoperability
