@@ -147,8 +147,12 @@ public final class ContactsSnapshotRestorer {
 
             try {
                 Long newRawContactId = restoreContact(resolver, contact, result, groupIdMapping, options);
-                result.contactsCreated++;
-                restoredRawContactIds.add(newRawContactId);
+                if (newRawContactId != null) {
+                    result.contactsCreated++;
+                    restoredRawContactIds.add(newRawContactId);
+                } else {
+                    result.addError("Failed to restore contact #" + current + ": no RawContact was created");
+                }
             } catch (Exception e) {
                 Log.e(TAG, "Failed to restore contact #" + current + " error=" + e.getMessage());
                 result.addError("Failed to restore contact: " + e.getMessage());
@@ -296,7 +300,12 @@ public final class ContactsSnapshotRestorer {
         }
         ops.add(rawBuilder.build());
 
-        int unrestoredGroupMemberships = 0;
+        // These are properties of the row itself (unmappable group, or
+        // unmappable in general) — true regardless of whether the batch
+        // insert mechanism below succeeds or falls back, so they're
+        // committed to `result` directly and exactly once here, rather than
+        // via a local counter that a later success/fallback branch would
+        // need to remember to add in.
         ArrayList<DataRowSnapshot> insertedRows = new ArrayList<>();
         for (DataRowSnapshot row : mergedRows) {
             try {
@@ -306,7 +315,7 @@ public final class ContactsSnapshotRestorer {
                     ops.add(dataBuilder.build());
                     insertedRows.add(row);
                 } else if (MIME_GROUP_MEMBERSHIP.equals(row.mimeType)) {
-                    unrestoredGroupMemberships++;
+                    result.groupMembershipsUnrestored++;
                     Log.w(TAG, "  Group membership could not be mapped to a target group; row preserved in backup but not restored");
                 } else {
                     result.dataRowsSkipped++;
@@ -323,7 +332,6 @@ public final class ContactsSnapshotRestorer {
             android.content.ContentProviderResult[] applied = resolver.applyBatch(ContactsContract.AUTHORITY, ops);
             Long newRawContactId = applied[0].uri != null ? Long.parseLong(applied[0].uri.getLastPathSegment()) : null;
             result.rawContactsCreated++;
-            result.groupMembershipsUnrestored += unrestoredGroupMemberships;
             int restoredHere = ops.size() - 1; // exclude the raw-contact insert itself
             result.dataRowsRestored += restoredHere;
             Log.d(TAG, "  Batch OK ops=" + ops.size());
@@ -356,27 +364,28 @@ public final class ContactsSnapshotRestorer {
                 if (rawId != null) {
                     int restored = 0;
                     int failed = 0;
-                    int fallbackUnrestoredGroups = 0;
-                    for (DataRowSnapshot row : mergedRows) {
+                    // Only retry rows already proven to build successfully in the
+                    // first pass above (insertedRows), not the full mergedRows list:
+                    // rows that failed to build or were unmappable were already
+                    // accounted for exactly once there. buildDataInsertBuilder is a
+                    // pure function of (row, groupIdMapping), so re-attempting an
+                    // already-failed/unmappable row here would just fail identically
+                    // and double-count it — the whole batch failing is not evidence
+                    // that a *different* row is now buildable.
+                    for (DataRowSnapshot row : insertedRows) {
                         try {
                             ContentProviderOperation.Builder dataBuilder = buildDataInsertBuilder(row, groupIdMapping);
-                            if (dataBuilder != null) {
-                                dataBuilder.withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId);
-                                resolver.applyBatch(ContactsContract.AUTHORITY,
-                                        new ArrayList<>(java.util.Collections.singletonList(dataBuilder.build())));
-                                restored++;
-                                if (isProviderData(row.mimeType)) {
-                                    result.restoredProviderDataRows++;
-                                } else {
-                                    result.restoredUserDataRows++;
-                                }
-                                if (row.data15 != null && row.data15.length > 0) {
-                                    result.binaryItemsRestored++;
-                                }
-                            } else if (MIME_GROUP_MEMBERSHIP.equals(row.mimeType)) {
-                                fallbackUnrestoredGroups++;
+                            dataBuilder.withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId);
+                            resolver.applyBatch(ContactsContract.AUTHORITY,
+                                    new ArrayList<>(java.util.Collections.singletonList(dataBuilder.build())));
+                            restored++;
+                            if (isProviderData(row.mimeType)) {
+                                result.restoredProviderDataRows++;
                             } else {
-                                result.dataRowsSkipped++;
+                                result.restoredUserDataRows++;
+                            }
+                            if (row.data15 != null && row.data15.length > 0) {
+                                result.binaryItemsRestored++;
                             }
                         } catch (Exception rowEx) {
                             Log.e(TAG, "  Fallback data row FAILED: mime=" + row.mimeType + " err=" + rowEx.getMessage());
@@ -385,11 +394,13 @@ public final class ContactsSnapshotRestorer {
                         }
                     }
                     result.dataRowsRestored += restored;
-                    result.groupMembershipsUnrestored += fallbackUnrestoredGroups;
+                    // Rows that failed to build or were unmappable (e.g. an
+                    // unmappable group membership) were already counted once
+                    // during the first pass, before the batch was even attempted.
                     Log.d(TAG, "  Fallback data rows: " + restored + " restored, " + failed + " failed");
                     return Long.parseLong(rawId);
                 } else {
-                    result.dataRowsFailed += mergedRows.size();
+                    result.dataRowsFailed += insertedRows.size();
                     return null;
                 }
             } catch (Exception ex) {
@@ -663,12 +674,14 @@ public final class ContactsSnapshotRestorer {
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, row.data1);
                 if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Phone.TYPE, parseTypeInt(row.data2));
                 if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.Phone.LABEL, row.data3);
+                applyRemainingGenericFields(builder, row, 1, 2, 3);
                 break;
 
             case "vnd.android.cursor.item/email_v2":
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.Email.ADDRESS, row.data1);
                 if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Email.TYPE, parseTypeInt(row.data2));
                 if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.Email.LABEL, row.data3);
+                applyRemainingGenericFields(builder, row, 1, 2, 3);
                 break;
 
             case "vnd.android.cursor.item/postal-address_v2":
@@ -683,61 +696,98 @@ public final class ContactsSnapshotRestorer {
                 if (row.data10 != null) builder.withValue(ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY, row.data10);
                 if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.StructuredPostal.TYPE, parseTypeInt(row.data2));
                 if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.StructuredPostal.LABEL, row.data3);
+                applyRemainingGenericFields(builder, row, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
                 break;
 
             case "vnd.android.cursor.item/organization":
+                // Organization.TYPE/LABEL (data2/3) are real fields (TYPE_WORK/TYPE_OTHER),
+                // not just an unused CommonColumns alias — same custom-label-at-type-0
+                // convention as phone/email. JOB_DESCRIPTION/SYMBOL/PHONETIC_NAME/
+                // OFFICE_LOCATION are documented Organization fields that were
+                // previously captured but silently dropped on restore.
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.Organization.COMPANY, row.data1);
+                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Organization.TYPE, parseTypeInt(row.data2));
+                if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.Organization.LABEL, row.data3);
                 if (row.data4 != null) builder.withValue(ContactsContract.CommonDataKinds.Organization.TITLE, row.data4);
                 if (row.data5 != null) builder.withValue(ContactsContract.CommonDataKinds.Organization.DEPARTMENT, row.data5);
+                if (row.data6 != null) builder.withValue(ContactsContract.CommonDataKinds.Organization.JOB_DESCRIPTION, row.data6);
+                if (row.data7 != null) builder.withValue(ContactsContract.CommonDataKinds.Organization.SYMBOL, row.data7);
+                if (row.data8 != null) builder.withValue(ContactsContract.CommonDataKinds.Organization.PHONETIC_NAME, row.data8);
+                if (row.data9 != null) builder.withValue(ContactsContract.CommonDataKinds.Organization.OFFICE_LOCATION, row.data9);
+                // data10 (PHONETIC_NAME_STYLE) is provider-computed, like StructuredName's
+                // FULL_NAME_STYLE — deliberately not forced onto a fresh insert.
+                applyRemainingGenericFields(builder, row, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
                 break;
 
             case "vnd.android.cursor.item/nickname":
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.Nickname.NAME, row.data1);
+                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Nickname.TYPE, parseTypeInt(row.data2));
+                if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.Nickname.LABEL, row.data3);
+                applyRemainingGenericFields(builder, row, 1, 2, 3);
                 break;
 
             case "vnd.android.cursor.item/note":
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.Note.NOTE, row.data1);
+                applyRemainingGenericFields(builder, row, 1);
                 break;
 
             case "vnd.android.cursor.item/contact_event":
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.Event.START_DATE, row.data1);
                 if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Event.TYPE, parseTypeInt(row.data2));
                 if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.Event.LABEL, row.data3);
+                applyRemainingGenericFields(builder, row, 1, 2, 3);
                 break;
 
             case "vnd.android.cursor.item/website":
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.Website.URL, row.data1);
                 if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Website.TYPE, parseTypeInt(row.data2));
                 if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.Website.LABEL, row.data3);
+                applyRemainingGenericFields(builder, row, 1, 2, 3);
                 break;
 
             case "vnd.android.cursor.item/im":
+                // Im.TYPE/LABEL (data2/3) are real fields (TYPE_HOME/TYPE_WORK/TYPE_OTHER),
+                // independent of PROTOCOL/CUSTOM_PROTOCOL (data5/6) — both were previously
+                // captured but only the protocol half was restored.
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.Im.DATA, row.data1);
+                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Im.TYPE, parseTypeInt(row.data2));
+                if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.Im.LABEL, row.data3);
                 if (row.data5 != null) {
                     int proto = parseTypeInt(row.data5);
                     builder.withValue(ContactsContract.CommonDataKinds.Im.PROTOCOL, proto);
-                    if (proto == 0 && row.data6 != null && !row.data6.isEmpty()) {
+                    // Unlike TYPE fields elsewhere (where 0 means "custom"), Im's
+                    // own custom sentinel is PROTOCOL_CUSTOM = -1; 0 is the
+                    // deprecated PROTOCOL_AIM. Using the wrong constant here
+                    // silently dropped CUSTOM_PROTOCOL for every custom-protocol
+                    // IM address (the common case, since all named protocols are
+                    // deprecated in favor of PROTOCOL_CUSTOM + CUSTOM_PROTOCOL).
+                    if (proto == ContactsContract.CommonDataKinds.Im.PROTOCOL_CUSTOM
+                            && row.data6 != null && !row.data6.isEmpty()) {
                         builder.withValue(ContactsContract.CommonDataKinds.Im.CUSTOM_PROTOCOL, row.data6);
                     }
                 }
+                applyRemainingGenericFields(builder, row, 1, 2, 3, 5, 6);
                 break;
 
             case "vnd.android.cursor.item/relation":
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.Relation.NAME, row.data1);
                 if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Relation.TYPE, parseTypeInt(row.data2));
                 if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.Relation.LABEL, row.data3);
+                applyRemainingGenericFields(builder, row, 1, 2, 3);
                 break;
 
             case "vnd.android.cursor.item/photo":
                 if (row.data15 != null && row.data15.length > 0) {
                     builder.withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, row.data15);
                 }
+                applyRemainingGenericFields(builder, row, 15);
                 break;
 
             case "vnd.android.cursor.item/sip-address":
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.SipAddress.SIP_ADDRESS, row.data1);
                 if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.SipAddress.TYPE, parseTypeInt(row.data2));
                 if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.SipAddress.LABEL, row.data3);
+                applyRemainingGenericFields(builder, row, 1, 2, 3);
                 break;
 
             case "vnd.android.cursor.item/group_membership": {
@@ -759,7 +809,47 @@ public final class ContactsSnapshotRestorer {
                 break;
         }
 
+        // Applies to every mappable row regardless of MIME type: these mark
+        // the user's chosen default (e.g. "preferred" phone/email), which is
+        // real user data, not provider bookkeeping like DATA_VERSION or
+        // IS_READ_ONLY (deliberately left alone — provider-managed, and not
+        // meaningful to force onto a freshly-inserted row).
+        if (row.isPrimary != 0) builder.withValue(ContactsContract.Data.IS_PRIMARY, row.isPrimary);
+        if (row.isSuperPrimary != 0) builder.withValue(ContactsContract.Data.IS_SUPER_PRIMARY, row.isSuperPrimary);
+
         return builder;
+    }
+
+    private static final String[] GENERIC_DATA_COLUMNS = {
+            null, // index 0 unused (DATA1 is index 1)
+            ContactsContract.Data.DATA1, ContactsContract.Data.DATA2, ContactsContract.Data.DATA3,
+            ContactsContract.Data.DATA4, ContactsContract.Data.DATA5, ContactsContract.Data.DATA6,
+            ContactsContract.Data.DATA7, ContactsContract.Data.DATA8, ContactsContract.Data.DATA9,
+            ContactsContract.Data.DATA10, ContactsContract.Data.DATA11, ContactsContract.Data.DATA12,
+            ContactsContract.Data.DATA13, ContactsContract.Data.DATA14,
+    };
+
+    /**
+     * For a KNOWN MIME type, applies any captured DATA column not already
+     * covered by that type's semantic field mapping (passed as
+     * {@code handledIndices}). Some sync adapters/OEMs stash extra data in
+     * columns Android itself doesn't define a meaning for on a known MIME
+     * type; "we understand this MIME type" must not become "we know which
+     * fields matter" — anything captured is attempted here rather than
+     * silently discarded. DATA15 is included unless 15 is in the handled set.
+     */
+    private static void applyRemainingGenericFields(ContentProviderOperation.Builder builder,
+                                                      DataRowSnapshot row, int... handledIndices) {
+        Set<Integer> handled = new HashSet<>();
+        for (int i : handledIndices) handled.add(i);
+        for (int i = 1; i <= 14; i++) {
+            if (handled.contains(i)) continue;
+            String value = row.getData(i);
+            if (value != null) builder.withValue(GENERIC_DATA_COLUMNS[i], value);
+        }
+        if (!handled.contains(15) && row.data15 != null && row.data15.length > 0) {
+            builder.withValue(ContactsContract.Data.DATA15, row.data15);
+        }
     }
 
     /**
