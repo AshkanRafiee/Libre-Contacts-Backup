@@ -257,11 +257,25 @@ public final class ContactsSnapshotRestorer {
         Log.d(TAG, "Restoring contact: rawContacts=" + contact.rawContacts.size()
                 + " selectedDataRows=" + mergedRows.size());
 
+        // Decide whether this source Contact has anything real left to
+        // restore BEFORE synthesizing a name. RawContactSnapshot.displayName
+        // comes from RawContacts.DISPLAY_NAME_PRIMARY, a raw-contact-level
+        // cache — sync adapters/messaging apps (Telegram, WhatsApp, etc.)
+        // routinely populate it on a "shadow" RawContact that carries none of
+        // its own Data rows besides their own proprietary one. If name
+        // synthesis ran first, filtering out that one row (category
+        // deselected) would still leave a manufactured name behind, turning
+        // "nothing left to restore" back into "a name-only contact with no
+        // phone/email/anything" — the exact empty-looking duplicate this
+        // check exists to prevent. A name alone, conjured from a cache
+        // rather than an actual Data row, is not "real data" on its own.
+        boolean hadRealDataBeforeNameSynthesis = !mergedRows.isEmpty();
+
         // Ensure a name data row exists so a nameless RawContact belonging to
         // this source Contact never becomes a separate, unlabeled Contact.
-        // Only synthesized when CONTACT_INFO is selected — if the user opted
-        // out of contact info entirely, don't manufacture a name for them.
-        if (options.includes(RestoreCategory.CONTACT_INFO)) {
+        // Only synthesized when CONTACT_INFO is selected, and only when there
+        // is other real data for that name to attach to.
+        if (hadRealDataBeforeNameSynthesis && options.includes(RestoreCategory.CONTACT_INFO)) {
             boolean hasNameRow = false;
             for (DataRowSnapshot row : mergedRows) {
                 if (MIME_NAME.equals(row.mimeType)) {

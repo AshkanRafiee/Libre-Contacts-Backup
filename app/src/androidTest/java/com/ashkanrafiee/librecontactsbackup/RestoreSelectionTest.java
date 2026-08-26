@@ -78,6 +78,28 @@ public class RestoreSelectionTest {
         return results[0].uri.getLastPathSegment();
     }
 
+    /**
+     * Inserts a RawContact with a raw-contact-level cached DISPLAY_NAME_PRIMARY
+     * but no corresponding "name" Data row — exactly what messaging apps'
+     * "shadow" RawContacts commonly look like (they cache the display name
+     * for their own UI without ever writing a StructuredName row). Requires
+     * presenting as a sync adapter, since the platform normally computes
+     * DISPLAY_NAME_PRIMARY itself and refuses to let a regular app set it
+     * directly.
+     */
+    private String insertShadowRawContact(String accountName, String accountType, String cachedDisplayName) throws Exception {
+        Uri syncAdapterUri = ContactsContract.RawContacts.CONTENT_URI.buildUpon()
+                .appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true")
+                .build();
+        ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(syncAdapterUri)
+                .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, accountName)
+                .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, accountType)
+                .withValue(ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY, cachedDisplayName);
+        android.content.ContentProviderResult[] results = resolver.applyBatch(ContactsContract.AUTHORITY,
+                new ArrayList<>(java.util.Collections.singletonList(b.build())));
+        return results[0].uri.getLastPathSegment();
+    }
+
     private void insertRow(String rawId, String mimeType, String... values) throws Exception {
         ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
                 .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId)
@@ -347,6 +369,55 @@ public class RestoreSelectionTest {
         assertNotNull(c);
         try {
             assertEquals("Exactly one RawContact should exist on the device — no empty duplicate",
+                    1, c.getCount());
+        } finally {
+            c.close();
+        }
+    }
+
+    // ============================================================
+    // Scenario 9: a shadow RawContact whose only "content" is a raw-contact-
+    // level cached display name (no actual name/phone/email Data row of its
+    // own) — exactly how Telegram/WhatsApp-style shadow entries look — must
+    // not be resurrected as a name-only contact once its one real data row
+    // (a provider-specific field) is filtered out. All identifiers here are
+    // synthetic/fake, not real user data.
+    // ============================================================
+    @Test
+    public void scenario9_shadowContactWithOnlyCachedDisplayNameIsNotResurrected() throws Exception {
+        String realContact = insertRawContact();
+        insertRow(realContact, "vnd.android.cursor.item/name", "Fake Real Person");
+        insertRow(realContact, "vnd.android.cursor.item/phone_v2", "+1-555-0000", "1");
+
+        // Simulates a messaging app's shadow RawContact: a cached display
+        // name at the RawContacts level, an account tying it to that app,
+        // but zero real Data rows besides its own proprietary field.
+        String shadowContact = insertShadowRawContact(
+                "fake-shadow-account@example.invalid", "com.example.fakemessagingapp", "Fake Real Person");
+        insertRow(shadowContact, UNKNOWN_MIME, "fake-messaging-app-internal-id-999");
+        Thread.sleep(300);
+
+        AndroidContactsSnapshot snapshot = ContactsSnapshotReader.read(targetContext());
+        assertEquals("Should be two distinct source Contacts", 2, snapshot.getContactCount());
+
+        cleanupContacts();
+
+        // Contact info selected, Additional data and Account info NOT selected —
+        // the shadow's one real row (provider-specific) is filtered out, and its
+        // account is stripped, leaving only its cached display name behind.
+        RestoreResult result = ContactsSnapshotRestorer.restore(targetContext(), snapshot,
+                RestoreOptions.of(RestoreCategory.CONTACT_INFO), (m, c, t) -> {});
+
+        assertEquals("Only the real contact should be created", 1, result.contactsCreated);
+        assertEquals("The shadow contact must not be resurrected via its cached display name alone",
+                1, result.emptyContactsSkipped);
+
+        Cursor c = resolver.query(ContactsContract.RawContacts.CONTENT_URI,
+                new String[]{ContactsContract.RawContacts._ID},
+                ContactsContract.RawContacts.DELETED + "=0", null, null);
+        assertNotNull(c);
+        try {
+            assertEquals("Exactly one RawContact should exist — no name-only duplicate",
                     1, c.getCount());
         } finally {
             c.close();
