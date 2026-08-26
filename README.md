@@ -22,6 +22,13 @@ Each backup is a single timestamped `.lcb` archive containing:
 
 On restore, contacts that originally belonged together (e.g. synced from Google *and* stored locally) are merged back into one contact — without ever merging two different people who just happen to share a name.
 
+Libre Contacts Backup preserves contact information, including less-common and provider-specific data that may be missed by ordinary vCard backups. During restore, you choose which available categories to restore — contact information, photos, groups, additional/provider-specific data, and account information can each be included or skipped independently. A few things to know:
+
+- Contact IDs and RawContact IDs may change on restore; the app does not try to recreate Android's internal provider bookkeeping.
+- Provider/account metadata may not be restorable on every device (e.g. if the original account isn't set up there).
+- Anything you don't select stays fully intact inside the `.lcb` — the archive is never modified by what you restore.
+- The same backup can be restored again later with a different selection.
+
 ## Build
 
 ```bash
