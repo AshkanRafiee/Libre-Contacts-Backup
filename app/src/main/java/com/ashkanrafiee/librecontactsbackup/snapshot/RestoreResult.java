@@ -22,9 +22,21 @@ public final class RestoreResult {
     public int dataRowsRestored;
     public int binaryItemsRestored;
 
+    // Split of dataRowsRestored by kind, for the restore-selection report:
+    // core contact info / photos / group memberships vs. provider-specific
+    // or unknown data.
+    public int restoredUserDataRows;
+    public int restoredProviderDataRows;
+
     // Intentional transformations (allowed, not data loss).
     public int mergedRawContacts;      // RawContacts folded into their source Contact's single target RawContact
     public int deduplicatedDataRows;   // genuinely identical rows collapsed into one
+
+    // Rows present in the source but intentionally not materialized this run
+    // because their RestoreCategory wasn't selected by the user. These are
+    // NOT data loss: they remain in the snapshot/.lcb and can be restored
+    // later with a different selection.
+    public int skippedByUserChoice;
 
     // Data that could not be carried over, despite being present in the source.
     public int dataRowsSkipped;
@@ -72,6 +84,9 @@ public final class RestoreResult {
         if (deduplicatedDataRows > 0) {
             sb.append("Deduplicated: ").append(deduplicatedDataRows).append(" identical rows\n");
         }
+        if (skippedByUserChoice > 0) {
+            sb.append("Not restored (category not selected, still in backup): ").append(skippedByUserChoice).append("\n");
+        }
         if (dataRowsSkipped > 0) {
             sb.append("Skipped: ").append(dataRowsSkipped).append("\n");
         }
@@ -91,13 +106,15 @@ public final class RestoreResult {
      * "restore complete" — callers already show that as the notification title.
      */
     public String briefSummary() {
+        String skippedSuffix = skippedByUserChoice > 0
+                ? " (" + skippedByUserChoice + " not selected)" : "";
         if (hasErrors()) {
-            return dataRowsRestored + " restored, " + dataRowsFailed + " failed";
+            return dataRowsRestored + " restored, " + dataRowsFailed + " failed" + skippedSuffix;
         }
         if (hasWarnings()) {
-            return dataRowsRestored + " data rows restored, with warnings";
+            return dataRowsRestored + " data rows restored, with warnings" + skippedSuffix;
         }
-        return contactsCreated + " contacts, " + dataRowsRestored + " data rows restored";
+        return contactsCreated + " contacts, " + dataRowsRestored + " data rows restored" + skippedSuffix;
     }
 
     public static final class FailedRow {

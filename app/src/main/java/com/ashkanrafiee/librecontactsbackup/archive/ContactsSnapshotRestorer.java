@@ -14,11 +14,16 @@ import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactsSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactSnapshot.DataRowSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactSnapshot.RawContactSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactsSnapshot.GroupSnapshot;
+import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreCategory;
+import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreOptions;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreResult;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Restores a lossless snapshot back to the Android Contacts Provider.
@@ -54,16 +59,62 @@ public final class ContactsSnapshotRestorer {
     private static final String TAG = "SnapshotRestorer";
     private static final String MIME_GROUP_MEMBERSHIP = "vnd.android.cursor.item/group_membership";
     private static final String MIME_NAME = "vnd.android.cursor.item/name";
+    private static final String MIME_PHOTO = "vnd.android.cursor.item/photo";
+
+    /**
+     * MIME types handled explicitly below (everything the app has deliberate
+     * semantic mapping for), excluding photo and group_membership which have
+     * their own {@link RestoreCategory}. Anything not in this set is treated
+     * as provider-specific/unknown and restored via the generic DATA1..DATA15
+     * passthrough under {@link RestoreCategory#ADDITIONAL_DATA}.
+     *
+     * Exposed publicly so {@link com.ashkanrafiee.librecontactsbackup.snapshot.BackupAnalyzer}
+     * classifies MIME types identically to how restore actually treats them,
+     * instead of maintaining a second, potentially-drifting list.
+     */
+    public static final Set<String> CORE_CONTACT_MIME_TYPES = Collections.unmodifiableSet(new HashSet<>(java.util.Arrays.asList(
+            MIME_NAME,
+            "vnd.android.cursor.item/phone_v2",
+            "vnd.android.cursor.item/email_v2",
+            "vnd.android.cursor.item/postal-address_v2",
+            "vnd.android.cursor.item/postal-address",
+            "vnd.android.cursor.item/organization",
+            "vnd.android.cursor.item/nickname",
+            "vnd.android.cursor.item/note",
+            "vnd.android.cursor.item/contact_event",
+            "vnd.android.cursor.item/website",
+            "vnd.android.cursor.item/im",
+            "vnd.android.cursor.item/relation",
+            "vnd.android.cursor.item/sip-address"
+    )));
 
     private ContactsSnapshotRestorer() {}
 
     /**
-     * Performs a restore: creates new contacts matching the snapshot.
-     * Raw contacts from the same source Contact are consolidated into one.
+     * Performs a restore of every supported category. Kept as a thin
+     * back-compat wrapper around {@link #restore} so existing callers/tests
+     * that don't need selective restore are unaffected.
      */
     public static RestoreResult restoreExact(Context context,
                                               AndroidContactsSnapshot snapshot,
                                               RestoreProgress progress) {
+        return restore(context, snapshot, RestoreOptions.all(), progress);
+    }
+
+    /**
+     * Performs a restore: creates new contacts matching the snapshot,
+     * materializing only the categories selected in {@code options}.
+     * Raw contacts from the same source Contact are consolidated into one.
+     *
+     * Categories not selected are simply never written to the target
+     * Contacts Provider during this call — the snapshot object (and the
+     * .lcb archive it came from) is never mutated, so the same snapshot can
+     * be restored again later with a different selection.
+     */
+    public static RestoreResult restore(Context context,
+                                         AndroidContactsSnapshot snapshot,
+                                         RestoreOptions options,
+                                         RestoreProgress progress) {
 
         RestoreResult result = new RestoreResult();
         result.contactsRead = snapshot.getContactCount();
@@ -74,11 +125,15 @@ public final class ContactsSnapshotRestorer {
         Log.i(TAG, "Snapshot: " + snapshot.getContactCount() + " contacts, "
                 + snapshot.getRawContactCount() + " raw contacts, "
                 + snapshot.getDataRowCount() + " data rows, "
-                + snapshot.getGroups().size() + " groups");
+                + snapshot.getGroups().size() + " groups, "
+                + "categories=" + options.selectedCategories());
 
         ContentResolver resolver = context.getContentResolver();
 
-        Map<Long, Long> groupIdMapping = buildGroupMapping(resolver, snapshot);
+        // Don't create target groups nobody asked for if GROUPS wasn't selected.
+        Map<Long, Long> groupIdMapping = options.includes(RestoreCategory.GROUPS)
+                ? buildGroupMapping(resolver, snapshot)
+                : Collections.emptyMap();
 
         int totalContacts = snapshot.getContactCount();
         int current = 0;
@@ -91,7 +146,7 @@ public final class ContactsSnapshotRestorer {
             }
 
             try {
-                Long newRawContactId = restoreContact(resolver, contact, result, groupIdMapping);
+                Long newRawContactId = restoreContact(resolver, contact, result, groupIdMapping, options);
                 result.contactsCreated++;
                 restoredRawContactIds.add(newRawContactId);
             } catch (Exception e) {
@@ -105,28 +160,38 @@ public final class ContactsSnapshotRestorer {
         if (result.groupMembershipsUnrestored > 0) {
             result.addWarning(result.groupMembershipsUnrestored + " group memberships could not be restored");
         }
+        if (result.skippedByUserChoice > 0) {
+            result.addWarning(result.skippedByUserChoice + " data row(s) not restored because their category "
+                    + "wasn't selected (still preserved in the backup)");
+        }
 
         Log.i(TAG, "=== Restore complete: " + result.contactsCreated + " contacts, "
                 + result.rawContactsCreated + " raw contacts, "
                 + result.dataRowsRestored + " data rows restored, "
                 + result.mergedRawContacts + " raw contacts merged, "
-                + result.deduplicatedDataRows + " rows deduplicated ===");
+                + result.deduplicatedDataRows + " rows deduplicated, "
+                + result.skippedByUserChoice + " skipped by user choice ===");
 
         return result;
     }
 
     /**
      * Restores a single source Contact by consolidating all of its
-     * RawContacts into one target RawContact.
+     * RawContacts into one target RawContact, materializing only the
+     * categories selected in {@code options}.
      *
      * @return the new RawContact's ID, or null if it could not be created at all.
      */
     private static Long restoreContact(ContentResolver resolver,
                                         AndroidContactSnapshot contact,
                                         RestoreResult result,
-                                        Map<Long, Long> groupIdMapping) throws Exception {
+                                        Map<Long, Long> groupIdMapping,
+                                        RestoreOptions options) throws Exception {
 
         // Merge all data rows from all raw contacts, deduplicating by canonical key.
+        // This consolidation reflects the source Contact structure and happens
+        // regardless of restore-category selection; category filtering is
+        // applied afterward, to the already-merged/deduplicated list.
         ArrayList<DataRowSnapshot> mergedRows = new ArrayList<>();
         String bestAccountName = null;
         String bestAccountType = null;
@@ -158,42 +223,64 @@ public final class ContactsSnapshotRestorer {
             result.mergedRawContacts += contact.rawContacts.size() - 1;
         }
 
+        if (!options.includes(RestoreCategory.ACCOUNT_INFO)) {
+            bestAccountName = null;
+            bestAccountType = null;
+        }
+
+        // Apply the user's category selection to the merged/deduplicated rows.
+        // Rows dropped here are NOT lost: they remain in the snapshot/.lcb,
+        // they are simply not materialized during this particular restore.
+        ArrayList<DataRowSnapshot> selectedRows = new ArrayList<>();
+        for (DataRowSnapshot row : mergedRows) {
+            if (isCategorySelected(row.mimeType, options)) {
+                selectedRows.add(row);
+            } else {
+                result.skippedByUserChoice++;
+            }
+        }
+        mergedRows = selectedRows;
+
         Log.d(TAG, "Restoring contact: rawContacts=" + contact.rawContacts.size()
-                + " mergedDataRows=" + mergedRows.size());
+                + " selectedDataRows=" + mergedRows.size());
 
         // Ensure a name data row exists so a nameless RawContact belonging to
         // this source Contact never becomes a separate, unlabeled Contact.
-        boolean hasNameRow = false;
-        for (DataRowSnapshot row : mergedRows) {
-            if (MIME_NAME.equals(row.mimeType)) {
-                hasNameRow = true;
-                break;
-            }
-        }
-        if (!hasNameRow) {
-            String nameToUse = null;
-            for (RawContactSnapshot rc : contact.rawContacts) {
-                if (rc.displayName != null && !rc.displayName.isEmpty()) {
-                    nameToUse = rc.displayName;
+        // Only synthesized when CONTACT_INFO is selected — if the user opted
+        // out of contact info entirely, don't manufacture a name for them.
+        if (options.includes(RestoreCategory.CONTACT_INFO)) {
+            boolean hasNameRow = false;
+            for (DataRowSnapshot row : mergedRows) {
+                if (MIME_NAME.equals(row.mimeType)) {
+                    hasNameRow = true;
                     break;
                 }
             }
-            if (nameToUse == null && contact.displayName != null && !contact.displayName.isEmpty()) {
-                nameToUse = contact.displayName;
-            }
-            if (nameToUse != null) {
-                Log.d(TAG, "  Synthesizing name row");
-                DataRowSnapshot syntheticName = new DataRowSnapshot();
-                syntheticName.mimeType = MIME_NAME;
-                syntheticName.data1 = nameToUse;
-                mergedRows.add(0, syntheticName);
-            } else {
-                Log.w(TAG, "  No name available for contact");
+            if (!hasNameRow) {
+                String nameToUse = null;
+                for (RawContactSnapshot rc : contact.rawContacts) {
+                    if (rc.displayName != null && !rc.displayName.isEmpty()) {
+                        nameToUse = rc.displayName;
+                        break;
+                    }
+                }
+                if (nameToUse == null && contact.displayName != null && !contact.displayName.isEmpty()) {
+                    nameToUse = contact.displayName;
+                }
+                if (nameToUse != null) {
+                    Log.d(TAG, "  Synthesizing name row");
+                    DataRowSnapshot syntheticName = new DataRowSnapshot();
+                    syntheticName.mimeType = MIME_NAME;
+                    syntheticName.data1 = nameToUse;
+                    mergedRows.add(0, syntheticName);
+                } else {
+                    Log.w(TAG, "  No name available for contact");
+                }
             }
         }
 
         if (mergedRows.isEmpty()) {
-            Log.w(TAG, "  WARNING: contact has ZERO data rows!");
+            Log.w(TAG, "  Contact has zero selected data rows (categories deselected or source was empty)");
         }
 
         // Build batch: raw contact insert (index 0) + all data rows
@@ -210,12 +297,14 @@ public final class ContactsSnapshotRestorer {
         ops.add(rawBuilder.build());
 
         int unrestoredGroupMemberships = 0;
+        ArrayList<DataRowSnapshot> insertedRows = new ArrayList<>();
         for (DataRowSnapshot row : mergedRows) {
             try {
                 ContentProviderOperation.Builder dataBuilder = buildDataInsertBuilder(row, groupIdMapping);
                 if (dataBuilder != null) {
                     dataBuilder.withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0);
                     ops.add(dataBuilder.build());
+                    insertedRows.add(row);
                 } else if (MIME_GROUP_MEMBERSHIP.equals(row.mimeType)) {
                     unrestoredGroupMemberships++;
                     Log.w(TAG, "  Group membership could not be mapped to a target group; row preserved in backup but not restored");
@@ -238,7 +327,12 @@ public final class ContactsSnapshotRestorer {
             int restoredHere = ops.size() - 1; // exclude the raw-contact insert itself
             result.dataRowsRestored += restoredHere;
             Log.d(TAG, "  Batch OK ops=" + ops.size());
-            for (DataRowSnapshot row : mergedRows) {
+            for (DataRowSnapshot row : insertedRows) {
+                if (isProviderData(row.mimeType)) {
+                    result.restoredProviderDataRows++;
+                } else {
+                    result.restoredUserDataRows++;
+                }
                 if (row.data15 != null && row.data15.length > 0) {
                     result.binaryItemsRestored++;
                 }
@@ -271,6 +365,14 @@ public final class ContactsSnapshotRestorer {
                                 resolver.applyBatch(ContactsContract.AUTHORITY,
                                         new ArrayList<>(java.util.Collections.singletonList(dataBuilder.build())));
                                 restored++;
+                                if (isProviderData(row.mimeType)) {
+                                    result.restoredProviderDataRows++;
+                                } else {
+                                    result.restoredUserDataRows++;
+                                }
+                                if (row.data15 != null && row.data15.length > 0) {
+                                    result.binaryItemsRestored++;
+                                }
                             } else if (MIME_GROUP_MEMBERSHIP.equals(row.mimeType)) {
                                 fallbackUnrestoredGroups++;
                             } else {
@@ -297,6 +399,31 @@ public final class ContactsSnapshotRestorer {
                 return null;
             }
         }
+    }
+
+    /**
+     * Whether {@code mimeType} belongs to a {@link RestoreCategory} the user
+     * selected. Photo and group_membership rows are gated by their own
+     * dedicated categories; every other known "core" contact field is gated
+     * by CONTACT_INFO; anything else is provider-specific/unknown and gated
+     * by ADDITIONAL_DATA.
+     */
+    private static boolean isCategorySelected(String mimeType, RestoreOptions options) {
+        if (MIME_PHOTO.equals(mimeType)) return options.includes(RestoreCategory.PHOTOS);
+        if (MIME_GROUP_MEMBERSHIP.equals(mimeType)) return options.includes(RestoreCategory.GROUPS);
+        if (CORE_CONTACT_MIME_TYPES.contains(mimeType)) return options.includes(RestoreCategory.CONTACT_INFO);
+        return options.includes(RestoreCategory.ADDITIONAL_DATA);
+    }
+
+    /**
+     * Whether {@code mimeType} is provider-specific/unknown data (as opposed
+     * to core contact info, a photo, or a group membership), for the
+     * restoredUserDataRows vs restoredProviderDataRows split in {@link RestoreResult}.
+     */
+    private static boolean isProviderData(String mimeType) {
+        return !CORE_CONTACT_MIME_TYPES.contains(mimeType)
+                && !MIME_PHOTO.equals(mimeType)
+                && !MIME_GROUP_MEMBERSHIP.equals(mimeType);
     }
 
     /**
