@@ -1,6 +1,7 @@
 package com.ashkanrafiee.librecontactsbackup;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.*;
 import android.content.*;
 import android.content.pm.PackageManager;
@@ -197,6 +198,7 @@ public class MainActivity extends Activity {
         final String[] options = {"1 backup set", "3 backup sets", "5 backup sets", "10 backup sets", "Keep all"};
         new AlertDialog.Builder(this).setTitle("Keep backup sets").setItems(options, (dialog, which) -> { int keep = which == 4 ? 9999 : Integer.parseInt(options[which].split(" ")[0]); BackupManager.prefs(this).edit().putInt("keep", keep).apply(); keepValue.setText(keep > 100 ? "All sets" : keep + " set" + (keep == 1 ? "" : "s")); }).show();
     }
+    @SuppressLint("WrongConstant") // data.getFlags() is masked to exactly the two accepted persistable flags below
     @Override protected void onActivityResult(int request, int result, Intent data) {
         super.onActivityResult(request, result, data); if (result != RESULT_OK || data == null) { if (request == FOLDER) { pendingBackup = false; pendingScheduleTime = false; pendingNotificationActions = null; } return; } Uri uri = data.getData();
         try { if (request == MANUAL_CSV || request == MANUAL_VCF || request == MANUAL_XLS) { String format = request == MANUAL_CSV ? "csv" : request == MANUAL_VCF ? "vcf" : "xls"; new Thread(() -> { try { BackupManager.writeManualExport(this, uri, format); } catch (Exception e) { notice(this, "Export failed", e.getMessage()); } }).start(); }
