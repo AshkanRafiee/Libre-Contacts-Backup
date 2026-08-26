@@ -15,6 +15,7 @@ android { namespace = 'com.ashkanrafiee.librecontactsbackup'; compileSdk 35
             storePassword signingValues['storePassword']
             keyAlias signingValues['keyAlias']
             keyPassword signingValues['keyPassword']
+            enableV3Signing true
         }
     } }
     buildTypes { release { if (signingValues['storeFile']) signingConfig signingConfigs.release; minifyEnabled false } }
