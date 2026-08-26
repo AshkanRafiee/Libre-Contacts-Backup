@@ -203,13 +203,32 @@ public class MainActivity extends Activity {
         super.onActivityResult(request, result, data); if (result != RESULT_OK || data == null) { if (request == FOLDER) { pendingBackup = false; pendingScheduleTime = false; pendingNotificationActions = null; } return; } Uri uri = data.getData();
         try { if (request == MANUAL_CSV || request == MANUAL_VCF || request == MANUAL_XLS) { String format = request == MANUAL_CSV ? "csv" : request == MANUAL_VCF ? "vcf" : "xls"; new Thread(() -> { try { BackupManager.writeManualExport(this, uri, format); } catch (Exception e) { notice(this, "Export failed", e.getMessage()); } }).start(); }
             else if (request == FOLDER) { getContentResolver().takePersistableUriPermission(uri, data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION)); BackupManager.prefs(this).edit().putString("folder", uri.toString()).apply(); load(); if (pendingBackup) { pendingBackup = false; backup(); } else if (pendingScheduleTime) { pendingScheduleTime = false; if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingScheduleTime = true; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 24); } else pickScheduleTime(); } else if (pendingNotificationActions != null) { String remaining = pendingNotificationActions; pendingNotificationActions = null; triggerNotificationAction(remaining); } }
-            else { if (checkSelfPermission(Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingRestoreUri = uri; requestPermissions(new String[]{Manifest.permission.WRITE_CONTACTS}, 22); return; } restoreSelected(uri); }
+            else {
+                // Restore needs READ_CONTACTS too, not just WRITE_CONTACTS: it queries
+                // existing RawContacts (to detect and split platform-auto-merged
+                // contacts) and existing Groups (to match/create target groups).
+                // A user who goes straight to Restore without ever running a Backup
+                // first would otherwise only ever be asked for WRITE_CONTACTS, and
+                // those internal queries would silently fail for lack of READ_CONTACTS.
+                boolean hasWrite = checkSelfPermission(Manifest.permission.WRITE_CONTACTS) == PackageManager.PERMISSION_GRANTED;
+                boolean hasRead = checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED;
+                if (!hasWrite || !hasRead) {
+                    pendingRestoreUri = uri;
+                    requestPermissions(new String[]{Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS}, 22);
+                    return;
+                }
+                restoreSelected(uri);
+            }
         } catch (Exception e) { notice(this, "Could not open", e.getMessage()); }
     }
-    @Override public void onRequestPermissionsResult(int request, String[] permissions, int[] results) { super.onRequestPermissionsResult(request, permissions, results); if (request == 21) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; boolean resume = pendingBackup; pendingBackup = false; if (granted && resume) backup(); } else if (request == 22) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; Uri uri = pendingRestoreUri; pendingRestoreUri = null; if (granted && uri != null) restoreSelected(uri); } else if (request == 23 && results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED && pendingManualFormat != null) { String format = pendingManualFormat; pendingManualFormat = null; launchManualExport(format); } else if (request == 24) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; boolean resume = pendingScheduleTime; pendingScheduleTime = false; if (granted && resume) pickScheduleTime(); } else if (request == 25) { if (pendingNotificationActions != null) { String remaining = pendingNotificationActions; pendingNotificationActions = null; triggerNotificationAction(remaining); } } }
+    @Override public void onRequestPermissionsResult(int request, String[] permissions, int[] results) { super.onRequestPermissionsResult(request, permissions, results); if (request == 21) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; boolean resume = pendingBackup; pendingBackup = false; if (granted && resume) backup(); } else if (request == 22) { boolean granted = results.length > 0; for (int r : results) if (r != PackageManager.PERMISSION_GRANTED) granted = false; Uri uri = pendingRestoreUri; pendingRestoreUri = null; if (granted && uri != null) restoreSelected(uri); } else if (request == 23 && results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED && pendingManualFormat != null) { String format = pendingManualFormat; pendingManualFormat = null; launchManualExport(format); } else if (request == 24) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; boolean resume = pendingScheduleTime; pendingScheduleTime = false; if (granted && resume) pickScheduleTime(); } else if (request == 25) { if (pendingNotificationActions != null) { String remaining = pendingNotificationActions; pendingNotificationActions = null; triggerNotificationAction(remaining); } } }
     void configureEncryption(boolean enabled) {
         if (!enabled) { BackupManager.prefs(this).edit().putBoolean("encrypted", false).apply(); return; }
-        BackupManager.prefs(this).edit().putBoolean("encrypted", true).apply();
+        // "encrypted" is only persisted once a password is actually saved (inside the
+        // success callback below) — not eagerly here. Setting it up front meant that
+        // canceling the password dialog left the app believing backups should be
+        // encrypted with no password actually saved, so every backup would then fail
+        // with "Set an encryption password first" until the switch was toggled again.
         passwordDialog("Set encryption password", true, password -> { try { BackupManager.saveEncryptionPassword(this, password); BackupManager.prefs(this).edit().putBoolean("encrypted", true).apply(); } catch (Exception e) { encryptionSwitch.setChecked(false); notice(this, "Encryption unavailable", e.getMessage()); } });
     }
     interface PasswordAction { void run(String password); }
@@ -217,8 +236,17 @@ public class MainActivity extends Activity {
         LinearLayout form = new LinearLayout(this); form.setOrientation(LinearLayout.VERTICAL); form.setPadding(dp(24), dp(8), dp(24), 0);
         EditText first = new EditText(this); first.setHint("Password"); first.setSingleLine(true); first.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD); form.addView(first, new LinearLayout.LayoutParams(-1, dp(54)));
         EditText second = null; if (confirm) { second = new EditText(this); second.setHint("Repeat password"); second.setSingleLine(true); second.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD); form.addView(second, new LinearLayout.LayoutParams(-1, dp(54))); }
-        final EditText repeated = second; AlertDialog dialog = new AlertDialog.Builder(this).setTitle(title).setMessage(confirm ? "Use at least 8 characters. Scheduled backups use this saved password." : "Enter the password used when this backup was created.").setView(form).setNegativeButton("Cancel", null).setPositiveButton(confirm ? "Enable" : "Restore", null).create();
-        if (confirm) dialog.setOnCancelListener(ignored -> encryptionSwitch.setChecked(false));
+        final EditText repeated = second;
+        // Reverting the switch must cover BOTH cancel paths: tapping the "Cancel"
+        // button only dismisses the dialog (Dialog.dismiss(), not cancel()), so
+        // OnCancelListener alone never fires for it — only for back-press/outside-touch.
+        // Relying on just one of the two left the switch visibly ON with no password
+        // ever saved whenever the user tapped Cancel explicitly.
+        Runnable revertSwitchIfConfirm = () -> { if (confirm) encryptionSwitch.setChecked(false); };
+        AlertDialog dialog = new AlertDialog.Builder(this).setTitle(title).setMessage(confirm ? "Use at least 8 characters. Scheduled backups use this saved password." : "Enter the password used when this backup was created.").setView(form)
+                .setNegativeButton("Cancel", (dialogInterface, which) -> revertSwitchIfConfirm.run())
+                .setPositiveButton(confirm ? "Enable" : "Restore", null).create();
+        dialog.setOnCancelListener(ignored -> revertSwitchIfConfirm.run());
         dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> { String password = first.getText().toString(); if (password.length() < 8 || (repeated != null && !password.equals(repeated.getText().toString()))) { first.setError(repeated == null ? "Use at least 8 characters" : "Passwords do not match"); return; } dialog.dismiss(); action.run(password); })); dialog.show();
     }
     void restoreSelected(Uri uri) {
