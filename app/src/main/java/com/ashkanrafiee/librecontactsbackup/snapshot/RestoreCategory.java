@@ -40,7 +40,7 @@ public enum RestoreCategory {
 
     ACCOUNT_INFO(
             "Account/source information",
-            "Which account (e.g. a Google account) a contact is tied to.",
+            "Preserve the original account (e.g. a Google account) where supported. When a contact came from more than one source, it's restored as one contact under a single account — the original multi-source structure isn't recreated exactly.",
             "e.g. that a contact is linked to your Google account",
             false, "not recommended when restoring to a different device or account — the contact still restores, just as a local contact");
 
