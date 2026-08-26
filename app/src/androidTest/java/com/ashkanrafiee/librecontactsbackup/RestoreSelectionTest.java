@@ -297,6 +297,63 @@ public class RestoreSelectionTest {
     }
 
     // ============================================================
+    // Scenario 8: a nameless "shadow" source Contact that only ever carried
+    // provider-specific data (e.g. a messaging app's internal RawContact,
+    // with no name/phone/email of its own) must NOT become an empty,
+    // duplicate-looking contact when Additional data/Account info aren't
+    // selected — it should simply not be created at all, since there is
+    // nothing left to restore for it.
+    // ============================================================
+    @Test
+    public void scenario8_shadowContactWithNothingSelectedIsNotCreatedEmpty() throws Exception {
+        String realContact = insertRawContact();
+        insertRow(realContact, "vnd.android.cursor.item/name", "Real Person");
+        insertRow(realContact, "vnd.android.cursor.item/phone_v2", "+1-555-9001", "1");
+
+        // A separate source Contact (no name/phone to aggregate on, so Android
+        // won't merge it with the real one) carrying only provider-specific
+        // data — mirrors what a messaging app's internal bookkeeping entry
+        // looks like: no name, no phone, just its own proprietary field.
+        String shadowContact = insertRawContact();
+        insertRow(shadowContact, UNKNOWN_MIME, "telegram-internal-id-12345");
+        Thread.sleep(300);
+
+        AndroidContactsSnapshot snapshot = ContactsSnapshotReader.read(targetContext());
+        assertEquals("Should be two distinct source Contacts", 2, snapshot.getContactCount());
+
+        cleanupContacts();
+
+        RestoreResult result = ContactsSnapshotRestorer.restore(targetContext(), snapshot,
+                RestoreOptions.of(RestoreCategory.CONTACT_INFO), (m, c, t) -> {});
+
+        assertEquals("Only the real contact should be created", 1, result.contactsCreated);
+        assertEquals("The shadow contact should be skipped, not created empty", 1, result.emptyContactsSkipped);
+
+        Cursor phoneCursor = resolver.query(ContactsContract.Data.CONTENT_URI,
+                new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER},
+                ContactsContract.Data.MIMETYPE + "=?",
+                new String[]{"vnd.android.cursor.item/phone_v2"}, null);
+        assertNotNull(phoneCursor);
+        try {
+            assertTrue("The real contact's phone should be restored", phoneCursor.moveToFirst());
+            assertEquals("+1-555-9001", phoneCursor.getString(0));
+        } finally {
+            phoneCursor.close();
+        }
+
+        Cursor c = resolver.query(ContactsContract.RawContacts.CONTENT_URI,
+                new String[]{ContactsContract.RawContacts._ID},
+                ContactsContract.RawContacts.DELETED + "=0", null, null);
+        assertNotNull(c);
+        try {
+            assertEquals("Exactly one RawContact should exist on the device — no empty duplicate",
+                    1, c.getCount());
+        } finally {
+            c.close();
+        }
+    }
+
+    // ============================================================
     // Scenario 7: data present in the backup that cannot be mapped onto the
     // target provider (here: a group_membership referencing a group ID that
     // isn't part of the snapshot's captured Groups, e.g. because the source

@@ -38,6 +38,14 @@ public final class RestoreResult {
     // later with a different selection.
     public int skippedByUserChoice;
 
+    // Source Contacts that ended up with zero data rows after category
+    // filtering (most commonly a messaging app's nameless "shadow" RawContact
+    // that only ever carried provider-specific data) and were therefore not
+    // created as an empty, duplicate-looking contact. Not data loss: nothing
+    // useful existed to write, and anything real is either already restored
+    // elsewhere or still sitting in the .lcb.
+    public int emptyContactsSkipped;
+
     // Data that could not be carried over, despite being present in the source.
     public int dataRowsSkipped;
     public int dataRowsFailed;
@@ -86,6 +94,9 @@ public final class RestoreResult {
         }
         if (skippedByUserChoice > 0) {
             sb.append("Not restored (category not selected, still in backup): ").append(skippedByUserChoice).append("\n");
+        }
+        if (emptyContactsSkipped > 0) {
+            sb.append("Empty contacts not created (no data left to restore): ").append(emptyContactsSkipped).append("\n");
         }
         if (dataRowsSkipped > 0) {
             sb.append("Skipped: ").append(dataRowsSkipped).append("\n");

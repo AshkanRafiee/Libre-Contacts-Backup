@@ -146,11 +146,15 @@ public final class ContactsSnapshotRestorer {
             }
 
             try {
+                int emptySkipsBefore = result.emptyContactsSkipped;
                 Long newRawContactId = restoreContact(resolver, contact, result, groupIdMapping, options);
                 if (newRawContactId != null) {
                     result.contactsCreated++;
                     restoredRawContactIds.add(newRawContactId);
-                } else {
+                } else if (result.emptyContactsSkipped == emptySkipsBefore) {
+                    // A null return with no matching emptyContactsSkipped increment
+                    // means restoreContact() genuinely failed to create anything,
+                    // as opposed to deliberately skipping a now-empty contact.
                     result.addError("Failed to restore contact #" + current + ": no RawContact was created");
                 }
             } catch (Exception e) {
@@ -168,13 +172,18 @@ public final class ContactsSnapshotRestorer {
             result.addWarning(result.skippedByUserChoice + " data row(s) not restored because their category "
                     + "wasn't selected (still preserved in the backup)");
         }
+        if (result.emptyContactsSkipped > 0) {
+            result.addWarning(result.emptyContactsSkipped + " contact(s) had no data left to restore after your "
+                    + "selection and were not created (often a messaging app's internal entry, not a real contact)");
+        }
 
         Log.i(TAG, "=== Restore complete: " + result.contactsCreated + " contacts, "
                 + result.rawContactsCreated + " raw contacts, "
                 + result.dataRowsRestored + " data rows restored, "
                 + result.mergedRawContacts + " raw contacts merged, "
                 + result.deduplicatedDataRows + " rows deduplicated, "
-                + result.skippedByUserChoice + " skipped by user choice ===");
+                + result.skippedByUserChoice + " skipped by user choice, "
+                + result.emptyContactsSkipped + " empty contacts skipped ===");
 
         return result;
     }
@@ -284,7 +293,24 @@ public final class ContactsSnapshotRestorer {
         }
 
         if (mergedRows.isEmpty()) {
-            Log.w(TAG, "  Contact has zero selected data rows (categories deselected or source was empty)");
+            // Nothing survived category filtering (or the source itself was
+            // already empty) — most commonly a "shadow" RawContact some
+            // messaging app (e.g. Telegram/WhatsApp) created purely to attach
+            // its own proprietary data to an existing contact, with no name,
+            // phone, or other core field of its own. Android's own Contacts
+            // app hides these from the main list, but this reader doesn't
+            // apply that visibility filter, so every one becomes its own
+            // source Contact. Restoring it as an empty RawContact would
+            // create a visible, nameless, dataless duplicate of the real
+            // contact for every such shadow entry — never useful, and not
+            // data loss, since there is genuinely nothing left to write:
+            // anything real either got selected (and is already restored
+            // under whichever target Contact it belongs to) or is safely
+            // still sitting in the .lcb archive. Skip creating a contact for
+            // it entirely instead of inserting an empty shell.
+            Log.w(TAG, "  Contact has zero selected data rows (categories deselected or source was empty); skipping empty contact");
+            result.emptyContactsSkipped++;
+            return null;
         }
 
         // Build batch: raw contact insert (index 0) + all data rows
