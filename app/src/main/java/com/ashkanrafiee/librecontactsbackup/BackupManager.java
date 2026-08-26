@@ -17,6 +17,7 @@ import com.ashkanrafiee.librecontactsbackup.export.VCardImporter;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactsSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.ContactsSnapshotReader;
+import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreOptions;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreResult;
 
 import org.json.JSONArray;
@@ -111,12 +112,13 @@ public final class BackupManager {
     }
 
     /**
-     * Restores contacts from a .lcb backup file.
-     * Handles both new format (canonical snapshot) and legacy format (VCF-only).
-     * Returns a RestoreResult with detailed statistics.
+     * Opens, decrypts, and decodes a .lcb backup file, without restoring
+     * anything. Split out from {@link #restoreWithResult} so callers can
+     * analyze the backup and let the user choose restore categories before
+     * any restore actually runs.
      */
-    public static RestoreResult restoreWithResult(Context c, Uri file, String password,
-                                                    RestoreProgress progress) throws Exception {
+    public static BackupArchiveReader.ArchiveData openArchive(Context c, Uri file, String password,
+                                                               RestoreProgress progress) throws Exception {
         progress.update("Opening backup", 0, 0);
         byte[] data;
         try (InputStream in = c.getContentResolver().openInputStream(file)) {
@@ -135,35 +137,53 @@ public final class BackupManager {
         if (!archiveData.checksumValid) {
             throw new IOException("Backup integrity check failed: checksums do not match");
         }
+        return archiveData;
+    }
 
+    /**
+     * Resolves an opened archive (new lossless format or legacy VCF-only
+     * format) into a restorable snapshot. Never mutates the archive.
+     */
+    public static AndroidContactsSnapshot resolveSnapshot(BackupArchiveReader.ArchiveData archiveData) throws Exception {
         if (archiveData.isLegacy) {
-            // Legacy format: restore from VCF (best-effort, may be lossy)
-            return restoreFromVcf(c, archiveData.vcfContent, progress);
+            if (archiveData.vcfContent == null || archiveData.vcfContent.isEmpty()) {
+                throw new IOException("No VCF content found in backup");
+            }
+            AndroidContactsSnapshot snapshot = VCardImporter.importVcf(archiveData.vcfContent);
+            if (snapshot.getContactCount() == 0) {
+                throw new IOException("No contacts found in backup");
+            }
+            return snapshot;
         } else if (archiveData.isLossless() && archiveData.snapshot != null) {
-            // New format: lossless restore from canonical snapshot
-            return ContactsSnapshotRestorer.restoreExact(c, archiveData.snapshot,
-                    (message, current, total) -> progress.update(message, current, total));
+            return archiveData.snapshot;
         } else {
             throw new IOException("Invalid backup format");
         }
     }
 
     /**
-     * Legacy restore from VCF content. Used as fallback for old .lcb files.
+     * Restores contacts from a .lcb backup file, materializing every
+     * supported category. Handles both new format (canonical snapshot) and
+     * legacy format (VCF-only). Returns a RestoreResult with detailed
+     * statistics. Kept for callers that don't need category selection.
      */
-    private static RestoreResult restoreFromVcf(Context c, String vcfContent, RestoreProgress progress) throws Exception {
-        if (vcfContent == null || vcfContent.isEmpty()) {
-            throw new IOException("No VCF content found in backup");
-        }
-
-        // Import VCF into a snapshot
-        AndroidContactsSnapshot snapshot = VCardImporter.importVcf(vcfContent);
-        if (snapshot.getContactCount() == 0) {
-            throw new IOException("No contacts found in backup");
-        }
-
-        // Restore from the snapshot
+    public static RestoreResult restoreWithResult(Context c, Uri file, String password,
+                                                    RestoreProgress progress) throws Exception {
+        BackupArchiveReader.ArchiveData archiveData = openArchive(c, file, password, progress);
+        AndroidContactsSnapshot snapshot = resolveSnapshot(archiveData);
         return ContactsSnapshotRestorer.restoreExact(c, snapshot,
+                (message, current, total) -> progress.update(message, current, total));
+    }
+
+    /**
+     * Restores only the categories selected in {@code options} from an
+     * already-opened/decoded snapshot. The snapshot (and the .lcb it came
+     * from) is never modified — the same snapshot can be restored again
+     * later with a different selection.
+     */
+    public static RestoreResult restoreWithOptions(Context c, AndroidContactsSnapshot snapshot,
+                                                    RestoreOptions options, RestoreProgress progress) {
+        return ContactsSnapshotRestorer.restore(c, snapshot, options,
                 (message, current, total) -> progress.update(message, current, total));
     }
 
