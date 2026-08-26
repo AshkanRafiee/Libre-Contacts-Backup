@@ -12,7 +12,7 @@ AutoName: Libre Contacts Backup
 
 RepoType: git
 Repo: https://github.com/AshkanRafiee/Libre-Contacts-Backup.git
-Binaries: 
+Binaries:
   https://github.com/AshkanRafiee/Libre-Contacts-Backup/releases/download/v%v/Libre-Contacts-Backup-v%v.apk
 
 Builds:
