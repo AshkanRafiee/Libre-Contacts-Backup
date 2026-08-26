@@ -106,9 +106,11 @@ public final class VCardImporter {
                     DataRowSnapshot row = new DataRowSnapshot("vnd.android.cursor.item/postal-address_v2");
                     String[] parts = unescapeVcard(propValue).split(";", -1);
                     // vCard ADR: PO;Ext;Street;City;Region;Zip;Country
-                    row.data4 = parts.length > 0 ? parts[0] : null; // PO box
-                    row.data5 = parts.length > 1 ? parts[1] : null; // neighborhood
-                    row.data6 = parts.length > 2 ? parts[2] : null; // street
+                    // Android postal data mapping (ContactsContract.CommonDataKinds.StructuredPostal):
+                    // data4 = street, data5 = PO box, data6 = neighborhood
+                    row.data5 = parts.length > 0 ? parts[0] : null; // PO box
+                    row.data6 = parts.length > 1 ? parts[1] : null; // neighborhood (vCard "extended address")
+                    row.data4 = parts.length > 2 ? parts[2] : null; // street
                     row.data7 = parts.length > 3 ? parts[3] : null; // city
                     row.data8 = parts.length > 4 ? parts[4] : null; // region
                     row.data9 = parts.length > 5 ? parts[5] : null; // postcode

@@ -288,8 +288,9 @@ public final class BackupManager {
                             break;
                         case "vnd.android.cursor.item/postal-address_v2":
                         case "vnd.android.cursor.item/postal-address":
-                            if (row.data6 != null && !row.data6.isEmpty())
-                                addr = addr.isEmpty() ? row.data6 : addr + "; " + row.data6;
+                            // data4 = STREET (ContactsContract.CommonDataKinds.StructuredPostal)
+                            if (row.data4 != null && !row.data4.isEmpty())
+                                addr = addr.isEmpty() ? row.data4 : addr + "; " + row.data4;
                             break;
                         case "vnd.android.cursor.item/organization":
                             if (row.data1 != null && org.isEmpty()) org = row.data1;

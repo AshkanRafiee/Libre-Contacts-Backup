@@ -143,14 +143,14 @@ public final class VCardExporter {
 
     private static void exportPostal(StringBuilder sb, DataRowSnapshot row) {
         // vCard ADR: PO;Ext;Street;City;Region;Zip;Country
-        // Android postal data mapping:
+        // Android postal data mapping (ContactsContract.CommonDataKinds.StructuredPostal):
         // data1 = formatted address, data2 = type, data3 = label
-        // data4 = PO box, data5 = neighborhood, data6 = street
+        // data4 = street, data5 = PO box, data6 = neighborhood
         // data7 = city, data8 = region, data9 = postcode, data10 = country
         sb.append("ADR").append(typeParam(row.data2, row.data3)).append(":");
-        sb.append(escapeVcard(nvl(row.data4))).append(";"); // PO box
-        sb.append(escapeVcard(nvl(row.data5))).append(";"); // neighborhood
-        sb.append(escapeVcard(nvl(row.data6))).append(";"); // street
+        sb.append(escapeVcard(nvl(row.data5))).append(";"); // PO box
+        sb.append(escapeVcard(nvl(row.data6))).append(";"); // neighborhood (vCard "extended address")
+        sb.append(escapeVcard(nvl(row.data4))).append(";"); // street
         sb.append(escapeVcard(nvl(row.data7))).append(";"); // city
         sb.append(escapeVcard(nvl(row.data8))).append(";"); // region
         sb.append(escapeVcard(nvl(row.data9))).append(";"); // postcode
