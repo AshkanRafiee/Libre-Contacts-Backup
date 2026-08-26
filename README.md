@@ -6,7 +6,7 @@ A free, open-source, native Android app that backs up your contacts — fully of
 - **Private by design** — no account, no cloud, no analytics, no network permission at all. Contacts are only read when a backup runs.
 - **Local by design** — backups are written to a folder you choose on your own device (or SD card); nothing is ever uploaded anywhere.
 - **Scheduled backups** — set a daily time and it runs automatically in the background, entirely on-device.
-- **Lossless** — preserves the full Contact → RawContact → Data hierarchy (every field, every account, every custom type), not a lossy flattened copy.
+- **As close to lossless as the Contacts Provider allows** — the backup preserves the full Contact → RawContact → Data hierarchy (every readable field, every account, every custom type), not a lossy flattened copy. Restore is lossless for whatever categories you select and the target device supports; anything it can't materialize is reported, not silently dropped, and stays intact in the backup either way.
 - **Optional encryption** — AES-256-GCM with a password, key wrapped by Android Keystore.
 
 ## Backup format
