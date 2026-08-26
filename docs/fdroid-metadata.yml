@@ -27,5 +27,5 @@ AllowedAPKSigningKeys: e90d878e33ab6f41dd841b4209311ec3fa816aeea7ca75687354e2840
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
-CurrentVersion: 2.1.0
-CurrentVersionCode: 16
+CurrentVersion: 2.1.1
+CurrentVersionCode: 17

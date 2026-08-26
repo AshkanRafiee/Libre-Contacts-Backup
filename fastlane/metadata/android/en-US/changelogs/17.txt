@@ -1,0 +1,5 @@
+Changes:
+- Setting a scheduled backup now prompts you to choose a backup folder and grant contacts permission if either is missing, so scheduled backups work out of the box
+- Tapping a scheduled backup notification takes you directly to the step that needs fixing (folder chooser or permission dialog)
+- If the backup folder becomes unavailable or contacts permission is revoked, the next scheduled backup shows a clear notification explaining what's wrong and how to fix it
+- Notifications now surface all missing prerequisites at once instead of only the first one

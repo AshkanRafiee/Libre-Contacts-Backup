@@ -27,7 +27,7 @@ public class MainActivity extends Activity {
     final int purple = Color.rgb(137, 125, 255), mint = Color.rgb(143, 240, 208), background = Color.rgb(10, 14, 24);
     final int card = Color.rgb(20, 27, 42), muted = Color.rgb(151, 161, 181);
     TextView status, folderValue, scheduleValue, keepValue, restoreStatus;
-    Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat; boolean pendingBackup; boolean compact;
+    Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat; boolean pendingBackup; boolean pendingScheduleTime; String pendingNotificationActions; boolean compact;
     Button backupButton;
     ProgressBar backupProgress;
     boolean backupRunning;
@@ -57,6 +57,17 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 20);
         build();
+        String action = getIntent() != null ? getIntent().getStringExtra("notification_action") : null;
+        if (action != null) getIntent().removeExtra("notification_action");
+        if (action != null && !action.isEmpty()) triggerNotificationAction(action);
+    }
+    void triggerNotificationAction(String actions) {
+        String[] parts = actions.split(",");
+        String first = parts[0].trim();
+        String remaining = actions.substring(first.length()).replaceFirst("^,", "").trim();
+        pendingNotificationActions = remaining.isEmpty() ? null : remaining;
+        if ("folder_missing".equals(first) || "folder_revoked".equals(first)) { chooseFolder(); }
+        else if ("permission_missing".equals(first)) { requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 25); }
     }
 
     void build() {
@@ -167,22 +178,27 @@ public class MainActivity extends Activity {
     }
     void scheduleDialog() {
         new AlertDialog.Builder(this).setTitle("Backup schedule").setItems(new String[]{"Off", "Daily at a specific time..."}, (dialog, which) -> {
-            if (which == 0) { BackupManager.prefs(this).edit().putString("schedule", "Off").apply(); scheduleValue.setText("Off"); AlarmScheduler.set(this, "Off"); }
-            else new TimePickerDialog(this, (view, hour, minute) -> { String s = String.format(Locale.getDefault(), "Daily at %02d:%02d", hour, minute); BackupManager.prefs(this).edit().putString("schedule", s).putInt("hour", hour).putInt("minute", minute).apply(); scheduleValue.setText(s); AlarmScheduler.setAtTime(this, hour, minute); }, 9, 0, true).show();
+            if (which == 0) { BackupManager.prefs(this).edit().putString("schedule", "Off").apply(); scheduleValue.setText("Off"); AlarmScheduler.set(this, "Off"); return; }
+            if (BackupManager.folder(this).isEmpty()) { pendingScheduleTime = true; chooseFolder(); return; }
+            if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingScheduleTime = true; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 24); return; }
+            pickScheduleTime();
         }).show();
+    }
+    void pickScheduleTime() {
+        new TimePickerDialog(this, (view, hour, minute) -> { String s = String.format(Locale.getDefault(), "Daily at %02d:%02d", hour, minute); BackupManager.prefs(this).edit().putString("schedule", s).putInt("hour", hour).putInt("minute", minute).apply(); scheduleValue.setText(s); AlarmScheduler.setAtTime(this, hour, minute); }, 9, 0, true).show();
     }
     void retentionDialog() {
         final String[] options = {"1 backup set", "3 backup sets", "5 backup sets", "10 backup sets", "Keep all"};
         new AlertDialog.Builder(this).setTitle("Keep backup sets").setItems(options, (dialog, which) -> { int keep = which == 4 ? 9999 : Integer.parseInt(options[which].split(" ")[0]); BackupManager.prefs(this).edit().putInt("keep", keep).apply(); keepValue.setText(keep > 100 ? "All sets" : keep + " set" + (keep == 1 ? "" : "s")); }).show();
     }
     @Override protected void onActivityResult(int request, int result, Intent data) {
-        super.onActivityResult(request, result, data); if (result != RESULT_OK || data == null) { if (request == FOLDER) pendingBackup = false; return; } Uri uri = data.getData();
+        super.onActivityResult(request, result, data); if (result != RESULT_OK || data == null) { if (request == FOLDER) { pendingBackup = false; pendingScheduleTime = false; pendingNotificationActions = null; } return; } Uri uri = data.getData();
         try { if (request == MANUAL_CSV || request == MANUAL_VCF || request == MANUAL_XLS) { String format = request == MANUAL_CSV ? "csv" : request == MANUAL_VCF ? "vcf" : "xls"; new Thread(() -> { try { BackupManager.writeManualExport(this, uri, format); } catch (Exception e) { notice(this, "Export failed", e.getMessage()); } }).start(); }
-            else if (request == FOLDER) { getContentResolver().takePersistableUriPermission(uri, data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION)); BackupManager.prefs(this).edit().putString("folder", uri.toString()).apply(); load(); if (pendingBackup) backup(); }
+            else if (request == FOLDER) { getContentResolver().takePersistableUriPermission(uri, data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION)); BackupManager.prefs(this).edit().putString("folder", uri.toString()).apply(); load(); if (pendingBackup) { pendingBackup = false; backup(); } else if (pendingScheduleTime) { pendingScheduleTime = false; if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingScheduleTime = true; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 24); } else pickScheduleTime(); } else if (pendingNotificationActions != null) { String remaining = pendingNotificationActions; pendingNotificationActions = null; triggerNotificationAction(remaining); } }
             else { if (checkSelfPermission(Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingRestoreUri = uri; requestPermissions(new String[]{Manifest.permission.WRITE_CONTACTS}, 22); return; } restoreSelected(uri); }
         } catch (Exception e) { notice(this, "Could not open", e.getMessage()); }
     }
-    @Override public void onRequestPermissionsResult(int request, String[] permissions, int[] results) { super.onRequestPermissionsResult(request, permissions, results); if (request == 21) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; boolean resume = pendingBackup; pendingBackup = false; if (granted && resume) backup(); } else if (request == 22) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; Uri uri = pendingRestoreUri; pendingRestoreUri = null; if (granted && uri != null) restoreSelected(uri); } else if (request == 23 && results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED && pendingManualFormat != null) { String format = pendingManualFormat; pendingManualFormat = null; launchManualExport(format); } }
+    @Override public void onRequestPermissionsResult(int request, String[] permissions, int[] results) { super.onRequestPermissionsResult(request, permissions, results); if (request == 21) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; boolean resume = pendingBackup; pendingBackup = false; if (granted && resume) backup(); } else if (request == 22) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; Uri uri = pendingRestoreUri; pendingRestoreUri = null; if (granted && uri != null) restoreSelected(uri); } else if (request == 23 && results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED && pendingManualFormat != null) { String format = pendingManualFormat; pendingManualFormat = null; launchManualExport(format); } else if (request == 24) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; boolean resume = pendingScheduleTime; pendingScheduleTime = false; if (granted && resume) pickScheduleTime(); } else if (request == 25) { if (pendingNotificationActions != null) { String remaining = pendingNotificationActions; pendingNotificationActions = null; triggerNotificationAction(remaining); } } }
     void configureEncryption(boolean enabled) {
         if (!enabled) { BackupManager.prefs(this).edit().putBoolean("encrypted", false).apply(); return; }
         BackupManager.prefs(this).edit().putBoolean("encrypted", true).apply();
@@ -229,12 +245,14 @@ public class MainActivity extends Activity {
     }
     void hideRestoreProgress() { runOnUiThread(() -> { if (restoreProgress != null && restoreProgress.isShowing()) restoreProgress.dismiss(); restoreProgress = null; restoreProgressText = null; }); }
     public static void notice(Context context, String title, String body) { new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(context, title + ": " + body, Toast.LENGTH_LONG).show()); }
-    public static void showScheduledNotification(Context context, String result) {
+    public static void showScheduledNotification(Context context, String result, String reason) {
         try {
             final String channelId = "scheduled_backups"; boolean success = result != null && result.startsWith("Saved");
             NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(new NotificationChannel(channelId, "Scheduled backups", NotificationManager.IMPORTANCE_DEFAULT));
-            Intent open = new Intent(context, MainActivity.class); PendingIntent pending = PendingIntent.getActivity(context, 91, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            Intent open = new Intent(context, MainActivity.class);
+            if (reason != null) open.putExtra("notification_action", reason);
+            PendingIntent pending = PendingIntent.getActivity(context, 91, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
             String title = success ? "Libre Contacts Backup complete" : "Libre Contacts Backup needs attention";
             String message = success ? result : (result == null ? "The scheduled backup could not be completed." : result);
             Notification.Builder builder = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(context, channelId) : new Notification.Builder(context);
@@ -242,6 +260,7 @@ public class MainActivity extends Activity {
             manager.notify(91, builder.build());
         } catch (Exception error) { Log.e("LibreContactsBackup", "Unable to show scheduled backup notification", error); }
     }
+    public static void showScheduledNotification(Context context, String result) { showScheduledNotification(context, result, null); }
 
     static final class ContactOrbit extends View {
         final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
