@@ -17,6 +17,12 @@ import android.util.Log;
 import android.view.*;
 import android.widget.*;
 
+import com.ashkanrafiee.librecontactsbackup.archive.BackupArchiveReader;
+import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactsSnapshot;
+import com.ashkanrafiee.librecontactsbackup.snapshot.BackupAnalysis;
+import com.ashkanrafiee.librecontactsbackup.snapshot.BackupAnalyzer;
+import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreCategory;
+import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreOptions;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreResult;
 
 import java.text.SimpleDateFormat;
@@ -220,7 +226,114 @@ public class MainActivity extends Activity {
         showRestoreProgress("Preparing restore");
         new Thread(() -> {
             try {
-                RestoreResult result = BackupManager.restoreWithResult(this, uri, password, (message, current, total) -> {
+                BackupArchiveReader.ArchiveData archiveData = BackupManager.openArchive(this, uri, password, (message, current, total) -> {
+                    runOnUiThread(() -> { if (restoreProgressText != null) restoreProgressText.setText(message); });
+                });
+                AndroidContactsSnapshot snapshot = BackupManager.resolveSnapshot(archiveData);
+                BackupAnalysis analysis = BackupAnalyzer.analyze(snapshot);
+                runOnUiThread(() -> { hideRestoreProgress(); showRestoreSelectionDialog(snapshot, analysis); });
+            } catch (Exception e) {
+                runOnUiThread(() -> { hideRestoreProgress(); notice(this, "Restore failed", "Wrong password or invalid backup"); });
+            }
+        }).start();
+    }
+
+    /** Plain-language "N things" label for a category's item count, e.g. "12 data fields". */
+    static String categoryCountLabel(RestoreCategory category, int count) {
+        switch (category) {
+            case CONTACT_INFO: return count + (count == 1 ? " data field" : " data fields");
+            case PHOTOS: return count + (count == 1 ? " photo" : " photos");
+            case GROUPS: return count + (count == 1 ? " group" : " groups");
+            case ADDITIONAL_DATA: return count + (count == 1 ? " field" : " fields");
+            case ACCOUNT_INFO: return count + (count == 1 ? " contact linked to an account" : " contacts linked to an account");
+            default: return String.valueOf(count);
+        }
+    }
+
+    /**
+     * Shows what the backup contains and lets the user choose which
+     * categories to materialize into the Contacts Provider (spec sections
+     * 6–9). Only the recommended categories are pre-selected; the rest can
+     * be added by the user. Nothing is restored until "Restore" is tapped;
+     * "Cancel" leaves the Contacts Provider untouched. The backup itself is
+     * never modified regardless of the choice made here. Tapping anywhere
+     * in a row — including its text — toggles that row's checkbox.
+     */
+    void showRestoreSelectionDialog(AndroidContactsSnapshot snapshot, BackupAnalysis analysis) {
+        LinearLayout panel = new LinearLayout(this); panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setPadding(dp(22), dp(20), dp(22), dp(16));
+        panel.setBackground(rounded(card, 22));
+
+        panel.addView(label("Restore contacts", 18, Color.WHITE), margins(0, 0, 0, 4));
+
+        String summary = "This backup contains " + analysis.contactCount
+                + (analysis.contactCount == 1 ? " contact" : " contacts")
+                + " and " + analysis.dataRowCount + (analysis.dataRowCount == 1 ? " data field" : " data fields") + ".";
+        panel.addView(label(summary, 12, muted), margins(0, 0, 0, 14));
+
+        ScrollView scroll = new ScrollView(this);
+        LinearLayout content = new LinearLayout(this); content.setOrientation(LinearLayout.VERTICAL);
+        scroll.addView(content, new ScrollView.LayoutParams(-1, -2));
+
+        LinkedHashMap<RestoreCategory, CheckBox> boxes = new LinkedHashMap<>();
+        for (RestoreCategory category : RestoreCategory.values()) {
+            LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.TOP);
+            row.setPadding(0, dp(10), 0, dp(10));
+
+            CheckBox box = new CheckBox(this);
+            box.setChecked(category.recommended);
+            boxes.put(category, box);
+            LinearLayout.LayoutParams boxParams = new LinearLayout.LayoutParams(-2, -2);
+            boxParams.topMargin = dp(2);
+            row.addView(box, boxParams);
+
+            LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
+            String count = categoryCountLabel(category, analysis.countFor(category));
+            words.addView(label(category.title + "  ·  " + count, 14, Color.WHITE));
+            words.addView(label(category.description + " " + category.example, 11, muted));
+            if (!category.recommended) {
+                words.addView(label("Not recommended — " + category.notRecommendedReason, 11, Color.rgb(222, 184, 112)));
+            }
+            LinearLayout.LayoutParams wordParams = new LinearLayout.LayoutParams(0, -2, 1);
+            wordParams.setMargins(dp(10), 0, 0, 0);
+            row.addView(words, wordParams);
+
+            row.setOnClickListener(v -> box.toggle());
+            content.addView(row);
+        }
+        panel.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
+
+        LinearLayout buttons = new LinearLayout(this); buttons.setOrientation(LinearLayout.HORIZONTAL);
+        Button cancel = button("Cancel", Color.rgb(28, 38, 55)); cancel.setTextColor(Color.rgb(211, 219, 235));
+        Button restore = button("Restore", mint); restore.setTextColor(background);
+        buttons.addView(cancel, new LinearLayout.LayoutParams(0, dp(46), 1));
+        LinearLayout.LayoutParams restoreParams = new LinearLayout.LayoutParams(0, dp(46), 1); restoreParams.setMargins(dp(10), 0, 0, 0);
+        buttons.addView(restore, restoreParams);
+        panel.addView(buttons, margins(0, 14, 0, 0));
+
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(panel);
+        dialog.setCancelable(true);
+        Window window = dialog.getWindow();
+        if (window != null) { window.setBackgroundDrawableResource(android.R.color.transparent); window.setLayout(dp(320), dp(480)); }
+
+        cancel.setOnClickListener(v -> dialog.dismiss());
+        restore.setOnClickListener(v -> {
+            LinkedHashSet<RestoreCategory> selected = new LinkedHashSet<>();
+            for (Map.Entry<RestoreCategory, CheckBox> entry : boxes.entrySet()) {
+                if (entry.getValue().isChecked()) selected.add(entry.getKey());
+            }
+            dialog.dismiss();
+            performRestore(snapshot, RestoreOptions.of(selected));
+        });
+        dialog.show();
+    }
+
+    void performRestore(AndroidContactsSnapshot snapshot, RestoreOptions options) {
+        showRestoreProgress("Restoring contacts");
+        new Thread(() -> {
+            try {
+                RestoreResult result = BackupManager.restoreWithOptions(this, snapshot, options, (message, current, total) -> {
                     runOnUiThread(() -> { if (restoreProgressText != null) restoreProgressText.setText(message); });
                 });
                 BackupManager.prefs(this).edit().putLong("lastRestore", System.currentTimeMillis())
@@ -230,7 +343,7 @@ public class MainActivity extends Activity {
                 final String briefMsg = result.briefSummary();
                 runOnUiThread(() -> { hideRestoreProgress(); load(); notice(this, title, briefMsg); });
             } catch (Exception e) {
-                runOnUiThread(() -> { hideRestoreProgress(); notice(this, "Restore failed", "Wrong password or invalid backup"); });
+                runOnUiThread(() -> { hideRestoreProgress(); notice(this, "Restore failed", e.getMessage()); });
             }
         }).start();
     }
