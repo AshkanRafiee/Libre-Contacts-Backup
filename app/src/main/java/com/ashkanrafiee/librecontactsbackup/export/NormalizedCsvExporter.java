@@ -1,5 +1,6 @@
 package com.ashkanrafiee.librecontactsbackup.export;
 
+import java.util.Locale;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactsSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactSnapshot.DataRowSnapshot;
@@ -68,7 +69,7 @@ public final class NormalizedCsvExporter {
                         case MIME_EMAIL:
                             if (row.data1 != null && !row.data1.isEmpty()) {
                                 if (emails.length() > 0) emails.append("; ");
-                                String type = phoneTypeLabel(row.data2, row.data3);
+                                String type = commonTypeLabel(row.data2, row.data3);
                                 if (!type.isEmpty()) emails.append(type).append(":");
                                 emails.append(row.data1);
                             }
@@ -77,7 +78,7 @@ public final class NormalizedCsvExporter {
                         case MIME_POSTAL_LEGACY:
                             if (hasPostalData(row)) {
                                 if (addresses.length() > 0) addresses.append("; ");
-                                String type = phoneTypeLabel(row.data2, row.data3);
+                                String type = commonTypeLabel(row.data2, row.data3);
                                 if (!type.isEmpty()) addresses.append(type).append(":");
                                 if (row.data4 != null && !row.data4.isEmpty()) addresses.append(row.data4).append(", ");
                                 if (row.data6 != null && !row.data6.isEmpty()) addresses.append(row.data6).append(", ");
@@ -163,13 +164,28 @@ public final class NormalizedCsvExporter {
                 || (row.data10 != null && !row.data10.isEmpty());
     }
 
+    // Phone.TYPE_* numbering (HOME=1, MOBILE=2, WORK=3, OTHER=7) is its own
+    // scheme, distinct from the generic BaseTypes/CommonColumns scheme most
+    // other kinds (Email, StructuredPostal) share — see commonTypeLabel.
     private static String phoneTypeLabel(String typeInt, String customLabel) {
         if (typeInt == null) return "";
         int t;
         try { t = Integer.parseInt(typeInt); } catch (Exception e) { return ""; }
         switch (t) {
-            case 1: return "home"; case 2: return "work"; case 3: return "other"; case -1: return "mobile";
-            default: return (t == 0 && customLabel != null && !customLabel.isEmpty()) ? customLabel.toLowerCase() : "";
+            case 1: return "home"; case 2: return "mobile"; case 3: return "work"; case 7: return "other";
+            default: return (t == 0 && customLabel != null && !customLabel.isEmpty()) ? customLabel.toLowerCase(Locale.ROOT) : "";
+        }
+    }
+
+    // The generic BaseTypes/CommonColumns scheme (HOME=1, WORK=2, OTHER=3)
+    // used by Email and StructuredPostal — not the same numbering as Phone.
+    private static String commonTypeLabel(String typeInt, String customLabel) {
+        if (typeInt == null) return "";
+        int t;
+        try { t = Integer.parseInt(typeInt); } catch (Exception e) { return ""; }
+        switch (t) {
+            case 1: return "home"; case 2: return "work"; case 3: return "other";
+            default: return (t == 0 && customLabel != null && !customLabel.isEmpty()) ? customLabel.toLowerCase(Locale.ROOT) : "";
         }
     }
 
@@ -177,35 +193,54 @@ public final class NormalizedCsvExporter {
         if (typeInt == null) return "other";
         int t;
         try { t = Integer.parseInt(typeInt); } catch (Exception e) { return "other"; }
-        switch (t) { case 1: return "birthday"; case 2: return "anniversary"; default: return "other"; }
+        switch (t) { case 1: return "anniversary"; case 3: return "birthday"; default: return "other"; }
     }
 
+    // Im.PROTOCOL_* (AIM=0, MSN=1, YAHOO=2, SKYPE=3, QQ=4, GOOGLE_TALK=5,
+    // ICQ=6, JABBER=7, NETMEETING=8).
     private static String imProtocolLabel(String protoInt, String customProto) {
         if (protoInt == null) return nvl(customProto);
         int t;
         try { t = Integer.parseInt(protoInt); } catch (Exception e) { return nvl(customProto); }
         switch (t) {
             case 0: return "aim"; case 1: return "msn"; case 2: return "yahoo";
-            case 3: return "skype"; case 4: return "qq"; case 5: return "icq";
-            case 6: return "jabber"; case 7: return "irc";
+            case 3: return "skype"; case 4: return "qq"; case 5: return "google talk";
+            case 6: return "icq"; case 7: return "jabber"; case 8: return "netmeeting";
             default: return customProto != null ? customProto : "";
         }
     }
 
+    // Relation.TYPE_* (ASSISTANT=1, BROTHER=2, CHILD=3, DOMESTIC_PARTNER=4,
+    // FATHER=5, FRIEND=6, MANAGER=7, MOTHER=8, PARENT=9, PARTNER=10,
+    // REFERRED_BY=11, RELATIVE=12, SISTER=13, SPOUSE=14).
     private static String relationTypeLabel(String typeInt, String customLabel) {
         if (typeInt == null) return "";
         int t;
         try { t = Integer.parseInt(typeInt); } catch (Exception e) { return ""; }
         switch (t) {
             case 1: return "assistant"; case 2: return "brother"; case 3: return "child";
-            case 4: return "partner"; case 5: return "father"; case 6: return "friend";
+            case 4: return "domestic partner"; case 5: return "father"; case 6: return "friend";
             case 7: return "manager"; case 8: return "mother"; case 9: return "parent";
-            case 10: return "domestic partner"; case 11: return "sister"; case 12: return "spouse";
-            case 13: return "relative";
-            default: return (customLabel != null && !customLabel.isEmpty()) ? customLabel.toLowerCase() : "";
+            case 10: return "partner"; case 11: return "referred by"; case 12: return "relative";
+            case 13: return "sister"; case 14: return "spouse";
+            default: return (customLabel != null && !customLabel.isEmpty()) ? customLabel.toLowerCase(Locale.ROOT) : "";
         }
     }
 
-    private static String csvEsc(String s) { return s == null ? "" : s.replace("\"", "\"\""); }
+    // A cell starting with =, +, -, @, or a tab is interpreted as a formula
+    // by Excel/Google Sheets/LibreOffice when this CSV is opened — a
+    // contact whose name or note is attacker-controlled (e.g. shared with
+    // someone, or synced from an untrusted source) could otherwise run a
+    // formula on whoever opens the export. Prefixing with a single quote
+    // neutralizes it as a formula while keeping the visible text unchanged
+    // in every spreadsheet app that opens this CSV.
+    private static String csvEsc(String s) {
+        if (s == null) return "";
+        String escaped = s.replace("\"", "\"\"");
+        if (!escaped.isEmpty() && "=+-@\t".indexOf(escaped.charAt(0)) >= 0) {
+            escaped = "'" + escaped;
+        }
+        return escaped;
+    }
     private static String nvl(String s) { return s != null ? s : ""; }
 }

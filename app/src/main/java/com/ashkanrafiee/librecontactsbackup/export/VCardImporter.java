@@ -1,5 +1,6 @@
 package com.ashkanrafiee.librecontactsbackup.export;
 
+import java.util.Locale;
 import android.util.Base64;
 
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactSnapshot;
@@ -37,7 +38,13 @@ public final class VCardImporter {
         // Unfold VCF lines (continuation lines start with space/tab)
         String unfolded = unfold(vcfContent);
 
-        String[] cards = unfolded.split("BEGIN:VCARD");
+        // Split only at an actual card-delimiter line, not at "BEGIN:VCARD"
+        // wherever it happens to occur as a substring — a NOTE or other
+        // free-text field could otherwise contain that exact text and
+        // fracture parsing mid-property. unfold() has already normalized
+        // line endings to '\n', so an actual delimiter is always preceded
+        // by a real line boundary.
+        String[] cards = unfolded.split("(?m)^BEGIN:VCARD\\s*$");
         for (String card : cards) {
             if (card.trim().isEmpty()) continue;
             AndroidContactSnapshot contact = parseVcard(card);
@@ -55,13 +62,17 @@ public final class VCardImporter {
         contact.addRawContact(rawContact);
 
         String displayName = null;
+        // Fallback name (given + family from N) used only if FN is absent —
+        // set aside rather than written straight to the name row's data1,
+        // since FN and N can appear in either order and FN must always win
+        // when both are present (see the post-loop reconciliation below).
+        String nameFallbackFromN = null;
         String lines[] = cardBody.split("\n");
 
         for (String line : lines) {
             String trimmed = line.trim();
             if (trimmed.isEmpty() || trimmed.startsWith("END:VCARD") || trimmed.startsWith("VERSION:")) continue;
 
-            String upper = trimmed.toUpperCase();
             String propName = extractPropertyName(trimmed);
             String[] propParams = extractPropertyParams(trimmed);
             String propValue = extractPropertyValue(trimmed);
@@ -71,25 +82,34 @@ public final class VCardImporter {
             switch (propName) {
                 case "FN":
                     displayName = unescapeVcard(propValue);
-                    addNameRow(rawContact, displayName, null, null, null, null, null);
+                    findOrCreateNameRow(rawContact); // ensure a name row exists even if N is absent
                     break;
 
                 case "N": {
-                    String[] parts = unescapeVcard(propValue).split(";", -1);
-                    String prefix = parts.length > 0 ? parts[0] : "";
+                    // vCard N property (RFC 2426 §3.1.2): Family;Given;
+                    // Additional(middle);Prefix;Suffix — in that fixed order.
+                    String[] parts = splitVcardFields(propValue);
+                    String family = parts.length > 0 ? parts[0] : "";
                     String given = parts.length > 1 ? parts[1] : "";
                     String middle = parts.length > 2 ? parts[2] : "";
-                    String family = parts.length > 3 ? parts[3] : "";
+                    String prefix = parts.length > 3 ? parts[3] : "";
                     String suffix = parts.length > 4 ? parts[4] : "";
-                    String fn = given.isEmpty() && family.isEmpty() ? displayName : trim(given + " " + family);
-                    addNameRow(rawContact, fn, given, family, prefix, suffix, middle);
+                    DataRowSnapshot row = findOrCreateNameRow(rawContact);
+                    row.data2 = given;
+                    row.data3 = family;
+                    row.data4 = prefix;
+                    row.data5 = middle;
+                    row.data6 = suffix;
+                    if (!given.isEmpty() || !family.isEmpty()) {
+                        nameFallbackFromN = trim(given + " " + family);
+                    }
                     break;
                 }
 
                 case "TEL": {
                     DataRowSnapshot row = new DataRowSnapshot("vnd.android.cursor.item/phone_v2");
                     row.data1 = unescapeVcard(propValue);
-                    applyTypeParam(row, propParams);
+                    applyPhoneTypeParam(row, propParams);
                     if (row.data1 != null && !row.data1.isEmpty()) rawContact.addDataRow(row);
                     break;
                 }
@@ -97,14 +117,14 @@ public final class VCardImporter {
                 case "EMAIL": {
                     DataRowSnapshot row = new DataRowSnapshot("vnd.android.cursor.item/email_v2");
                     row.data1 = unescapeVcard(propValue);
-                    applyTypeParam(row, propParams);
+                    applyCommonTypeParam(row, propParams);
                     if (row.data1 != null && !row.data1.isEmpty()) rawContact.addDataRow(row);
                     break;
                 }
 
                 case "ADR": {
                     DataRowSnapshot row = new DataRowSnapshot("vnd.android.cursor.item/postal-address_v2");
-                    String[] parts = unescapeVcard(propValue).split(";", -1);
+                    String[] parts = splitVcardFields(propValue);
                     // vCard ADR: PO;Ext;Street;City;Region;Zip;Country
                     // Android postal data mapping (ContactsContract.CommonDataKinds.StructuredPostal):
                     // data4 = street, data5 = PO box, data6 = neighborhood
@@ -115,24 +135,22 @@ public final class VCardImporter {
                     row.data8 = parts.length > 4 ? parts[4] : null; // region
                     row.data9 = parts.length > 5 ? parts[5] : null; // postcode
                     row.data10 = parts.length > 6 ? parts[6] : null; // country
-                    applyTypeParam(row, propParams);
+                    applyCommonTypeParam(row, propParams);
                     if (row.hasNonNullData()) rawContact.addDataRow(row);
                     break;
                 }
 
                 case "ORG": {
-                    DataRowSnapshot row = new DataRowSnapshot("vnd.android.cursor.item/organization");
-                    String[] parts = unescapeVcard(propValue).split(";", -1);
+                    String[] parts = splitVcardFields(propValue);
+                    DataRowSnapshot row = findOrCreateOrganizationRow(rawContact);
                     row.data1 = parts.length > 0 ? parts[0] : null; // company
                     row.data5 = parts.length > 1 ? parts[1] : null; // department
-                    if (row.data1 != null && !row.data1.isEmpty()) rawContact.addDataRow(row);
                     break;
                 }
 
                 case "TITLE": {
-                    DataRowSnapshot row = new DataRowSnapshot("vnd.android.cursor.item/organization");
+                    DataRowSnapshot row = findOrCreateOrganizationRow(rawContact);
                     row.data4 = unescapeVcard(propValue);
-                    if (row.data4 != null && !row.data4.isEmpty()) rawContact.addDataRow(row);
                     break;
                 }
 
@@ -195,7 +213,7 @@ public final class VCardImporter {
                 case "URL": {
                     DataRowSnapshot row = new DataRowSnapshot("vnd.android.cursor.item/website");
                     row.data1 = unescapeVcard(propValue);
-                    applyTypeParam(row, propParams);
+                    applyWebsiteTypeParam(row, propParams);
                     if (row.data1 != null && !row.data1.isEmpty()) rawContact.addDataRow(row);
                     break;
                 }
@@ -218,7 +236,7 @@ public final class VCardImporter {
 
                 case "PHOTO": {
                     String encoding = getParamValue(propParams, "ENCODING");
-                    if (encoding != null && encoding.toUpperCase().contains("B")) {
+                    if (encoding != null && encoding.toUpperCase(Locale.ROOT).contains("B")) {
                         DataRowSnapshot row = new DataRowSnapshot("vnd.android.cursor.item/photo");
                         try {
                             row.data15 = Base64.decode(propValue.trim(), Base64.NO_WRAP);
@@ -231,7 +249,7 @@ public final class VCardImporter {
                 case "X-SIP": {
                     DataRowSnapshot row = newDataRowWithMime("vnd.android.cursor.item/sip-address");
                     row.data1 = unescapeVcard(propValue);
-                    applyTypeParam(row, propParams);
+                    applyCommonTypeParam(row, propParams);
                     if (row.data1 != null && !row.data1.isEmpty()) rawContact.addDataRow(row);
                     break;
                 }
@@ -249,7 +267,17 @@ public final class VCardImporter {
             }
         }
 
-        if (contact.rawContacts.isEmpty() || rawContact.dataRows.isEmpty()) return null;
+        if (rawContact.dataRows.isEmpty()) return null;
+
+        // FN and N may appear in either order; whichever supplies the name
+        // row's data1 is decided here, once, after seeing both — FN always
+        // wins over N's synthesized fallback when both are present.
+        for (DataRowSnapshot row : rawContact.dataRows) {
+            if ("vnd.android.cursor.item/name".equals(row.mimeType)) {
+                row.data1 = displayName != null ? displayName : nameFallbackFromN;
+                break;
+            }
+        }
 
         // Set display name from the contact snapshot level
         if (displayName != null) {
@@ -267,18 +295,6 @@ public final class VCardImporter {
         return contact;
     }
 
-    private static void addNameRow(RawContactSnapshot rawContact, String displayName,
-                                    String given, String family, String prefix, String suffix, String middle) {
-        DataRowSnapshot row = new DataRowSnapshot("vnd.android.cursor.item/name");
-        row.data1 = displayName;
-        row.data2 = given;
-        row.data3 = family;
-        row.data4 = prefix;
-        row.data5 = middle;
-        row.data6 = suffix;
-        rawContact.addDataRow(row);
-    }
-
     private static DataRowSnapshot findOrCreateNameRow(RawContactSnapshot rawContact) {
         for (DataRowSnapshot row : rawContact.dataRows) {
             if ("vnd.android.cursor.item/name".equals(row.mimeType)) return row;
@@ -288,22 +304,54 @@ public final class VCardImporter {
         return row;
     }
 
+    private static DataRowSnapshot findOrCreateOrganizationRow(RawContactSnapshot rawContact) {
+        for (DataRowSnapshot row : rawContact.dataRows) {
+            if ("vnd.android.cursor.item/organization".equals(row.mimeType)) return row;
+        }
+        DataRowSnapshot row = new DataRowSnapshot("vnd.android.cursor.item/organization");
+        rawContact.addDataRow(row);
+        return row;
+    }
+
     private static DataRowSnapshot newDataRowWithMime(String mime) {
         return new DataRowSnapshot(mime);
     }
 
-    private static void applyTypeParam(DataRowSnapshot row, String[] params) {
+    // Phone.TYPE_* (HOME=1, MOBILE=2, WORK=3, OTHER=7) — its own numbering,
+    // matching phoneTypeParam on the export side.
+    private static void applyPhoneTypeParam(DataRowSnapshot row, String[] params) {
         for (String param : params) {
-            String upper = param.toUpperCase();
+            String upper = param.toUpperCase(Locale.ROOT);
+            if (upper.startsWith("TYPE=")) {
+                String type = upper.substring(5);
+                switch (type) {
+                    case "HOME": row.data2 = "1"; break;
+                    case "CELL": case "MOBILE": row.data2 = "2"; break;
+                    case "WORK": row.data2 = "3"; break;
+                    case "OTHER": row.data2 = "7"; break;
+                    case "FAX": row.data2 = "4"; break;
+                    case "PAGER": row.data2 = "6"; break;
+                    default:
+                        row.data2 = "0";
+                        row.data3 = type;
+                        break;
+                }
+                return;
+            }
+        }
+    }
+
+    // The generic BaseTypes/CommonColumns scheme (HOME=1, WORK=2, OTHER=3)
+    // shared by Email, StructuredPostal, and SipAddress.
+    private static void applyCommonTypeParam(DataRowSnapshot row, String[] params) {
+        for (String param : params) {
+            String upper = param.toUpperCase(Locale.ROOT);
             if (upper.startsWith("TYPE=")) {
                 String type = upper.substring(5);
                 switch (type) {
                     case "HOME": row.data2 = "1"; break;
                     case "WORK": row.data2 = "2"; break;
                     case "OTHER": row.data2 = "3"; break;
-                    case "MOBILE": row.data2 = "-1"; break;
-                    case "FAX": row.data2 = "4"; break;
-                    case "PAGER": row.data2 = "5"; break;
                     default:
                         row.data2 = "0";
                         row.data3 = type;
@@ -314,15 +362,21 @@ public final class VCardImporter {
         }
     }
 
-    private static void applyEventTypeParam(DataRowSnapshot row, String[] params) {
+    // Website.TYPE_* (HOMEPAGE=1, BLOG=2, PROFILE=3, HOME=4, WORK=5, FTP=6,
+    // OTHER=7) — a third, unrelated numbering.
+    private static void applyWebsiteTypeParam(DataRowSnapshot row, String[] params) {
         for (String param : params) {
-            String upper = param.toUpperCase();
+            String upper = param.toUpperCase(Locale.ROOT);
             if (upper.startsWith("TYPE=")) {
                 String type = upper.substring(5);
                 switch (type) {
-                    case "BIRTHDAY": row.data2 = "1"; break;
-                    case "ANNIVERSARY": row.data2 = "2"; break;
-                    case "OTHER": row.data2 = "3"; break;
+                    case "HOMEPAGE": row.data2 = "1"; break;
+                    case "BLOG": row.data2 = "2"; break;
+                    case "PROFILE": row.data2 = "3"; break;
+                    case "HOME": row.data2 = "4"; break;
+                    case "WORK": row.data2 = "5"; break;
+                    case "FTP": row.data2 = "6"; break;
+                    case "OTHER": row.data2 = "7"; break;
                     default:
                         row.data2 = "0";
                         row.data3 = type;
@@ -333,9 +387,33 @@ public final class VCardImporter {
         }
     }
 
+    // Event.TYPE_* (ANNIVERSARY=1, OTHER=2, BIRTHDAY=3).
+    private static void applyEventTypeParam(DataRowSnapshot row, String[] params) {
+        for (String param : params) {
+            String upper = param.toUpperCase(Locale.ROOT);
+            if (upper.startsWith("TYPE=")) {
+                String type = upper.substring(5);
+                switch (type) {
+                    case "ANNIVERSARY": row.data2 = "1"; break;
+                    case "OTHER": row.data2 = "2"; break;
+                    case "BIRTHDAY": row.data2 = "3"; break;
+                    default:
+                        row.data2 = "0";
+                        row.data3 = type;
+                        break;
+                }
+                return;
+            }
+        }
+    }
+
+    // Im.PROTOCOL_* (AIM=0, MSN=1, YAHOO=2, SKYPE=3, QQ=4, GOOGLE_TALK=5,
+    // ICQ=6, JABBER=7, NETMEETING=8) — matches imProtocolLabel's export-side
+    // vocabulary (GOOGLETALK, ICQ, JABBER, NETMEETING; no "IRC", never a
+    // real protocol constant here).
     private static void applyImProtocolParam(DataRowSnapshot row, String[] params) {
         for (String param : params) {
-            String upper = param.toUpperCase();
+            String upper = param.toUpperCase(Locale.ROOT);
             if (upper.startsWith("X-SERVICE-TYPE=")) {
                 String proto = upper.substring(15);
                 switch (proto) {
@@ -344,9 +422,10 @@ public final class VCardImporter {
                     case "YAHOO": row.data5 = "2"; break;
                     case "SKYPE": row.data5 = "3"; break;
                     case "QQ": row.data5 = "4"; break;
-                    case "ICQ": row.data5 = "5"; break;
-                    case "JABBER": row.data5 = "6"; break;
-                    case "IRC": row.data5 = "7"; break;
+                    case "GOOGLETALK": row.data5 = "5"; break;
+                    case "ICQ": row.data5 = "6"; break;
+                    case "JABBER": row.data5 = "7"; break;
+                    case "NETMEETING": row.data5 = "8"; break;
                     default:
                         row.data5 = "0";
                         row.data6 = proto;
@@ -357,25 +436,30 @@ public final class VCardImporter {
         }
     }
 
+    // Relation.TYPE_* (ASSISTANT=1, BROTHER=2, CHILD=3, DOMESTIC_PARTNER=4,
+    // FATHER=5, FRIEND=6, MANAGER=7, MOTHER=8, PARENT=9, PARTNER=10,
+    // REFERRED_BY=11, RELATIVE=12, SISTER=13, SPOUSE=14) — matches
+    // relationTypeParam's export-side vocabulary.
     private static void applyRelationTypeParam(DataRowSnapshot row, String[] params) {
         for (String param : params) {
-            String upper = param.toUpperCase();
+            String upper = param.toUpperCase(Locale.ROOT);
             if (upper.startsWith("TYPE=")) {
                 String type = upper.substring(5);
                 switch (type) {
                     case "ASSISTANT": row.data2 = "1"; break;
                     case "BROTHER": row.data2 = "2"; break;
                     case "CHILD": row.data2 = "3"; break;
-                    case "PARTNER": row.data2 = "4"; break;
+                    case "DOMESTIC_PARTNER": row.data2 = "4"; break;
                     case "FATHER": row.data2 = "5"; break;
                     case "FRIEND": row.data2 = "6"; break;
                     case "MANAGER": row.data2 = "7"; break;
                     case "MOTHER": row.data2 = "8"; break;
                     case "PARENT": row.data2 = "9"; break;
-                    case "DOMESTIC PARTNER": row.data2 = "10"; break;
-                    case "SISTER": row.data2 = "11"; break;
-                    case "SPOUSE": row.data2 = "12"; break;
-                    case "RELATIVE": row.data2 = "13"; break;
+                    case "PARTNER": row.data2 = "10"; break;
+                    case "REFERRED_BY": row.data2 = "11"; break;
+                    case "RELATIVE": row.data2 = "12"; break;
+                    case "SISTER": row.data2 = "13"; break;
+                    case "SPOUSE": row.data2 = "14"; break;
                     default:
                         row.data2 = "0";
                         row.data3 = type;
@@ -388,7 +472,7 @@ public final class VCardImporter {
 
     private static String getParamValue(String[] params, String name) {
         for (String param : params) {
-            if (param.toUpperCase().startsWith(name.toUpperCase() + "=")) {
+            if (param.toUpperCase(Locale.ROOT).startsWith(name.toUpperCase(Locale.ROOT) + "=")) {
                 return param.substring(name.length() + 1);
             }
         }
@@ -453,6 +537,22 @@ public final class VCardImporter {
             }
         }
         return sb.toString();
+    }
+
+    /**
+     * Splits a compound vCard value (N, ADR, ORG) on its real field
+     * separators only — a semicolon preceded by a backslash is an escaped
+     * literal, not a boundary. Splitting the already-unescaped string (the
+     * previous approach) can't tell the two apart, since unescaping removes
+     * the backslash before the split ever runs; splitting the raw value
+     * first and unescaping each resulting field afterward preserves the
+     * distinction.
+     */
+    private static String[] splitVcardFields(String rawValue) {
+        if (rawValue == null) return new String[0];
+        String[] parts = rawValue.split("(?<!\\\\);", -1);
+        for (int i = 0; i < parts.length; i++) parts[i] = unescapeVcard(parts[i]);
+        return parts;
     }
 
     private static String unescapeVcard(String s) {
