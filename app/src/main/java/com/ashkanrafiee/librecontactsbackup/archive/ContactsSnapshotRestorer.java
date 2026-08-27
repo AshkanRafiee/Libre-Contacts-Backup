@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,11 +30,24 @@ import java.util.Set;
  * Restores a lossless snapshot back to the Android Contacts Provider.
  *
  * Restore respects the source Contact grouping as the primary identity
- * boundary: every {@link AndroidContactSnapshot} in the snapshot (one per
- * source Contact) becomes exactly one target RawContact/Contact. All
- * RawContacts that belonged to the same source Contact are consolidated
- * into that single target RawContact; their Data rows are unioned and only
- * genuinely identical rows (same canonical key) are deduplicated.
+ * boundary, but does NOT collapse a source Contact's RawContacts into one
+ * target RawContact. Each source RawContact is recreated as its own target
+ * RawContact, keeping its own account/type/source-id (when
+ * {@link RestoreCategory#ACCOUNT_INFO} is selected) and its own Data rows
+ * exactly as read. When a source Contact had more than one RawContact, the
+ * new target RawContacts are linked with AggregationExceptions
+ * TYPE_KEEP_TOGETHER immediately after insert, so they present as one
+ * Contact without depending on the platform's own matching heuristics.
+ *
+ * Recreating each RawContact separately (instead of merging their Data rows
+ * into a single new row set) matters specifically for RawContacts owned by
+ * a sync adapter still active on the restore target (e.g. a messaging app
+ * still logged into the same account on the same device): the adapter
+ * recognizes its own RawContact by (account, source-id) and updates it in
+ * place, instead of failing to find "its" RawContact and creating a fresh,
+ * separately-aggregated one — which is what a merged single-RawContact
+ * restore looked like to that adapter, and the cause of duplicate contacts
+ * reappearing after restore even though the app's own data was correct.
  *
  * Two source Contacts are NEVER merged into one target Contact, even if
  * they share the same display name. Raw contacts are inserted with normal
@@ -47,7 +61,8 @@ import java.util.Set;
  * more than one source Contact, applies AggregationExceptions
  * TYPE_KEEP_SEPARATE to split them back apart — guaranteeing the
  * "same numbers in, same numbers out" contract regardless of what the
- * platform's matching heuristics decided.
+ * platform's matching heuristics decided. RawContacts sharing the same
+ * source Contact are left alone (they were deliberately linked above).
  *
  * Group membership is restored by mapping each source Group (captured in
  * the snapshot) onto a matching or newly created target Group; membership
@@ -104,7 +119,11 @@ public final class ContactsSnapshotRestorer {
     /**
      * Performs a restore: creates new contacts matching the snapshot,
      * materializing only the categories selected in {@code options}.
-     * Raw contacts from the same source Contact are consolidated into one.
+     * Each source RawContact is recreated as its own target RawContact
+     * (never merged with siblings from the same source Contact); when a
+     * source Contact has more than one, its new RawContacts are explicitly
+     * linked with AggregationExceptions so they still present as one
+     * Contact.
      *
      * Categories not selected are simply never written to the target
      * Contacts Provider during this call — the snapshot object (and the
@@ -138,6 +157,11 @@ public final class ContactsSnapshotRestorer {
         int totalContacts = snapshot.getContactCount();
         int current = 0;
         ArrayList<Long> restoredRawContactIds = new ArrayList<>();
+        // Which source Contact (by loop index) each restored RawContact id came
+        // from, so the fixup pass below can tell "these two were always meant
+        // to be together" (same source Contact) apart from "the platform
+        // accidentally merged two different people" (different source Contacts).
+        Map<Long, Integer> sourceContactIndexByRawId = new HashMap<>();
 
         for (AndroidContactSnapshot contact : snapshot.contacts) {
             current++;
@@ -146,24 +170,27 @@ public final class ContactsSnapshotRestorer {
             }
 
             try {
-                int emptySkipsBefore = result.emptyContactsSkipped;
-                Long newRawContactId = restoreContact(resolver, contact, result, groupIdMapping, options);
-                if (newRawContactId != null) {
+                List<Long> newRawContactIds = restoreContact(resolver, contact, result, groupIdMapping, options);
+                if (!newRawContactIds.isEmpty()) {
                     result.contactsCreated++;
-                    restoredRawContactIds.add(newRawContactId);
-                } else if (result.emptyContactsSkipped == emptySkipsBefore) {
-                    // A null return with no matching emptyContactsSkipped increment
-                    // means restoreContact() genuinely failed to create anything,
-                    // as opposed to deliberately skipping a now-empty contact.
-                    result.addError("Failed to restore contact #" + current + ": no RawContact was created");
+                    for (Long id : newRawContactIds) {
+                        restoredRawContactIds.add(id);
+                        sourceContactIndexByRawId.put(id, current);
+                    }
                 }
+                // A source Contact that yields zero RawContacts is never a silent
+                // failure here: restoreContact() either counted it via
+                // emptyContactsSkipped (nothing survived category filtering) or
+                // via addFailedRow/dataRowsFailed (a genuine insert failure) for
+                // every one of its source RawContacts, so result already reflects
+                // exactly what happened without a redundant top-level error.
             } catch (Exception e) {
-                Log.e(TAG, "Failed to restore contact #" + current + " error=" + e.getMessage());
+                Log.e(TAG, "Failed to restore contact #" + current, e);
                 result.addError("Failed to restore contact: " + e.getMessage());
             }
         }
 
-        separateAccidentallyMergedContacts(resolver, restoredRawContactIds, result);
+        separateAccidentallyMergedContacts(resolver, restoredRawContactIds, sourceContactIndexByRawId, result);
 
         if (result.groupMembershipsUnrestored > 0) {
             result.addWarning(result.groupMembershipsUnrestored + " group memberships could not be restored");
@@ -173,14 +200,14 @@ public final class ContactsSnapshotRestorer {
                     + "wasn't selected (still preserved in the backup)");
         }
         if (result.emptyContactsSkipped > 0) {
-            result.addWarning(result.emptyContactsSkipped + " contact(s) had no data left to restore after your "
+            result.addWarning(result.emptyContactsSkipped + " item(s) had no data left to restore after your "
                     + "selection and were not created (often a messaging app's internal entry, not a real contact)");
         }
 
         Log.i(TAG, "=== Restore complete: " + result.contactsCreated + " contacts, "
                 + result.rawContactsCreated + " raw contacts, "
                 + result.dataRowsRestored + " data rows restored, "
-                + result.mergedRawContacts + " raw contacts merged, "
+                + result.linkedRawContacts + " raw contacts linked (multi-source contacts), "
                 + result.deduplicatedDataRows + " rows deduplicated, "
                 + result.skippedByUserChoice + " skipped by user choice, "
                 + result.emptyContactsSkipped + " empty contacts skipped ===");
@@ -189,156 +216,270 @@ public final class ContactsSnapshotRestorer {
     }
 
     /**
-     * Restores a single source Contact by consolidating all of its
-     * RawContacts into one target RawContact, materializing only the
-     * categories selected in {@code options}.
+     * Restores a single source Contact by recreating each of its RawContacts
+     * as its own target RawContact — never merging their Data rows together —
+     * materializing only the categories selected in {@code options}. When
+     * more than one RawContact is created, they are linked with
+     * AggregationExceptions TYPE_KEEP_TOGETHER so they still present as one
+     * Contact.
      *
-     * @return the new RawContact's ID, or null if it could not be created at all.
+     * @return the new RawContact IDs (0, 1, or more; empty if nothing was created).
      */
-    private static Long restoreContact(ContentResolver resolver,
-                                        AndroidContactSnapshot contact,
-                                        RestoreResult result,
-                                        Map<Long, Long> groupIdMapping,
-                                        RestoreOptions options) throws Exception {
+    private static List<Long> restoreContact(ContentResolver resolver,
+                                              AndroidContactSnapshot contact,
+                                              RestoreResult result,
+                                              Map<Long, Long> groupIdMapping,
+                                              RestoreOptions options) throws Exception {
 
-        // Merge all data rows from all raw contacts, deduplicating by canonical key.
-        // This consolidation reflects the source Contact structure and happens
-        // regardless of restore-category selection; category filtering is
-        // applied afterward, to the already-merged/deduplicated list.
-        ArrayList<DataRowSnapshot> mergedRows = new ArrayList<>();
-        String bestAccountName = null;
-        String bestAccountType = null;
+        ArrayList<Long> createdRawContactIds = new ArrayList<>();
 
+        // Pass 1: filter each RawContact's own rows by category selection and
+        // de-dup within that RawContact only (guards against the reader ever
+        // producing a literal duplicate for the same RawContact). Each
+        // RawContact's data stays its own and is inserted as its own target
+        // RawContact below — rows are never merged across RawContacts.
+        ArrayList<ArrayList<DataRowSnapshot>> perRawContactRows = new ArrayList<>();
+        ArrayList<Boolean> perRawContactIsOtherType = new ArrayList<>();
         for (RawContactSnapshot rawContact : contact.rawContacts) {
-            // Track the first non-null account type
-            if (bestAccountName == null && rawContact.accountName != null && !rawContact.accountName.isEmpty()) {
-                bestAccountName = rawContact.accountName;
-                bestAccountType = rawContact.accountType;
-            }
+            // A RawContact belongs to another app, not to this phone's own
+            // address book, only when BOTH are true: it has a real external
+            // account (not this device's own local entries), AND it carries
+            // at least one provider-specific/unknown field of its own — the
+            // actual evidence that the account is being used to attach that
+            // app's own data, not just a normal synced contacts source.
+            //
+            // Both conditions matter: a LOCAL contact that happens to pick up
+            // one extra field from some app still keeps its normal fields
+            // (name, phone, etc.) independently restorable via CONTACT_INFO —
+            // only that one incidental extra field is what ADDITIONAL_DATA
+            // governs, same as always. And an externally-synced contact
+            // (e.g. a real Google contact) that carries nothing but ordinary
+            // fields is just a normal contact under a synced account, not an
+            // "other app" entry — gating it on ADDITIONAL_DATA (off by
+            // default) would otherwise make deselecting that obscure,
+            // not-recommended option wipe out someone's entire real address
+            // book.
+            //
+            // Only when both signals line up — another app's account AND
+            // that app's own data actually present — is this RawContact
+            // "other type": restoring a partial version of it (say, just its
+            // name, minus the very data that made it what it is) wouldn't
+            // match the original and has no use on its own, so
+            // ADDITIONAL_DATA alone decides ALL of its rows together — not
+            // CONTACT_INFO per row — and it comes back completely or not at
+            // all. PHOTOS and GROUPS remain independent either way.
+            boolean hasExternalAccount = rawContact.accountType != null && !rawContact.accountType.isEmpty();
+            boolean hasProviderSpecificRow = false;
             for (DataRowSnapshot row : rawContact.dataRows) {
-                String key = row.canonicalKey();
-                boolean duplicate = false;
-                for (DataRowSnapshot existing : mergedRows) {
-                    if (key.equals(existing.canonicalKey())) {
-                        duplicate = true;
-                        break;
-                    }
+                if (!CORE_CONTACT_MIME_TYPES.contains(row.mimeType)
+                        && !MIME_PHOTO.equals(row.mimeType)
+                        && !MIME_GROUP_MEMBERSHIP.equals(row.mimeType)) {
+                    hasProviderSpecificRow = true;
+                    break;
                 }
-                if (!duplicate) {
-                    mergedRows.add(row);
+            }
+            boolean isOtherType = hasExternalAccount && hasProviderSpecificRow;
+
+            ArrayList<DataRowSnapshot> selectedRows = new ArrayList<>();
+            for (DataRowSnapshot row : rawContact.dataRows) {
+                if (isCategorySelected(row.mimeType, isOtherType, options)) {
+                    selectedRows.add(row);
+                } else {
+                    result.skippedByUserChoice++;
+                }
+            }
+            ArrayList<DataRowSnapshot> rows = new ArrayList<>();
+            Set<String> seenKeys = new HashSet<>();
+            for (DataRowSnapshot row : selectedRows) {
+                if (seenKeys.add(row.canonicalKey())) {
+                    rows.add(row);
                 } else {
                     result.deduplicatedDataRows++;
                 }
             }
+
+            perRawContactRows.add(rows);
+            perRawContactIsOtherType.add(isOtherType);
         }
 
-        if (contact.rawContacts.size() > 1) {
-            result.mergedRawContacts += contact.rawContacts.size() - 1;
-        }
-
-        if (!options.includes(RestoreCategory.ACCOUNT_INFO)) {
-            bestAccountName = null;
-            bestAccountType = null;
-        }
-
-        // Apply the user's category selection to the merged/deduplicated rows.
-        // Rows dropped here are NOT lost: they remain in the snapshot/.lcb,
-        // they are simply not materialized during this particular restore.
-        ArrayList<DataRowSnapshot> selectedRows = new ArrayList<>();
-        for (DataRowSnapshot row : mergedRows) {
-            if (isCategorySelected(row.mimeType, options)) {
-                selectedRows.add(row);
-            } else {
-                result.skippedByUserChoice++;
-            }
-        }
-        mergedRows = selectedRows;
-
-        Log.d(TAG, "Restoring contact: rawContacts=" + contact.rawContacts.size()
-                + " selectedDataRows=" + mergedRows.size());
-
-        // Decide whether this source Contact has anything real left to
-        // restore BEFORE synthesizing a name. RawContactSnapshot.displayName
-        // comes from RawContacts.DISPLAY_NAME_PRIMARY, a raw-contact-level
-        // cache — sync adapters/messaging apps (Telegram, WhatsApp, etc.)
-        // routinely populate it on a "shadow" RawContact that carries none of
-        // its own Data rows besides their own proprietary one. If name
-        // synthesis ran first, filtering out that one row (category
-        // deselected) would still leave a manufactured name behind, turning
-        // "nothing left to restore" back into "a name-only contact with no
-        // phone/email/anything" — the exact empty-looking duplicate this
-        // check exists to prevent. A name alone, conjured from a cache
-        // rather than an actual Data row, is not "real data" on its own.
-        boolean hadRealDataBeforeNameSynthesis = !mergedRows.isEmpty();
-
-        // Ensure a name data row exists so a nameless RawContact belonging to
-        // this source Contact never becomes a separate, unlabeled Contact.
-        // Only synthesized when CONTACT_INFO is selected, and only when there
-        // is other real data for that name to attach to.
-        if (hadRealDataBeforeNameSynthesis && options.includes(RestoreCategory.CONTACT_INFO)) {
-            boolean hasNameRow = false;
-            for (DataRowSnapshot row : mergedRows) {
-                if (MIME_NAME.equals(row.mimeType)) {
-                    hasNameRow = true;
-                    break;
+        // Ensure a name data row exists SOMEWHERE among this source Contact's
+        // surviving RawContacts — checked across all of them, not each in
+        // isolation, since it's common for only one sibling RawContact (e.g.
+        // the phone-native one) to carry the real name row while another
+        // (e.g. a messaging app's) legitimately doesn't. Synthesizing a name
+        // independently per RawContact would attach a spurious duplicate name
+        // to the nameless sibling even though the real one is already present
+        // elsewhere on the same Contact. Only synthesized once, onto the
+        // first RawContact that still has other real data to attach it to,
+        // when CONTACT_INFO is selected and no sibling already has one.
+        //
+        // RawContactSnapshot.displayName comes from RawContacts.DISPLAY_NAME_PRIMARY,
+        // a raw-contact-level cache — sync adapters/messaging apps (Telegram,
+        // WhatsApp, etc.) routinely populate it on a "shadow" RawContact that
+        // carries none of its own Data rows besides their own proprietary
+        // one. This is why the check below only fires when that RawContact
+        // has other real data left after category filtering: a name alone,
+        // conjured from a cache rather than an actual Data row, is not "real
+        // data" on its own, and would otherwise resurrect an empty-looking
+        // duplicate.
+        if (options.includes(RestoreCategory.CONTACT_INFO)) {
+            boolean anyHasNameRow = false;
+            outer:
+            for (ArrayList<DataRowSnapshot> rows : perRawContactRows) {
+                for (DataRowSnapshot row : rows) {
+                    if (MIME_NAME.equals(row.mimeType)) {
+                        anyHasNameRow = true;
+                        break outer;
+                    }
                 }
             }
-            if (!hasNameRow) {
-                String nameToUse = null;
-                for (RawContactSnapshot rc : contact.rawContacts) {
-                    if (rc.displayName != null && !rc.displayName.isEmpty()) {
-                        nameToUse = rc.displayName;
+            if (!anyHasNameRow) {
+                for (int i = 0; i < contact.rawContacts.size(); i++) {
+                    ArrayList<DataRowSnapshot> rows = perRawContactRows.get(i);
+                    if (rows.isEmpty()) continue;
+                    RawContactSnapshot rc = contact.rawContacts.get(i);
+                    String nameToUse = (rc.displayName != null && !rc.displayName.isEmpty())
+                            ? rc.displayName
+                            : (contact.displayName != null && !contact.displayName.isEmpty() ? contact.displayName : null);
+                    if (nameToUse != null) {
+                        Log.d(TAG, "  Synthesizing name row");
+                        DataRowSnapshot syntheticName = new DataRowSnapshot();
+                        syntheticName.mimeType = MIME_NAME;
+                        syntheticName.data1 = nameToUse;
+                        rows.add(0, syntheticName);
                         break;
                     }
                 }
-                if (nameToUse == null && contact.displayName != null && !contact.displayName.isEmpty()) {
-                    nameToUse = contact.displayName;
-                }
-                if (nameToUse != null) {
-                    Log.d(TAG, "  Synthesizing name row");
-                    DataRowSnapshot syntheticName = new DataRowSnapshot();
-                    syntheticName.mimeType = MIME_NAME;
-                    syntheticName.data1 = nameToUse;
-                    mergedRows.add(0, syntheticName);
-                } else {
-                    Log.w(TAG, "  No name available for contact");
-                }
             }
         }
 
-        if (mergedRows.isEmpty()) {
-            // Nothing survived category filtering (or the source itself was
-            // already empty) — most commonly a "shadow" RawContact some
-            // messaging app (e.g. Telegram/WhatsApp) created purely to attach
-            // its own proprietary data to an existing contact, with no name,
-            // phone, or other core field of its own. Android's own Contacts
-            // app hides these from the main list, but this reader doesn't
-            // apply that visibility filter, so every one becomes its own
-            // source Contact. Restoring it as an empty RawContact would
-            // create a visible, nameless, dataless duplicate of the real
-            // contact for every such shadow entry — never useful, and not
-            // data loss, since there is genuinely nothing left to write:
-            // anything real either got selected (and is already restored
-            // under whichever target Contact it belongs to) or is safely
-            // still sitting in the .lcb archive. Skip creating a contact for
-            // it entirely instead of inserting an empty shell.
-            Log.w(TAG, "  Contact has zero selected data rows (categories deselected or source was empty); skipping empty contact");
-            result.emptyContactsSkipped++;
-            return null;
+        // Pass 2: insert each RawContact that still has real data.
+        for (int i = 0; i < contact.rawContacts.size(); i++) {
+            RawContactSnapshot rawContact = contact.rawContacts.get(i);
+            ArrayList<DataRowSnapshot> rows = perRawContactRows.get(i);
+
+            if (rows.isEmpty()) {
+                // Nothing survived category filtering (or this RawContact was
+                // already empty) — most commonly a "shadow" RawContact some
+                // messaging app (e.g. Telegram/WhatsApp) created purely to
+                // attach its own proprietary data to an existing contact, with
+                // no name, phone, or other core field of its own. Restoring it
+                // as an empty RawContact would create a visible, nameless,
+                // dataless duplicate — never useful, and not data loss, since
+                // anything real either got selected (and is already restored
+                // under this same source Contact's other RawContact(s)) or is
+                // safely still sitting in the .lcb archive.
+                Log.w(TAG, "  RawContact has zero selected data rows; skipping");
+                result.emptyContactsSkipped++;
+                continue;
+            }
+
+            // "Other type" RawContacts (see above) are meaningless to keep
+            // under their original account only sometimes: restoring their
+            // data but stripping their account is close to pointless — the
+            // sync adapter that owns that account (e.g. a messaging app)
+            // won't recognize a local RawContact as its own, and will just
+            // create another one on its next sync anyway, reintroducing the
+            // very duplicate this all-or-nothing rule exists to prevent.
+            // Selecting ADDITIONAL_DATA for such a RawContact therefore
+            // preserves its account too, regardless of ACCOUNT_INFO — the two
+            // only make sense together for this case. ACCOUNT_INFO remains
+            // its own independent choice for ordinary RawContacts (e.g.
+            // keeping a real Google contact linked to your Google account),
+            // which has nothing to do with another app's own data.
+            boolean isOtherType = perRawContactIsOtherType.get(i);
+            boolean preserveAccounts = isOtherType
+                    ? options.includes(RestoreCategory.ADDITIONAL_DATA)
+                    : options.includes(RestoreCategory.ACCOUNT_INFO);
+
+            Long newRawContactId = insertOneRawContact(resolver, rawContact, rows, preserveAccounts, groupIdMapping, result);
+            if (newRawContactId != null) {
+                createdRawContactIds.add(newRawContactId);
+            }
         }
+
+        // When a source Contact had more than one RawContact, link the new
+        // ones together explicitly instead of relying on the platform's own
+        // matching heuristics to re-aggregate them — this is what lets a
+        // still-active sync adapter's RawContact (e.g. Telegram, recreated
+        // under its own account/source-id above) get picked back up as one
+        // Contact deterministically, regardless of whether automatic
+        // name/phone matching would have succeeded on its own.
+        if (createdRawContactIds.size() > 1) {
+            result.linkedRawContacts += createdRawContactIds.size() - 1;
+            try {
+                for (int i = 0; i < createdRawContactIds.size(); i++) {
+                    for (int j = i + 1; j < createdRawContactIds.size(); j++) {
+                        applyAggregationException(resolver, ContactsContract.AggregationExceptions.TYPE_KEEP_TOGETHER,
+                                createdRawContactIds.get(i), createdRawContactIds.get(j));
+                    }
+                }
+            } catch (Exception e) {
+                // The RawContacts themselves are already inserted and real;
+                // losing just the linking step must not lose track of them —
+                // they'd still show up under the platform's own aggregation
+                // (possibly as separate Contacts) rather than disappear, and
+                // the caller needs their IDs either way for its own
+                // cross-source-Contact fixup pass.
+                Log.e(TAG, "  Failed to link RawContacts for one source Contact", e);
+                result.addWarning("Could not link some raw contacts together: " + e.getMessage());
+            }
+        }
+
+        return createdRawContactIds;
+    }
+
+    /**
+     * Builds the RawContacts insert op, shared by the primary batch path and
+     * its individual-insert fallback so both preserve (or drop) the account
+     * identically — a single source of truth for what {@code preserveAccounts}
+     * means for this RawContact.
+     *
+     * The account/type/source-id values come verbatim from the .lcb being
+     * restored, with no check that a matching account actually exists on
+     * this device: doing so would require the GET_ACCOUNTS permission (or
+     * per-account visibility grants), which this app deliberately does not
+     * request — see {@link RestoreCategory#ACCOUNT_INFO}. Writing an
+     * unmatched account name/type onto a RawContact does not grant it any
+     * special access; it just becomes an ordinary RawContact tagged with an
+     * account no sync adapter recognizes, which is why ACCOUNT_INFO is
+     * off by default and its own description warns that restoring to a
+     * different account is not recommended.
+     */
+    private static ContentProviderOperation.Builder newRawContactInsertOp(RawContactSnapshot rawContact, boolean preserveAccounts) {
+        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI);
+        if (preserveAccounts && rawContact.accountName != null && !rawContact.accountName.isEmpty()) {
+            builder.withValue(ContactsContract.RawContacts.ACCOUNT_NAME, rawContact.accountName);
+            builder.withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, rawContact.accountType);
+            if (rawContact.sourceId != null && !rawContact.sourceId.isEmpty()) {
+                builder.withValue(ContactsContract.RawContacts.SOURCE_ID, rawContact.sourceId);
+            }
+        } else {
+            builder.withValue(ContactsContract.RawContacts.ACCOUNT_NAME, (String) null);
+            builder.withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, (String) null);
+        }
+        return builder;
+    }
+
+    /**
+     * Inserts one RawContact and its (already category-filtered, deduplicated)
+     * Data rows as a single batch, falling back to individual inserts if the
+     * batch fails. {@code preserveAccounts} governs whether this RawContact's
+     * own original account/type/source-id are kept or dropped to local.
+     *
+     * @return the new RawContact's ID, or null if it could not be created at all.
+     */
+    private static Long insertOneRawContact(ContentResolver resolver,
+                                             RawContactSnapshot rawContact,
+                                             ArrayList<DataRowSnapshot> rows,
+                                             boolean preserveAccounts,
+                                             Map<Long, Long> groupIdMapping,
+                                             RestoreResult result) throws Exception {
 
         // Build batch: raw contact insert (index 0) + all data rows
         ArrayList<ContentProviderOperation> ops = new ArrayList<>();
 
-        ContentProviderOperation.Builder rawBuilder = ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI);
-        if (bestAccountName != null) {
-            rawBuilder.withValue(ContactsContract.RawContacts.ACCOUNT_NAME, bestAccountName);
-            rawBuilder.withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, bestAccountType);
-        } else {
-            rawBuilder.withValue(ContactsContract.RawContacts.ACCOUNT_NAME, (String) null);
-            rawBuilder.withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, (String) null);
-        }
-        ops.add(rawBuilder.build());
+        ops.add(newRawContactInsertOp(rawContact, preserveAccounts).build());
 
         // These are properties of the row itself (unmappable group, or
         // unmappable in general) — true regardless of whether the batch
@@ -347,7 +488,7 @@ public final class ContactsSnapshotRestorer {
         // via a local counter that a later success/fallback branch would
         // need to remember to add in.
         ArrayList<DataRowSnapshot> insertedRows = new ArrayList<>();
-        for (DataRowSnapshot row : mergedRows) {
+        for (DataRowSnapshot row : rows) {
             try {
                 ContentProviderOperation.Builder dataBuilder = buildDataInsertBuilder(row, groupIdMapping);
                 if (dataBuilder != null) {
@@ -362,7 +503,7 @@ public final class ContactsSnapshotRestorer {
                     Log.w(TAG, "  Skipping data row: mime=" + row.mimeType);
                 }
             } catch (Exception e) {
-                Log.e(TAG, "  Build data row FAILED: mime=" + row.mimeType + " err=" + e.getMessage());
+                Log.e(TAG, "  Build data row FAILED: mime=" + row.mimeType, e);
                 result.addFailedRow(row.mimeType, null, e.getMessage());
             }
         }
@@ -387,15 +528,18 @@ public final class ContactsSnapshotRestorer {
             }
             return newRawContactId;
         } catch (Exception e) {
-            Log.e(TAG, "  Batch insert FAILED: error=" + e.getMessage());
+            Log.e(TAG, "  Batch insert FAILED", e);
             result.addWarning("Batch insert failed, attempting individual inserts: " + e.getMessage());
 
-            // Fallback: create raw contact alone, then insert data rows one by one
+            // Fallback: create raw contact alone, then insert data rows one by one.
+            // Must preserve the account the same way the primary path above
+            // does — an "other type" RawContact whose account gets dropped
+            // here (e.g. because a large photo tripped TransactionTooLargeException
+            // on the batch) would become unrecognizable to the sync adapter
+            // that's supposed to own it, reintroducing the duplicate-contact
+            // bug this account preservation exists to prevent.
             ArrayList<ContentProviderOperation> singleOp = new ArrayList<>();
-            singleOp.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
-                    .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, (String) null)
-                    .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, (String) null)
-                    .build());
+            singleOp.add(newRawContactInsertOp(rawContact, preserveAccounts).build());
 
             try {
                 android.content.ContentProviderResult[] results = resolver.applyBatch(ContactsContract.AUTHORITY, singleOp);
@@ -405,7 +549,7 @@ public final class ContactsSnapshotRestorer {
                     int restored = 0;
                     int failed = 0;
                     // Only retry rows already proven to build successfully in the
-                    // first pass above (insertedRows), not the full mergedRows list:
+                    // first pass above (insertedRows), not the full rows list:
                     // rows that failed to build or were unmappable were already
                     // accounted for exactly once there. buildDataInsertBuilder is a
                     // pure function of (row, groupIdMapping), so re-attempting an
@@ -428,7 +572,7 @@ public final class ContactsSnapshotRestorer {
                                 result.binaryItemsRestored++;
                             }
                         } catch (Exception rowEx) {
-                            Log.e(TAG, "  Fallback data row FAILED: mime=" + row.mimeType + " err=" + rowEx.getMessage());
+                            Log.e(TAG, "  Fallback data row FAILED: mime=" + row.mimeType, rowEx);
                             result.addFailedRow(row.mimeType, null, rowEx.getMessage());
                             failed++;
                         }
@@ -444,9 +588,9 @@ public final class ContactsSnapshotRestorer {
                     return null;
                 }
             } catch (Exception ex) {
-                Log.e(TAG, "  Fallback raw contact insert FAILED: " + ex.getMessage());
+                Log.e(TAG, "  Fallback raw contact insert FAILED", ex);
                 result.addFailedRow("raw_contact", null, ex.getMessage());
-                result.dataRowsFailed += mergedRows.size();
+                result.dataRowsFailed += rows.size();
                 return null;
             }
         }
@@ -454,14 +598,19 @@ public final class ContactsSnapshotRestorer {
 
     /**
      * Whether {@code mimeType} belongs to a {@link RestoreCategory} the user
-     * selected. Photo and group_membership rows are gated by their own
-     * dedicated categories; every other known "core" contact field is gated
-     * by CONTACT_INFO; anything else is provider-specific/unknown and gated
-     * by ADDITIONAL_DATA.
+     * selected. Photo and group_membership rows are always gated by their
+     * own dedicated categories. For a RawContact flagged
+     * {@code rawContactIsOtherType} (it carries provider-specific/unknown
+     * data of its own), ADDITIONAL_DATA alone decides every other row on
+     * it — core "normal" fields included — since a partial version of such
+     * an entry isn't the original and isn't useful on its own. Otherwise,
+     * every core contact field is gated by CONTACT_INFO as usual; anything
+     * else is provider-specific/unknown and gated by ADDITIONAL_DATA.
      */
-    private static boolean isCategorySelected(String mimeType, RestoreOptions options) {
+    private static boolean isCategorySelected(String mimeType, boolean rawContactIsOtherType, RestoreOptions options) {
         if (MIME_PHOTO.equals(mimeType)) return options.includes(RestoreCategory.PHOTOS);
         if (MIME_GROUP_MEMBERSHIP.equals(mimeType)) return options.includes(RestoreCategory.GROUPS);
+        if (rawContactIsOtherType) return options.includes(RestoreCategory.ADDITIONAL_DATA);
         if (CORE_CONTACT_MIME_TYPES.contains(mimeType)) return options.includes(RestoreCategory.CONTACT_INFO);
         return options.includes(RestoreCategory.ADDITIONAL_DATA);
     }
@@ -487,64 +636,85 @@ public final class ContactsSnapshotRestorer {
      */
     private static void separateAccidentallyMergedContacts(ContentResolver resolver,
                                                              ArrayList<Long> restoredRawContactIds,
+                                                             Map<Long, Integer> sourceContactIndexByRawId,
                                                              RestoreResult result) {
-        ArrayList<Long> validIds = new ArrayList<>();
-        for (Long id : restoredRawContactIds) {
-            if (id != null) validIds.add(id);
-        }
-        if (validIds.size() < 2) return;
-
-        StringBuilder where = new StringBuilder(ContactsContract.RawContacts._ID).append(" IN (");
-        for (int i = 0; i < validIds.size(); i++) {
-            if (i > 0) where.append(',');
-            where.append(validIds.get(i));
-        }
-        where.append(')');
-
-        Map<Long, Long> contactIdByRaw = new HashMap<>();
-        Cursor cursor = resolver.query(
-                ContactsContract.RawContacts.CONTENT_URI,
-                new String[]{ContactsContract.RawContacts._ID, ContactsContract.RawContacts.CONTACT_ID},
-                where.toString(), null, null);
-        if (cursor == null) return;
+        // This is a best-effort fixup pass over RawContacts that are already
+        // successfully restored (real data already sitting in the provider).
+        // A failure here must never throw out of restore() and lose the
+        // RestoreResult for an otherwise-successful run — it degrades to a
+        // warning instead, same as the other provider-query helpers in this
+        // file (see readExistingGroups).
         try {
-            int idxId = cursor.getColumnIndex(ContactsContract.RawContacts._ID);
-            int idxContactId = cursor.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID);
-            while (cursor.moveToNext()) {
-                if (cursor.isNull(idxContactId)) continue;
-                contactIdByRaw.put(cursor.getLong(idxId), cursor.getLong(idxContactId));
+            ArrayList<Long> validIds = new ArrayList<>();
+            for (Long id : restoredRawContactIds) {
+                if (id != null) validIds.add(id);
             }
-        } finally {
-            cursor.close();
-        }
+            if (validIds.size() < 2) return;
 
-        Map<Long, ArrayList<Long>> rawIdsByContactId = new HashMap<>();
-        for (Long rawId : validIds) {
-            Long contactId = contactIdByRaw.get(rawId);
-            if (contactId == null) continue;
-            rawIdsByContactId.computeIfAbsent(contactId, k -> new ArrayList<>()).add(rawId);
-        }
+            StringBuilder where = new StringBuilder(ContactsContract.RawContacts._ID).append(" IN (");
+            for (int i = 0; i < validIds.size(); i++) {
+                if (i > 0) where.append(',');
+                where.append(validIds.get(i));
+            }
+            where.append(')');
 
-        int splitCount = 0;
-        for (ArrayList<Long> group : rawIdsByContactId.values()) {
-            if (group.size() <= 1) continue;
-            // Every raw contact in `group` came from a different
-            // restoreContact() call (each inserts exactly one), so the
-            // platform incorrectly aggregated distinct source Contacts.
-            // Every pair gets its own exception: splitting each member from
-            // just the first isn't enough to guarantee the others split
-            // from each other too when 3+ source Contacts collided at once.
-            for (int i = 0; i < group.size(); i++) {
-                for (int j = i + 1; j < group.size(); j++) {
-                    applyAggregationException(resolver, ContactsContract.AggregationExceptions.TYPE_KEEP_SEPARATE,
-                            group.get(i), group.get(j));
-                    splitCount++;
+            Map<Long, Long> contactIdByRaw = new HashMap<>();
+            Cursor cursor = resolver.query(
+                    ContactsContract.RawContacts.CONTENT_URI,
+                    new String[]{ContactsContract.RawContacts._ID, ContactsContract.RawContacts.CONTACT_ID},
+                    where.toString(), null, null);
+            if (cursor == null) return;
+            try {
+                int idxId = cursor.getColumnIndex(ContactsContract.RawContacts._ID);
+                int idxContactId = cursor.getColumnIndex(ContactsContract.RawContacts.CONTACT_ID);
+                while (cursor.moveToNext()) {
+                    if (cursor.isNull(idxContactId)) continue;
+                    contactIdByRaw.put(cursor.getLong(idxId), cursor.getLong(idxContactId));
+                }
+            } finally {
+                cursor.close();
+            }
+
+            Map<Long, ArrayList<Long>> rawIdsByContactId = new HashMap<>();
+            for (Long rawId : validIds) {
+                Long contactId = contactIdByRaw.get(rawId);
+                if (contactId == null) continue;
+                rawIdsByContactId.computeIfAbsent(contactId, k -> new ArrayList<>()).add(rawId);
+            }
+
+            int splitCount = 0;
+            for (ArrayList<Long> group : rawIdsByContactId.values()) {
+                if (group.size() <= 1) continue;
+                // A group can now legitimately contain raw contacts from the SAME
+                // source Contact (they were deliberately linked with
+                // TYPE_KEEP_TOGETHER in restoreContact()) — only split pairs whose
+                // source Contact actually differs; those are the platform
+                // incorrectly aggregating two distinct people. Every differing
+                // pair gets its own exception: splitting each member from just
+                // the first isn't enough to guarantee the others split from each
+                // other too when 3+ source Contacts collided at once.
+                for (int i = 0; i < group.size(); i++) {
+                    for (int j = i + 1; j < group.size(); j++) {
+                        Long rawA = group.get(i);
+                        Long rawB = group.get(j);
+                        Integer sourceA = sourceContactIndexByRawId.get(rawA);
+                        Integer sourceB = sourceContactIndexByRawId.get(rawB);
+                        if (sourceA == null || sourceB == null || sourceA.equals(sourceB)) {
+                            continue; // same source Contact (or unknown) — meant to be together
+                        }
+                        applyAggregationException(resolver, ContactsContract.AggregationExceptions.TYPE_KEEP_SEPARATE,
+                                rawA, rawB);
+                        splitCount++;
+                    }
                 }
             }
-        }
-        if (splitCount > 0) {
-            Log.i(TAG, "Split " + splitCount + " raw contact(s) the platform had auto-merged, "
-                    + "to preserve distinct source Contact boundaries");
+            if (splitCount > 0) {
+                Log.i(TAG, "Split " + splitCount + " raw contact(s) the platform had auto-merged, "
+                        + "to preserve distinct source Contact boundaries");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to check for/split accidentally merged contacts", e);
+            result.addWarning("Could not verify distinct source contacts stayed separate: " + e.getMessage());
         }
     }
 
@@ -638,6 +808,7 @@ public final class ContactsSnapshotRestorer {
                     null, null, null
             );
         } catch (Exception e) {
+            Log.e(TAG, "Failed to read existing target groups", e);
             return result;
         }
         if (cursor == null) return result;
@@ -661,6 +832,17 @@ public final class ContactsSnapshotRestorer {
         return result;
     }
 
+    /**
+     * Creates a target Group carrying the source Group's own account, the
+     * same trust boundary as {@link #newRawContactInsertOp}: the account
+     * comes verbatim from the .lcb with no existence check (this app
+     * doesn't request GET_ACCOUNTS), and writing it grants no special
+     * access — an unmatched account just means no sync adapter recognizes
+     * this Group. Unlike RawContacts, this is NOT gated by ACCOUNT_INFO:
+     * Android's Groups table does not reliably support a genuinely
+     * account-less "local" group across devices/OEMs, so the source
+     * account is always carried over when GROUPS is selected.
+     */
     private static Long createTargetGroup(ContentResolver resolver, GroupSnapshot group) {
         try {
             ContentValues values = new ContentValues();
@@ -678,7 +860,7 @@ public final class ContactsSnapshotRestorer {
             String lastSegment = uri.getLastPathSegment();
             return lastSegment != null ? Long.parseLong(lastSegment) : null;
         } catch (Exception e) {
-            Log.w(TAG, "Failed to create target group: " + e.getMessage());
+            Log.w(TAG, "Failed to create target group", e);
             return null;
         }
     }
@@ -712,15 +894,17 @@ public final class ContactsSnapshotRestorer {
 
             case "vnd.android.cursor.item/phone_v2":
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, row.data1);
-                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Phone.TYPE, parseTypeInt(row.data2));
-                if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.Phone.LABEL, row.data3);
+                int typePhone = parseTypeInt(row.data2);
+                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Phone.TYPE, typePhone);
+                if (row.data3 != null && typePhone == 0) builder.withValue(ContactsContract.CommonDataKinds.Phone.LABEL, row.data3);
                 applyRemainingGenericFields(builder, row, 1, 2, 3);
                 break;
 
             case "vnd.android.cursor.item/email_v2":
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.Email.ADDRESS, row.data1);
-                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Email.TYPE, parseTypeInt(row.data2));
-                if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.Email.LABEL, row.data3);
+                int typeEmail = parseTypeInt(row.data2);
+                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Email.TYPE, typeEmail);
+                if (row.data3 != null && typeEmail == 0) builder.withValue(ContactsContract.CommonDataKinds.Email.LABEL, row.data3);
                 applyRemainingGenericFields(builder, row, 1, 2, 3);
                 break;
 
@@ -734,8 +918,9 @@ public final class ContactsSnapshotRestorer {
                 if (row.data8 != null) builder.withValue(ContactsContract.CommonDataKinds.StructuredPostal.REGION, row.data8);
                 if (row.data9 != null) builder.withValue(ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE, row.data9);
                 if (row.data10 != null) builder.withValue(ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY, row.data10);
-                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.StructuredPostal.TYPE, parseTypeInt(row.data2));
-                if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.StructuredPostal.LABEL, row.data3);
+                int typeStructuredPostal = parseTypeInt(row.data2);
+                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.StructuredPostal.TYPE, typeStructuredPostal);
+                if (row.data3 != null && typeStructuredPostal == 0) builder.withValue(ContactsContract.CommonDataKinds.StructuredPostal.LABEL, row.data3);
                 applyRemainingGenericFields(builder, row, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
                 break;
 
@@ -746,8 +931,9 @@ public final class ContactsSnapshotRestorer {
                 // OFFICE_LOCATION are documented Organization fields that were
                 // previously captured but silently dropped on restore.
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.Organization.COMPANY, row.data1);
-                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Organization.TYPE, parseTypeInt(row.data2));
-                if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.Organization.LABEL, row.data3);
+                int typeOrganization = parseTypeInt(row.data2);
+                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Organization.TYPE, typeOrganization);
+                if (row.data3 != null && typeOrganization == 0) builder.withValue(ContactsContract.CommonDataKinds.Organization.LABEL, row.data3);
                 if (row.data4 != null) builder.withValue(ContactsContract.CommonDataKinds.Organization.TITLE, row.data4);
                 if (row.data5 != null) builder.withValue(ContactsContract.CommonDataKinds.Organization.DEPARTMENT, row.data5);
                 if (row.data6 != null) builder.withValue(ContactsContract.CommonDataKinds.Organization.JOB_DESCRIPTION, row.data6);
@@ -761,8 +947,9 @@ public final class ContactsSnapshotRestorer {
 
             case "vnd.android.cursor.item/nickname":
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.Nickname.NAME, row.data1);
-                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Nickname.TYPE, parseTypeInt(row.data2));
-                if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.Nickname.LABEL, row.data3);
+                int typeNickname = parseTypeInt(row.data2);
+                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Nickname.TYPE, typeNickname);
+                if (row.data3 != null && typeNickname == 0) builder.withValue(ContactsContract.CommonDataKinds.Nickname.LABEL, row.data3);
                 applyRemainingGenericFields(builder, row, 1, 2, 3);
                 break;
 
@@ -773,15 +960,17 @@ public final class ContactsSnapshotRestorer {
 
             case "vnd.android.cursor.item/contact_event":
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.Event.START_DATE, row.data1);
-                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Event.TYPE, parseTypeInt(row.data2));
-                if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.Event.LABEL, row.data3);
+                int typeEvent = parseTypeInt(row.data2);
+                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Event.TYPE, typeEvent);
+                if (row.data3 != null && typeEvent == 0) builder.withValue(ContactsContract.CommonDataKinds.Event.LABEL, row.data3);
                 applyRemainingGenericFields(builder, row, 1, 2, 3);
                 break;
 
             case "vnd.android.cursor.item/website":
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.Website.URL, row.data1);
-                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Website.TYPE, parseTypeInt(row.data2));
-                if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.Website.LABEL, row.data3);
+                int typeWebsite = parseTypeInt(row.data2);
+                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Website.TYPE, typeWebsite);
+                if (row.data3 != null && typeWebsite == 0) builder.withValue(ContactsContract.CommonDataKinds.Website.LABEL, row.data3);
                 applyRemainingGenericFields(builder, row, 1, 2, 3);
                 break;
 
@@ -790,8 +979,9 @@ public final class ContactsSnapshotRestorer {
                 // independent of PROTOCOL/CUSTOM_PROTOCOL (data5/6) — both were previously
                 // captured but only the protocol half was restored.
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.Im.DATA, row.data1);
-                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Im.TYPE, parseTypeInt(row.data2));
-                if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.Im.LABEL, row.data3);
+                int typeIm = parseTypeInt(row.data2);
+                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Im.TYPE, typeIm);
+                if (row.data3 != null && typeIm == 0) builder.withValue(ContactsContract.CommonDataKinds.Im.LABEL, row.data3);
                 if (row.data5 != null) {
                     int proto = parseTypeInt(row.data5);
                     builder.withValue(ContactsContract.CommonDataKinds.Im.PROTOCOL, proto);
@@ -811,8 +1001,9 @@ public final class ContactsSnapshotRestorer {
 
             case "vnd.android.cursor.item/relation":
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.Relation.NAME, row.data1);
-                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Relation.TYPE, parseTypeInt(row.data2));
-                if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.Relation.LABEL, row.data3);
+                int typeRelation = parseTypeInt(row.data2);
+                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.Relation.TYPE, typeRelation);
+                if (row.data3 != null && typeRelation == 0) builder.withValue(ContactsContract.CommonDataKinds.Relation.LABEL, row.data3);
                 applyRemainingGenericFields(builder, row, 1, 2, 3);
                 break;
 
@@ -825,8 +1016,9 @@ public final class ContactsSnapshotRestorer {
 
             case "vnd.android.cursor.item/sip-address":
                 if (row.data1 != null) builder.withValue(ContactsContract.CommonDataKinds.SipAddress.SIP_ADDRESS, row.data1);
-                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.SipAddress.TYPE, parseTypeInt(row.data2));
-                if (row.data3 != null && parseTypeInt(row.data2) == 0) builder.withValue(ContactsContract.CommonDataKinds.SipAddress.LABEL, row.data3);
+                int typeSipAddress = parseTypeInt(row.data2);
+                if (row.data2 != null) builder.withValue(ContactsContract.CommonDataKinds.SipAddress.TYPE, typeSipAddress);
+                if (row.data3 != null && typeSipAddress == 0) builder.withValue(ContactsContract.CommonDataKinds.SipAddress.LABEL, row.data3);
                 applyRemainingGenericFields(builder, row, 1, 2, 3);
                 break;
 

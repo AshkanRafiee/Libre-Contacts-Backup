@@ -61,7 +61,15 @@ public class RestoreSelectionTest {
     }
 
     private void cleanupContacts() {
-        try { resolver.delete(ContactsContract.RawContacts.CONTENT_URI, null, null); } catch (Exception e) { /* ignore */ }
+        // A normal (non-syncadapter) delete of a RawContact that has a real
+        // account only soft-deletes it (marks it dirty for sync), leaving a
+        // zombie row other tests/runs can still match by account+source-id.
+        // Deleting through the syncadapter URI forces a real delete, so
+        // cleanup between tests is actually clean.
+        Uri syncAdapterUri = ContactsContract.RawContacts.CONTENT_URI.buildUpon()
+                .appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true")
+                .build();
+        try { resolver.delete(syncAdapterUri, null, null); } catch (Exception e) { /* ignore */ }
         try { resolver.delete(ContactsContract.Groups.CONTENT_URI, null, null); } catch (Exception e) { /* ignore */ }
     }
 
@@ -70,9 +78,16 @@ public class RestoreSelectionTest {
     }
 
     private String insertRawContact() throws Exception {
+        return insertRawContact(null, null, null);
+    }
+
+    private String insertRawContact(String accountName, String accountType, String sourceId) throws Exception {
         ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
-                .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, (String) null)
-                .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, (String) null);
+                .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, accountName)
+                .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, accountType);
+        if (sourceId != null) {
+            b.withValue(ContactsContract.RawContacts.SOURCE_ID, sourceId);
+        }
         android.content.ContentProviderResult[] results = resolver.applyBatch(ContactsContract.AUTHORITY,
                 new ArrayList<>(java.util.Collections.singletonList(b.build())));
         return results[0].uri.getLastPathSegment();
@@ -167,12 +182,16 @@ public class RestoreSelectionTest {
     }
 
     private boolean targetHasPhone() {
+        return targetHasPhoneNumber("+1-555-7001");
+    }
+
+    private boolean targetHasPhoneNumber(String number) {
         Cursor c = resolver.query(ContactsContract.Data.CONTENT_URI,
                 new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER},
-                ContactsContract.Data.MIMETYPE + "=?",
-                new String[]{"vnd.android.cursor.item/phone_v2"}, null);
+                ContactsContract.Data.MIMETYPE + "=? AND " + ContactsContract.CommonDataKinds.Phone.NUMBER + "=?",
+                new String[]{"vnd.android.cursor.item/phone_v2", number}, null);
         if (c == null) return false;
-        try { return c.moveToFirst() && "+1-555-7001".equals(c.getString(0)); } finally { c.close(); }
+        try { return c.moveToFirst(); } finally { c.close(); }
     }
 
     // ============================================================
@@ -468,5 +487,239 @@ public class RestoreSelectionTest {
         assertTrue("Unrestorable data must produce a warning the user can see", result.hasWarnings());
         assertFalse("The unrestorable membership must not silently appear on the target",
                 targetHasMime("vnd.android.cursor.item/group_membership"));
+    }
+
+    private void linkAsOneContact(String rawId1, String rawId2) {
+        ContentValues values = new ContentValues();
+        values.put(ContactsContract.AggregationExceptions.TYPE, ContactsContract.AggregationExceptions.TYPE_KEEP_TOGETHER);
+        values.put(ContactsContract.AggregationExceptions.RAW_CONTACT_ID1, Long.parseLong(rawId1));
+        values.put(ContactsContract.AggregationExceptions.RAW_CONTACT_ID2, Long.parseLong(rawId2));
+        resolver.update(ContactsContract.AggregationExceptions.CONTENT_URI, values, null, null);
+    }
+
+    // ============================================================
+    // Scenario 10: reproduces the real-world duplicate-contact bug reported
+    // against a device where a messaging app (e.g. Telegram) syncs its own
+    // RawContact, already aggregation-linked with the phone-native RawContact
+    // for the same person. Restore used to consolidate both into a single
+    // new RawContact carrying the union of their rows — which meant the
+    // messaging app's sync adapter could never recognize a RawContact of its
+    // own (it identifies "its" RawContact by account+source-id) after
+    // restore, and would create a fresh one on its next sync instead of
+    // updating in place — the actual cause of contacts doubling after
+    // restore even though the app's own data was correct.
+    //
+    // This asserts the fix directly: each source RawContact is recreated as
+    // its own target RawContact, keeping its own account/type/source-id, and
+    // the two are linked via AggregationExceptions so they still present as
+    // one Contact.
+    // ============================================================
+    @Test
+    public void scenario10_multiAccountRawContactsPreservedAndLinkedNotMerged() throws Exception {
+        String local = insertRawContact();
+        insertRow(local, "vnd.android.cursor.item/name", "Multi Source Person");
+        insertRow(local, "vnd.android.cursor.item/phone_v2", "+1-555-8001", "1");
+
+        String messenger = insertRawContact("fake-messenger-account@example.invalid",
+                "com.example.fakemessenger", "fake-messenger-source-id-42");
+        insertRow(messenger, "vnd.android.cursor.item/name", "Multi Source Person");
+        insertRow(messenger, UNKNOWN_MIME, "messenger-marker-row");
+
+        // Mirrors the platform having already aggregation-linked these two on
+        // the source device (whether organically or via a manual merge).
+        linkAsOneContact(local, messenger);
+        Thread.sleep(300);
+
+        AndroidContactsSnapshot snapshot = ContactsSnapshotReader.read(targetContext());
+        AndroidContactSnapshot sourceContact = null;
+        for (AndroidContactSnapshot c : snapshot.contacts) {
+            if (c.rawContacts.size() == 2) sourceContact = c;
+        }
+        assertNotNull("The two RawContacts should have been captured as one source Contact", sourceContact);
+
+        cleanupContacts();
+
+        RestoreResult result = ContactsSnapshotRestorer.restore(targetContext(), snapshot,
+                RestoreOptions.of(RestoreCategory.CONTACT_INFO, RestoreCategory.ADDITIONAL_DATA, RestoreCategory.ACCOUNT_INFO),
+                (m, c, t) -> {});
+
+        assertEquals("No error restoring the multi-account contact", 0, result.errors.size());
+        Thread.sleep(500); // Let the provider's own aggregation settle before querying it
+
+        // Scoped lookups by distinguishing marks, not an unfiltered table
+        // scan — the emulator/device's RawContacts table normally holds many
+        // thousands of unrelated rows (demo/seeded contacts, prior test
+        // leftovers, etc.) that a blanket query would also pick up.
+        Long localRawId = rawContactIdForData("vnd.android.cursor.item/phone_v2", "+1-555-8001");
+        Long messengerRawId = rawContactIdForAccount("com.example.fakemessenger", "fake-messenger-source-id-42");
+
+        assertNotNull("Restored local RawContact should be found by its phone number", localRawId);
+        assertNotNull("Restored messenger RawContact should be found by its own preserved account/source-id "
+                        + "(this is what lets its sync adapter recognize it as its own on next sync, "
+                        + "instead of creating a duplicate)",
+                messengerRawId);
+        assertFalse("The two must remain distinct RawContacts, not merged into one",
+                localRawId.equals(messengerRawId));
+
+        assertEquals("The two RawContacts must be linked as exactly one target Contact",
+                contactIdOf(localRawId), contactIdOf(messengerRawId));
+        assertEquals("Exactly one extra RawContact was linked (not merged) for this multi-source contact",
+                1, result.linkedRawContacts);
+    }
+
+    private Long rawContactIdForData(String mimeType, String data1) {
+        Cursor c = resolver.query(ContactsContract.Data.CONTENT_URI,
+                new String[]{ContactsContract.Data.RAW_CONTACT_ID},
+                ContactsContract.Data.MIMETYPE + "=? AND " + ContactsContract.Data.DATA1 + "=?",
+                new String[]{mimeType, data1}, null);
+        if (c == null) return null;
+        try { return c.moveToFirst() ? c.getLong(0) : null; } finally { c.close(); }
+    }
+
+    private Long rawContactIdForAccount(String accountType, String sourceId) {
+        Cursor c = resolver.query(ContactsContract.RawContacts.CONTENT_URI,
+                new String[]{ContactsContract.RawContacts._ID},
+                ContactsContract.RawContacts.ACCOUNT_TYPE + "=? AND " + ContactsContract.RawContacts.SOURCE_ID + "=? AND "
+                        + ContactsContract.RawContacts.DELETED + "=0",
+                new String[]{accountType, sourceId}, null);
+        if (c == null) return null;
+        try { return c.moveToFirst() ? c.getLong(0) : null; } finally { c.close(); }
+    }
+
+    private Long contactIdOf(long rawContactId) {
+        Cursor c = resolver.query(ContactsContract.RawContacts.CONTENT_URI,
+                new String[]{ContactsContract.RawContacts.CONTACT_ID},
+                ContactsContract.RawContacts._ID + "=?", new String[]{String.valueOf(rawContactId)}, null);
+        if (c == null) return null;
+        try { return c.moveToFirst() ? c.getLong(0) : null; } finally { c.close(); }
+    }
+
+    // ============================================================
+    // Scenario 11: a standalone RawContact from a synced/messaging-app
+    // account whose ONLY real content is a bare name (no phone, email, or
+    // any other field of its own) — e.g. a messaging app caching a contact's
+    // name without ever sharing a phone number — must be excluded when
+    // ADDITIONAL_DATA isn't selected, even though CONTACT_INFO is selected
+    // and the name row is genuinely captured (not synthesized). Reproduces:
+    // "I unselected Additional data but I still got a Telegram contact back
+    // with just a name and last name, no number."
+    // ============================================================
+    @Test
+    public void scenario11_otherTypeRawContactRestoredWholeOrNotAtAll() throws Exception {
+        // Mirrors a real messaging-app-linked RawContact: its own name row
+        // AND its own phone number, PLUS a provider-specific marker row of
+        // its own (e.g. Telegram's profile/call markers). Because it carries
+        // provider-specific data, it's an "other type" entry — ADDITIONAL_DATA
+        // must decide ALL of it (including its name and phone), not just the
+        // marker row, so a deselection never leaves behind a partial,
+        // not-the-original version of it.
+        String messengerOnly = insertRawContact("fake-messenger-account@example.invalid",
+                "com.example.fakemessenger", "fake-messenger-source-id-77");
+        insertRow(messengerOnly, "vnd.android.cursor.item/name", "Other Type Person");
+        insertRow(messengerOnly, "vnd.android.cursor.item/phone_v2", "+1-555-8801", "1");
+        insertRow(messengerOnly, UNKNOWN_MIME, "messenger-marker-row");
+        Thread.sleep(300);
+
+        AndroidContactsSnapshot snapshot = ContactsSnapshotReader.read(targetContext());
+        cleanupContacts();
+
+        RestoreResult result = ContactsSnapshotRestorer.restore(targetContext(), snapshot,
+                RestoreOptions.of(RestoreCategory.CONTACT_INFO, RestoreCategory.PHOTOS,
+                        RestoreCategory.GROUPS, RestoreCategory.ADDITIONAL_DATA),
+                (m, c, t) -> {});
+        assertEquals("The other-type entry should be created whole when Additional data is selected",
+                1, result.contactsCreated);
+        assertTrue("...including its own phone number", targetHasPhoneNumber("+1-555-8801"));
+        assertTrue("...and its own provider-specific marker row", targetHasMime(UNKNOWN_MIME));
+
+        cleanupContacts();
+
+        result = ContactsSnapshotRestorer.restore(targetContext(), snapshot,
+                RestoreOptions.of(RestoreCategory.CONTACT_INFO, RestoreCategory.PHOTOS, RestoreCategory.GROUPS),
+                (m, c, t) -> {});
+
+        assertEquals("The other-type entry must NOT be created at all when Additional data is deselected — "
+                        + "not even partially, with just its name or phone left behind",
+                0, result.contactsCreated);
+        assertFalse("No trace of its phone number should be restored", targetHasPhoneNumber("+1-555-8801"));
+        assertFalse("No trace of its marker row should be restored", targetHasMime(UNKNOWN_MIME));
+        assertEquals("It must be reported as intentionally skipped, not silently dropped",
+                1, result.emptyContactsSkipped);
+    }
+
+    // ============================================================
+    // Scenario 12: a RawContact that carries NO provider-specific data of
+    // its own — just an ordinary name — is a "normal" vCard-style contact
+    // regardless of which account it came from, and stays governed by
+    // CONTACT_INFO as always. Covers both a locally-entered contact and a
+    // synced-account contact that genuinely has nothing beyond a name.
+    // ============================================================
+    @Test
+    public void scenario12_bareNameWithNoProviderDataUnaffectedByAdditionalDataToggle() throws Exception {
+        String local = insertRawContact();
+        insertRow(local, "vnd.android.cursor.item/name", "Just A Name Locally");
+
+        String syncedNoExtras = insertRawContact("plain-account@example.invalid", "com.example.plainsync", "plain-source-1");
+        insertRow(syncedNoExtras, "vnd.android.cursor.item/name", "Just A Name Synced");
+        Thread.sleep(300);
+
+        AndroidContactsSnapshot snapshot = ContactsSnapshotReader.read(targetContext());
+        cleanupContacts();
+
+        RestoreResult result = ContactsSnapshotRestorer.restore(targetContext(), snapshot,
+                RestoreOptions.of(RestoreCategory.CONTACT_INFO, RestoreCategory.PHOTOS, RestoreCategory.GROUPS),
+                (m, c, t) -> {});
+
+        assertEquals("Both bare-name contacts (local and synced) must still be restored "
+                        + "when Additional data is deselected, since neither carries any provider-specific data",
+                2, result.contactsCreated);
+    }
+
+    // ============================================================
+    // Scenario 13: selecting Additional data for an "other type" entry must
+    // preserve its own account/source-id too, even when Account info is
+    // NOT selected — restoring such an entry's data without its account
+    // would leave it unrecognizable to the app that owns it (e.g. a
+    // messaging app), which would just create another copy on its next
+    // sync anyway. Account info alone still governs ordinary contacts.
+    // ============================================================
+    @Test
+    public void scenario13_additionalDataAloneCarriesAccountForOtherTypeEntries() throws Exception {
+        String messengerOnly = insertRawContact("fake-messenger-account@example.invalid",
+                "com.example.fakemessenger", "fake-messenger-source-id-99");
+        insertRow(messengerOnly, "vnd.android.cursor.item/name", "Coupled Account Person");
+        insertRow(messengerOnly, UNKNOWN_MIME, "messenger-marker-row");
+
+        String googleContact = insertRawContact("real-google-account@example.invalid", "com.google", null);
+        insertRow(googleContact, "vnd.android.cursor.item/name", "Ordinary Google Person");
+        insertRow(googleContact, "vnd.android.cursor.item/phone_v2", "+1-555-9101", "1");
+        Thread.sleep(300);
+
+        AndroidContactsSnapshot snapshot = ContactsSnapshotReader.read(targetContext());
+        cleanupContacts();
+
+        // Additional data selected, Account info NOT selected.
+        ContactsSnapshotRestorer.restore(targetContext(), snapshot,
+                RestoreOptions.of(RestoreCategory.CONTACT_INFO, RestoreCategory.PHOTOS,
+                        RestoreCategory.GROUPS, RestoreCategory.ADDITIONAL_DATA),
+                (m, c, t) -> {});
+
+        Long messengerRawId = rawContactIdForAccount("com.example.fakemessenger", "fake-messenger-source-id-99");
+        assertNotNull("The other-type entry's own account must be preserved because Additional data was selected, "
+                        + "even though Account info was not",
+                messengerRawId);
+
+        Cursor c = resolver.query(ContactsContract.RawContacts.CONTENT_URI,
+                new String[]{ContactsContract.RawContacts._ID},
+                ContactsContract.RawContacts.ACCOUNT_TYPE + "=?", new String[]{"com.google"}, null);
+        assertNotNull(c);
+        try {
+            assertFalse("The ordinary Google contact must have been restored as local, not under its Google account",
+                    c.moveToFirst());
+        } finally {
+            c.close();
+        }
+        assertTrue("The ordinary Google contact's own data should still be restored (just as local)",
+                targetHasPhoneNumber("+1-555-9101"));
     }
 }

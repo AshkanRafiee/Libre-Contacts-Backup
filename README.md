@@ -20,7 +20,7 @@ Each backup is a single timestamped `.lcb` archive containing:
 | `contacts.json` / `contacts.csv` | Human-readable exports |
 | `manifest.json` | Checksums and format version |
 
-On restore, contacts that originally belonged together (e.g. synced from Google *and* stored locally) are merged back into one contact — without ever merging two different people who just happen to share a name.
+On restore, contacts that originally belonged together (e.g. synced from Google *and* stored locally) are recreated as separate raw contacts, each keeping its own original source, and linked back together as one contact — without ever merging two different people who just happen to share a name.
 
 Libre Contacts Backup preserves contact information, including less-common and provider-specific data that may be missed by ordinary vCard backups. During restore, you choose which available categories to restore — contact information, photos, groups, additional/provider-specific data, and account information can each be included or skipped independently. A few things to know:
 

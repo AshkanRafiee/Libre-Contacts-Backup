@@ -34,15 +34,15 @@ public enum RestoreCategory {
 
     ADDITIONAL_DATA(
             "Additional contact data",
-            "Less common or provider-specific fields found in this backup.",
-            "e.g. a custom field saved by WhatsApp or another app",
-            false, "rarely needed, and may not display correctly on this device"),
+            "Entries that carry their own data from another app (e.g. a messaging app), and less common provider-specific fields. Each such entry is restored exactly as a whole — all of its data AND its original account together, or none of it at all — since a partial version (e.g. just a name, without what made it that entry, or without the account that app recognizes as its own) wouldn't match the original and isn't useful on its own. Note: whether that app actually recognizes the restored entry as its own is up to that app, not this setting — some apps may still add a new entry of their own regardless.",
+            "e.g. a messaging-app-linked entry restored with all its own data and its account intact, or not at all",
+            false, "rarely needed, may not display correctly on this device, restores each such entry only in full, never partially, and doesn't guarantee the other app won't still create its own entry too"),
 
     ACCOUNT_INFO(
             "Account/source information",
-            "Preserve the original account (e.g. a Google account) where supported. When a contact came from more than one source, it's restored as one contact under a single account — the original multi-source structure isn't recreated exactly.",
+            "Preserve your ordinary contacts' original account (e.g. a Google account) so they stay linked to it. This is separate from Additional contact data, which always keeps its own entries' accounts together with their data when selected.",
             "e.g. that a contact is linked to your Google account",
-            false, "not recommended when restoring to a different device or account — the contact still restores, just as a local contact");
+            false, "not recommended when restoring to a different device or account — the contact still restores, just as a local contact. Note: keeping an account doesn't guarantee that app will recognize the contact as already synced — that depends on the app, not this setting");
 
     public final String title;
     public final String description;

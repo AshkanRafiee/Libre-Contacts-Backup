@@ -29,8 +29,8 @@ public final class RestoreResult {
     public int restoredProviderDataRows;
 
     // Intentional transformations (allowed, not data loss).
-    public int mergedRawContacts;      // RawContacts folded into their source Contact's single target RawContact
-    public int deduplicatedDataRows;   // genuinely identical rows collapsed into one
+    public int linkedRawContacts;      // extra RawContacts recreated (not merged) and linked via AggregationExceptions to their source Contact's other RawContact(s)
+    public int deduplicatedDataRows;   // genuinely identical rows within the same RawContact collapsed into one
 
     // Rows present in the source but intentionally not materialized this run
     // because their RestoreCategory wasn't selected by the user. These are
@@ -38,11 +38,14 @@ public final class RestoreResult {
     // later with a different selection.
     public int skippedByUserChoice;
 
-    // Source Contacts that ended up with zero data rows after category
+    // Source RawContacts that ended up with zero data rows after category
     // filtering (most commonly a messaging app's nameless "shadow" RawContact
     // that only ever carried provider-specific data) and were therefore not
-    // created as an empty, duplicate-looking contact. Not data loss: nothing
-    // useful existed to write, and anything real is either already restored
+    // created as an empty, duplicate-looking entry. Counted per RawContact,
+    // not per source Contact: a Contact with several RawContacts can have
+    // some skipped this way while its other RawContact(s) still restore
+    // normally under the same target Contact. Not data loss: nothing useful
+    // existed to write, and anything real is either already restored
     // elsewhere or still sitting in the .lcb.
     public int emptyContactsSkipped;
 
@@ -86,8 +89,8 @@ public final class RestoreResult {
         if (binaryItemsRestored > 0) {
             sb.append("  Binary items: ").append(binaryItemsRestored).append("\n");
         }
-        if (mergedRawContacts > 0) {
-            sb.append("Merged: ").append(mergedRawContacts).append(" raw contacts into their source contacts\n");
+        if (linkedRawContacts > 0) {
+            sb.append("Linked: ").append(linkedRawContacts).append(" raw contacts kept separate but grouped under their source contact\n");
         }
         if (deduplicatedDataRows > 0) {
             sb.append("Deduplicated: ").append(deduplicatedDataRows).append(" identical rows\n");
