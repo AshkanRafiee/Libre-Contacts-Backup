@@ -68,6 +68,11 @@ public final class AndroidContactSnapshot {
         return c;
     }
 
+    /** toJson collapses null to "" for every optional string field; this reverses that on the way back in. */
+    private static String nullIfEmpty(String s) {
+        return (s == null || s.isEmpty()) ? null : s;
+    }
+
     /**
      * Represents a single RawContact belonging to a specific account/source,
      * containing all its Data rows.
@@ -96,21 +101,6 @@ public final class AndroidContactSnapshot {
             dataRows.add(row);
         }
 
-        public boolean hasMimeType(String mimeType) {
-            for (DataRowSnapshot row : dataRows) {
-                if (mimeType.equals(row.mimeType)) return true;
-            }
-            return false;
-        }
-
-        public List<DataRowSnapshot> getDataRowsByMimeType(String mimeType) {
-            ArrayList<DataRowSnapshot> result = new ArrayList<>();
-            for (DataRowSnapshot row : dataRows) {
-                if (mimeType.equals(row.mimeType)) result.add(row);
-            }
-            return result;
-        }
-
         public JSONObject toJson() throws JSONException {
             JSONObject obj = new JSONObject();
             obj.put("rawContactId", rawContactId);
@@ -132,15 +122,14 @@ public final class AndroidContactSnapshot {
         public static RawContactSnapshot fromJson(JSONObject obj) throws JSONException {
             RawContactSnapshot rc = new RawContactSnapshot();
             rc.rawContactId = obj.optLong("rawContactId", 0);
-            rc.displayName = obj.optString("displayName", null);
-            if (rc.displayName != null && rc.displayName.isEmpty()) rc.displayName = null;
-            rc.accountName = obj.optString("accountName", null);
-            rc.accountType = obj.optString("accountType", null);
-            rc.dataSet = obj.optString("dataSet", null);
-            rc.sourceId = obj.optString("sourceId", null);
+            rc.displayName = nullIfEmpty(obj.optString("displayName", null));
+            rc.accountName = nullIfEmpty(obj.optString("accountName", null));
+            rc.accountType = nullIfEmpty(obj.optString("accountType", null));
+            rc.dataSet = nullIfEmpty(obj.optString("dataSet", null));
+            rc.sourceId = nullIfEmpty(obj.optString("sourceId", null));
             rc.starred = obj.optInt("starred", 0);
             rc.timesContacted = obj.optInt("timesContacted", 0);
-            rc.customRingtone = obj.optString("customRingtone", null);
+            rc.customRingtone = nullIfEmpty(obj.optString("customRingtone", null));
             rc.sendToVoicemail = obj.optInt("sendToVoicemail", 0);
             JSONArray arr = obj.optJSONArray("dataRows");
             if (arr != null) {
@@ -193,11 +182,6 @@ public final class AndroidContactSnapshot {
             this.mimeType = mimeType;
         }
 
-        public DataRowSnapshot(String mimeType, String data1) {
-            this.mimeType = mimeType;
-            this.data1 = data1;
-        }
-
         public String getData(int index) {
             switch (index) {
                 case 1: return data1;
@@ -214,27 +198,8 @@ public final class AndroidContactSnapshot {
                 case 12: return data12;
                 case 13: return data13;
                 case 14: return data14;
-                case 15: return null; // DATA15 is binary, use getData15()
+                case 15: return null; // DATA15 is binary; access the data15 field directly
                 default: return null;
-            }
-        }
-
-        public void setData(int index, String value) {
-            switch (index) {
-                case 1: data1 = value; break;
-                case 2: data2 = value; break;
-                case 3: data3 = value; break;
-                case 4: data4 = value; break;
-                case 5: data5 = value; break;
-                case 6: data6 = value; break;
-                case 7: data7 = value; break;
-                case 8: data8 = value; break;
-                case 9: data9 = value; break;
-                case 10: data10 = value; break;
-                case 11: data11 = value; break;
-                case 12: data12 = value; break;
-                case 13: data13 = value; break;
-                case 14: data14 = value; break;
             }
         }
 
@@ -243,37 +208,6 @@ public final class AndroidContactSnapshot {
                     || data5 != null || data6 != null || data7 != null || data8 != null
                     || data9 != null || data10 != null || data11 != null || data12 != null
                     || data13 != null || data14 != null || (data15 != null && data15.length > 0);
-        }
-
-        /**
-         * Creates a shallow copy without binary data, for comparison purposes.
-         */
-        public DataRowSnapshot copyWithoutBinary() {
-            DataRowSnapshot copy = new DataRowSnapshot(mimeType);
-            copy.dataId = dataId;
-            copy.rawContactId = rawContactId;
-            copy.data1 = data1;
-            copy.data2 = data2;
-            copy.data3 = data3;
-            copy.data4 = data4;
-            copy.data5 = data5;
-            copy.data6 = data6;
-            copy.data7 = data7;
-            copy.data8 = data8;
-            copy.data9 = data9;
-            copy.data10 = data10;
-            copy.data11 = data11;
-            copy.data12 = data12;
-            copy.data13 = data13;
-            copy.data14 = data14;
-            copy.isPrimary = isPrimary;
-            copy.isSuperPrimary = isSuperPrimary;
-            copy.dataVersion = dataVersion;
-            copy.isReadOnly = isReadOnly;
-            copy.timesUsed = timesUsed;
-            copy.lastTimeUsed = lastTimeUsed;
-            copy.customRingtone = customRingtone;
-            return copy;
         }
 
         /**
@@ -300,10 +234,14 @@ public final class AndroidContactSnapshot {
             sb.append(isPrimary).append('|');
             sb.append(isSuperPrimary).append('|');
             if (data15 != null) {
-                for (byte b : data15) sb.append(String.format("%02x", b));
+                for (byte b : data15) {
+                    sb.append(HEX_DIGITS[(b >> 4) & 0xF]).append(HEX_DIGITS[b & 0xF]);
+                }
             }
             return sb.toString();
         }
+
+        private static final char[] HEX_DIGITS = "0123456789abcdef".toCharArray();
 
         private static String nvl(String s) { return s != null ? s : ""; }
 
@@ -343,33 +281,19 @@ public final class AndroidContactSnapshot {
             row.dataId = obj.optLong("dataId", 0);
             row.mimeType = obj.optString("mimeType", "");
             row.data1 = obj.optString("data1", null);
-            if (!obj.has("data1")) row.data1 = null;
             row.data2 = obj.optString("data2", null);
-            if (!obj.has("data2")) row.data2 = null;
             row.data3 = obj.optString("data3", null);
-            if (!obj.has("data3")) row.data3 = null;
             row.data4 = obj.optString("data4", null);
-            if (!obj.has("data4")) row.data4 = null;
             row.data5 = obj.optString("data5", null);
-            if (!obj.has("data5")) row.data5 = null;
             row.data6 = obj.optString("data6", null);
-            if (!obj.has("data6")) row.data6 = null;
             row.data7 = obj.optString("data7", null);
-            if (!obj.has("data7")) row.data7 = null;
             row.data8 = obj.optString("data8", null);
-            if (!obj.has("data8")) row.data8 = null;
             row.data9 = obj.optString("data9", null);
-            if (!obj.has("data9")) row.data9 = null;
             row.data10 = obj.optString("data10", null);
-            if (!obj.has("data10")) row.data10 = null;
             row.data11 = obj.optString("data11", null);
-            if (!obj.has("data11")) row.data11 = null;
             row.data12 = obj.optString("data12", null);
-            if (!obj.has("data12")) row.data12 = null;
             row.data13 = obj.optString("data13", null);
-            if (!obj.has("data13")) row.data13 = null;
             row.data14 = obj.optString("data14", null);
-            if (!obj.has("data14")) row.data14 = null;
             if (obj.has("data15")) {
                 row.data15 = android.util.Base64.decode(obj.getString("data15"), android.util.Base64.NO_WRAP);
             }
@@ -380,7 +304,6 @@ public final class AndroidContactSnapshot {
             row.timesUsed = obj.optInt("timesUsed", 0);
             row.lastTimeUsed = obj.optLong("lastTimeUsed", 0);
             row.customRingtone = obj.optString("customRingtone", null);
-            if (obj.has("customRingtone") && row.customRingtone != null && row.customRingtone.isEmpty()) row.customRingtone = null;
             return row;
         }
     }

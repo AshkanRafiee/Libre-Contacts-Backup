@@ -5,7 +5,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.provider.ContactsContract;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Reads a complete, lossless snapshot of the Android Contacts Provider.
@@ -67,6 +69,7 @@ public final class ContactsSnapshotReader {
     };
 
     private static final String[] DATA_PROJECTION_EXTRAS = {
+            ContactsContract.Data._ID,
             ContactsContract.Data.IS_READ_ONLY,
             ContactsContract.Data.TIMES_USED
     };
@@ -111,7 +114,7 @@ public final class ContactsSnapshotReader {
         // Such a ghost carries no user data and must not be counted.
         for (AndroidContactSnapshot contact : contactMap.values()) {
             if (!contact.rawContacts.isEmpty()) {
-                snapshot.contacts.add(contact);
+                snapshot.addContact(contact);
             }
         }
         return snapshot;
@@ -354,7 +357,7 @@ public final class ContactsSnapshotReader {
         try {
             cursor = resolver.query(
                     ContactsContract.Data.CONTENT_URI,
-                    new String[]{ ContactsContract.Data._ID, ContactsContract.Data.IS_READ_ONLY, ContactsContract.Data.TIMES_USED },
+                    DATA_PROJECTION_EXTRAS,
                     null, null, null
             );
         } catch (Exception e) {
@@ -370,19 +373,23 @@ public final class ContactsSnapshotReader {
             int idxTimesUsed = cursor.getColumnIndex(ContactsContract.Data.TIMES_USED);
             if (idxId < 0) return;
 
+            // Index every data row by its id once, up front, instead of
+            // rescanning every raw contact's every row for every cursor row
+            // below (which was O(rows queried × rows already read) — the
+            // same Data table read twice, compared against itself).
+            Map<Long, AndroidContactSnapshot.DataRowSnapshot> rowsById = new HashMap<>();
+            for (AndroidContactSnapshot.RawContactSnapshot rc : rawContactMap.values()) {
+                for (AndroidContactSnapshot.DataRowSnapshot dr : rc.dataRows) {
+                    rowsById.put(dr.dataId, dr);
+                }
+            }
+
             while (cursor.moveToNext()) {
                 long dataId = cursor.getLong(idxId);
-                int readOnly = idxReadOnly >= 0 ? safeInt(cursor, idxReadOnly) : 0;
-                int timesUsed = idxTimesUsed >= 0 ? safeInt(cursor, idxTimesUsed) : 0;
-
-                for (AndroidContactSnapshot.RawContactSnapshot rc : rawContactMap.values()) {
-                    for (AndroidContactSnapshot.DataRowSnapshot dr : rc.dataRows) {
-                        if (dr.dataId == dataId) {
-                            dr.isReadOnly = readOnly;
-                            dr.timesUsed = timesUsed;
-                        }
-                    }
-                }
+                AndroidContactSnapshot.DataRowSnapshot dr = rowsById.get(dataId);
+                if (dr == null) continue;
+                dr.isReadOnly = idxReadOnly >= 0 ? safeInt(cursor, idxReadOnly) : 0;
+                dr.timesUsed = idxTimesUsed >= 0 ? safeInt(cursor, idxTimesUsed) : 0;
             }
         } finally {
             cursor.close();

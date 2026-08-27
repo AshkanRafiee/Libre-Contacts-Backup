@@ -68,11 +68,6 @@ public final class AndroidContactsSnapshot {
 
         public GroupSnapshot() {}
 
-        public GroupSnapshot(long groupId, String title) {
-            this.groupId = groupId;
-            this.title = title;
-        }
-
         public JSONObject toJson() throws JSONException {
             JSONObject obj = new JSONObject();
             obj.put("groupId", groupId);
