@@ -1,7 +1,7 @@
 plugins { id 'com.android.application' }
 
 android { namespace = 'com.ashkanrafiee.librecontactsbackup'; compileSdk 35
-    defaultConfig { applicationId 'com.ashkanrafiee.librecontactsbackup'; minSdk 26; targetSdk 35; versionCode 17; versionName '2.1.1'
+    defaultConfig { applicationId 'com.ashkanrafiee.librecontactsbackup'; minSdk 26; targetSdk 35; versionCode 18; versionName '2.2.0'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     dependenciesInfo { includeInApk = false; includeInBundle = false }

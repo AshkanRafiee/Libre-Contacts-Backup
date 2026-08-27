@@ -1,0 +1,12 @@
+Changes:
+- Restoring a contact that came from more than one source (e.g. a phone contact also linked to a messaging app) now recreates each source separately and links them back together, instead of merging them into one row — this prevents duplicate contacts from reappearing after the other app re-syncs
+- Entries that only exist because of another app (e.g. a messaging app's internal contact data) are now restored completely or not at all, never as a stripped-down partial copy
+- Added a note under the restore options explaining that preserving an app's data or account doesn't guarantee that app will recognize the contact as its own
+- The restore options screen now always shows a scrollbar so it's clear there are more options to scroll to
+- Fixed shared VCF exports silently losing the family name for contacts without a name prefix or suffix
+- Fixed several contact fields (phone type, relationship, messaging service, website type, birthday/anniversary) being mislabeled when exporting to VCF or CSV
+- Fixed restoring a name and organization from a shared VCF sometimes creating duplicate entries instead of one combined entry
+- Hardened backup file reading against corrupted or maliciously crafted archives
+- Fixed a crash that could be triggered by another app installed on the device
+- Increased the strength of password-based backup encryption
+- General reliability improvements to backup and restore
