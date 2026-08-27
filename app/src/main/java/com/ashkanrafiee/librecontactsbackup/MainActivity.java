@@ -31,7 +31,7 @@ import java.util.*;
 
 public class MainActivity extends Activity {
     static final int FOLDER = 10, FILE = 11, MANUAL_CSV = 30, MANUAL_VCF = 31, MANUAL_XLS = 32;
-    final int purple = Color.rgb(137, 125, 255), mint = Color.rgb(143, 240, 208), background = Color.rgb(10, 14, 24);
+    final int mint = Color.rgb(143, 240, 208), background = Color.rgb(10, 14, 24);
     final int card = Color.rgb(20, 27, 42), muted = Color.rgb(151, 161, 181);
     TextView status, folderValue, scheduleValue, keepValue, restoreStatus;
     Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat; boolean pendingBackup; boolean pendingScheduleTime; String pendingNotificationActions; boolean compact;
@@ -68,10 +68,19 @@ public class MainActivity extends Activity {
         if (action != null) getIntent().removeExtra("notification_action");
         if (action != null && !action.isEmpty()) triggerNotificationAction(action);
     }
+    // MainActivity is exported (required for the launcher intent-filter), so
+    // this "notification_action" extra can arrive from any locally-installed
+    // app via an explicit Intent, not just this app's own notifications —
+    // treat it as untrusted input. split(",", 2) (a positive limit) always
+    // returns a length-1-or-more array even for edge cases like a bare ","
+    // or "" input, unlike the no-limit split(",") used previously, which
+    // collapses an all-delimiter string like "," to a zero-length array and
+    // crashed on parts[0].
     void triggerNotificationAction(String actions) {
-        String[] parts = actions.split(",");
+        if (actions == null || actions.isEmpty()) return;
+        String[] parts = actions.split(",", 2);
         String first = parts[0].trim();
-        String remaining = actions.substring(first.length()).replaceFirst("^,", "").trim();
+        String remaining = parts.length > 1 ? parts[1].trim() : "";
         pendingNotificationActions = remaining.isEmpty() ? null : remaining;
         if ("folder_missing".equals(first) || "folder_revoked".equals(first)) { chooseFolder(); }
         else if ("permission_missing".equals(first)) { requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 25); }
@@ -165,7 +174,7 @@ public class MainActivity extends Activity {
         long last = BackupManager.prefs(this).getLong("last", 0);
         if (last > 0) status.setText("Last backup " + new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(last)));
         scheduleValue.setText(AlarmScheduler.displayLabel(this));
-        int keep = BackupManager.prefs(this).getInt("keep", 5); keepValue.setText(keep > 100 ? "All sets" : keep + " set" + (keep == 1 ? "" : "s"));
+        int keep = BackupManager.prefs(this).getInt("keep", 5); keepValue.setText(keepLabel(keep));
         long restored = BackupManager.prefs(this).getLong("lastRestore", 0); int restoredCount = BackupManager.prefs(this).getInt("lastRestoreCount", 0);
         if (restored > 0) { restoreStatus.setVisibility(View.VISIBLE); restoreStatus.setText("Restored " + restoredCount + " contacts  ·  " + new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(restored))); } else if (compact) restoreStatus.setVisibility(View.GONE);
     }
@@ -181,22 +190,22 @@ public class MainActivity extends Activity {
         backupButton.setEnabled(false);
         backupProgress.setVisibility(View.VISIBLE);
         status.setText("Backing up...");
-        new Thread(() -> { String result = BackupManager.runBackup(this, true); runOnUiThread(() -> { status.setText(result); backupButton.setEnabled(true); backupProgress.setVisibility(View.GONE); backupRunning = false; }); }).start();
+        new Thread(() -> { BackupManager.BackupOutcome result = BackupManager.runBackup(this, true); runOnUiThread(() -> { status.setText(result.message); backupButton.setEnabled(true); backupProgress.setVisibility(View.GONE); backupRunning = false; }); }).start();
     }
     void scheduleDialog() {
         new AlertDialog.Builder(this).setTitle("Backup schedule").setItems(new String[]{"Off", "Daily at a specific time..."}, (dialog, which) -> {
-            if (which == 0) { BackupManager.prefs(this).edit().putString("schedule", "Off").apply(); scheduleValue.setText("Off"); AlarmScheduler.set(this, "Off"); return; }
+            if (which == 0) { BackupManager.prefs(this).edit().putString("schedule", "Off").apply(); scheduleValue.setText("Off"); AlarmScheduler.scheduleNext(this); return; }
             if (BackupManager.folder(this).isEmpty()) { pendingScheduleTime = true; chooseFolder(); return; }
             if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingScheduleTime = true; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 24); return; }
             pickScheduleTime();
         }).show();
     }
     void pickScheduleTime() {
-        new TimePickerDialog(this, (view, hour, minute) -> { String s = String.format(Locale.getDefault(), "Daily at %02d:%02d", hour, minute); BackupManager.prefs(this).edit().putString("schedule", s).putInt("hour", hour).putInt("minute", minute).apply(); scheduleValue.setText(s); AlarmScheduler.setAtTime(this, hour, minute); }, 9, 0, true).show();
+        new TimePickerDialog(this, (view, hour, minute) -> { String s = AlarmScheduler.dailyLabel(hour, minute); BackupManager.prefs(this).edit().putString("schedule", s).putInt("hour", hour).putInt("minute", minute).apply(); scheduleValue.setText(s); AlarmScheduler.setAtTime(this, hour, minute); }, 9, 0, true).show();
     }
     void retentionDialog() {
         final String[] options = {"1 backup set", "3 backup sets", "5 backup sets", "10 backup sets", "Keep all"};
-        new AlertDialog.Builder(this).setTitle("Keep backup sets").setItems(options, (dialog, which) -> { int keep = which == 4 ? 9999 : Integer.parseInt(options[which].split(" ")[0]); BackupManager.prefs(this).edit().putInt("keep", keep).apply(); keepValue.setText(keep > 100 ? "All sets" : keep + " set" + (keep == 1 ? "" : "s")); }).show();
+        new AlertDialog.Builder(this).setTitle("Keep backup sets").setItems(options, (dialog, which) -> { int keep = which == 4 ? 9999 : Integer.parseInt(options[which].split(" ")[0]); BackupManager.prefs(this).edit().putInt("keep", keep).apply(); keepValue.setText(keepLabel(keep)); }).show();
     }
     @SuppressLint("WrongConstant") // data.getFlags() is masked to exactly the two accepted persistable flags below
     @Override protected void onActivityResult(int request, int result, Intent data) {
@@ -263,9 +272,23 @@ public class MainActivity extends Activity {
                 BackupAnalysis analysis = BackupAnalyzer.analyze(snapshot);
                 runOnUiThread(() -> { hideRestoreProgress(); showRestoreSelectionDialog(snapshot, analysis); });
             } catch (Exception e) {
-                runOnUiThread(() -> { hideRestoreProgress(); notice(this, "Restore failed", "Wrong password or invalid backup"); });
+                // GCM's own authentication check is exactly what fails when
+                // the wrong password derives the wrong key — a real crypto
+                // signal, not a guess. Anything else (corrupt archive, I/O
+                // error, oversized entry, etc.) gets its real message
+                // instead of always blaming the password.
+                String message = (e instanceof javax.crypto.AEADBadTagException
+                        || e instanceof javax.crypto.BadPaddingException
+                        || e instanceof SecurityException)
+                        ? "Wrong password or invalid backup"
+                        : (e.getMessage() != null ? e.getMessage() : "Wrong password or invalid backup");
+                runOnUiThread(() -> { hideRestoreProgress(); notice(this, "Restore failed", message); });
             }
         }).start();
+    }
+
+    static String keepLabel(int keep) {
+        return keep > 100 ? "All sets" : keep + " set" + (keep == 1 ? "" : "s");
     }
 
     /** Plain-language "N things" label for a category's item count, e.g. "12 data fields". */
@@ -302,6 +325,11 @@ public class MainActivity extends Activity {
         panel.addView(label(summary, 12, muted), margins(0, 0, 0, 14));
 
         ScrollView scroll = new ScrollView(this);
+        // Keep the scrollbar always visible (not just while actively
+        // scrolling) so it's obvious there are more categories below —
+        // the checkbox list can exceed the dialog's visible height.
+        scroll.setScrollbarFadingEnabled(false);
+        scroll.setVerticalScrollBarEnabled(true);
         LinearLayout content = new LinearLayout(this); content.setOrientation(LinearLayout.VERTICAL);
         scroll.addView(content, new ScrollView.LayoutParams(-1, -2));
 
@@ -388,9 +416,9 @@ public class MainActivity extends Activity {
     }
     void hideRestoreProgress() { runOnUiThread(() -> { if (restoreProgress != null && restoreProgress.isShowing()) restoreProgress.dismiss(); restoreProgress = null; restoreProgressText = null; }); }
     public static void notice(Context context, String title, String body) { new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(context, title + ": " + body, Toast.LENGTH_LONG).show()); }
-    public static void showScheduledNotification(Context context, String result, String reason) {
+    public static void showScheduledNotification(Context context, String result, boolean success, String reason) {
         try {
-            final String channelId = "scheduled_backups"; boolean success = result != null && result.startsWith("Saved");
+            final String channelId = "scheduled_backups";
             NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(new NotificationChannel(channelId, "Scheduled backups", NotificationManager.IMPORTANCE_DEFAULT));
             Intent open = new Intent(context, MainActivity.class);
@@ -403,7 +431,7 @@ public class MainActivity extends Activity {
             manager.notify(91, builder.build());
         } catch (Exception error) { Log.e("LibreContactsBackup", "Unable to show scheduled backup notification", error); }
     }
-    public static void showScheduledNotification(Context context, String result) { showScheduledNotification(context, result, null); }
+    public static void showScheduledNotification(Context context, String result, boolean success) { showScheduledNotification(context, result, success, null); }
 
     static final class ContactOrbit extends View {
         final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);

@@ -1,19 +1,18 @@
 package com.ashkanrafiee.librecontactsbackup;
 import android.app.*;import android.content.*;import android.os.Build;import java.util.*;
 public final class AlarmScheduler {
-    public static void set(Context c,String ignored){scheduleNext(c);}
     public static void setAtTime(Context c,int h,int m){install(c,nextRun(h,m).getTimeInMillis());}
-    public static void restore(Context c){scheduleNext(c);}
+    public static String dailyLabel(int h,int m){return String.format(Locale.getDefault(),"Daily at %02d:%02d",h,m);}
     public static String displayLabel(Context c){
         String s=BackupManager.prefs(c).getString("schedule","Off");
-        if(!s.equals("Off")&&!s.startsWith("Daily at "))return String.format(Locale.getDefault(),"Daily at %02d:%02d",BackupManager.prefs(c).getInt("hour",9),BackupManager.prefs(c).getInt("minute",0));
+        if(!s.equals("Off")&&!s.startsWith("Daily at "))return dailyLabel(BackupManager.prefs(c).getInt("hour",9),BackupManager.prefs(c).getInt("minute",0));
         return s;
     }
     public static void scheduleNext(Context c){
         String s=BackupManager.prefs(c).getString("schedule","Off");
         if(s.equals("Off")){install(c,0);return;}
         if(!s.startsWith("Daily at ")){
-            s=String.format(Locale.getDefault(),"Daily at %02d:%02d",BackupManager.prefs(c).getInt("hour",9),BackupManager.prefs(c).getInt("minute",0));
+            s=dailyLabel(BackupManager.prefs(c).getInt("hour",9),BackupManager.prefs(c).getInt("minute",0));
             BackupManager.prefs(c).edit().putString("schedule",s).apply();
         }
         install(c,nextRun(BackupManager.prefs(c).getInt("hour",9),BackupManager.prefs(c).getInt("minute",0)).getTimeInMillis());

@@ -12,7 +12,8 @@ import android.view.*;
 import android.widget.*;
 
 public class AboutActivity extends Activity {
-    final int background = Color.rgb(10, 14, 24), card = Color.rgb(20, 27, 42), muted = Color.rgb(151, 161, 181), mint = Color.rgb(143, 240, 208), purple = Color.rgb(137, 125, 255);
+    private static final String SUPPORT_EMAIL = "librecontactsbackup.abstract692@passmail.net";
+    final int background = Color.rgb(10, 14, 24), card = Color.rgb(20, 27, 42), muted = Color.rgb(151, 161, 181), mint = Color.rgb(143, 240, 208);
     int dp(float value) { return (int) (value * getResources().getDisplayMetrics().density + .5f); }
     TextView text(String value, float size, int color) { TextView v = new TextView(this); v.setText(value); v.setTextSize(size); v.setTextColor(color); return v; }
     GradientDrawable rounded(int color, float radius) { GradientDrawable d = new GradientDrawable(); d.setColor(color); d.setCornerRadius(dp(radius)); return d; }
@@ -31,12 +32,12 @@ public class AboutActivity extends Activity {
         body.addView(info("Source code", "github.com/AshkanRafiee/Libre-Contacts-Backup", v -> open("https://github.com/AshkanRafiee/Libre-Contacts-Backup")), margins(0, 0, 0, 8));
         body.addView(info("GitHub profile", "github.com/AshkanRafiee", v -> open("https://github.com/AshkanRafiee/")), margins(0, 0, 0, 8));
         body.addView(info("Website", "AshkanRafiee.com", v -> open("https://AshkanRafiee.com")), margins(0, 0, 0, 8));
-        body.addView(info("Suggestions", "librecontactsbackup.abstract692@passmail.net", v -> email()), margins(0, 0, 0, 20));
+        body.addView(info("Suggestions", SUPPORT_EMAIL, v -> email()), margins(0, 0, 0, 20));
         String version = "1.0"; try { version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception ignored) { }
         TextView footer = text("Libre Contacts Backup · Version " + version, 11, Color.rgb(103, 115, 136)); footer.setGravity(Gravity.CENTER); body.addView(footer);
     }
     TextView section(String heading, String body) { TextView v = text(heading + "\n" + body, 12, muted); v.setLineSpacing(2, 1.05f); return v; }
     LinearLayout info(String heading, String value, View.OnClickListener click) { LinearLayout box = new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL); box.setPadding(dp(16), dp(13), dp(16), dp(13)); box.setBackground(rounded(card, 15)); TextView h = text(heading, 12, muted); box.addView(h); TextView v = text(value, 14, click == null ? Color.WHITE : Color.rgb(190, 184, 255)); v.setPadding(0, dp(5), 0, 0); v.setMaxLines(2); v.setEllipsize(TextUtils.TruncateAt.END); if (click != null) { v.setPaintFlags(v.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG); box.setOnClickListener(click); } box.addView(v); return box; }
     void open(String url) { try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception e) { Toast.makeText(this, "No browser available", Toast.LENGTH_SHORT).show(); } }
-    void email() { try { startActivity(new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:librecontactsbackup.abstract692@passmail.net"))); } catch (Exception e) { Toast.makeText(this, "No email app available", Toast.LENGTH_SHORT).show(); } }
+    void email() { try { startActivity(new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:" + SUPPORT_EMAIL))); } catch (Exception e) { Toast.makeText(this, "No email app available", Toast.LENGTH_SHORT).show(); } }
 }

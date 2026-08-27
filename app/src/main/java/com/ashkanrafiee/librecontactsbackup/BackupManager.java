@@ -6,12 +6,12 @@ import android.net.Uri;
 import android.provider.ContactsContract;
 import android.provider.DocumentsContract;
 import android.util.Base64;
+import android.util.Log;
 
 import com.ashkanrafiee.librecontactsbackup.archive.BackupArchiveReader;
 import com.ashkanrafiee.librecontactsbackup.archive.BackupArchiveWriter;
 import com.ashkanrafiee.librecontactsbackup.archive.ContactsSnapshotRestorer;
 import com.ashkanrafiee.librecontactsbackup.export.NormalizedCsvExporter;
-import com.ashkanrafiee.librecontactsbackup.export.NormalizedJsonExporter;
 import com.ashkanrafiee.librecontactsbackup.export.VCardExporter;
 import com.ashkanrafiee.librecontactsbackup.export.VCardImporter;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactSnapshot;
@@ -19,9 +19,6 @@ import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactsSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.ContactsSnapshotReader;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreOptions;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreResult;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -69,8 +66,9 @@ public final class BackupManager {
         String value = folder(c); if (value.isEmpty()) return "Not selected";
         try {
             Uri tree = Uri.parse(value); Uri document = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree));
-            Cursor cursor = c.getContentResolver().query(document, new String[]{DocumentsContract.Document.COLUMN_DISPLAY_NAME}, null, null, null);
-            if (cursor != null) { if (cursor.moveToFirst() && cursor.getString(0) != null) { String name = cursor.getString(0); cursor.close(); return name; } cursor.close(); }
+            try (Cursor cursor = c.getContentResolver().query(document, new String[]{DocumentsContract.Document.COLUMN_DISPLAY_NAME}, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst() && cursor.getString(0) != null) return cursor.getString(0);
+            }
         } catch (Exception ignored) { }
         String id = Uri.decode(Uri.parse(value).getPath()); if (id == null) return "Selected"; int colon = id.lastIndexOf(':'); if (colon >= 0) id = id.substring(colon + 1); int slash = id.lastIndexOf('/'); return slash >= 0 ? id.substring(slash + 1) : id;
     }
@@ -79,9 +77,19 @@ public final class BackupManager {
      * Runs a lossless backup: reads all contacts from the provider into
      * a snapshot, then writes the .lcb archive with canonical + derived formats.
      */
-    public static String runBackup(Context c, boolean notify) {
+    /** Whether a backup succeeded, alongside its display message — kept separate so callers never have to infer success from message text. */
+    public static final class BackupOutcome {
+        public final boolean success;
+        public final String message;
+        public BackupOutcome(boolean success, String message) {
+            this.success = success;
+            this.message = message;
+        }
+    }
+
+    public static BackupOutcome runBackup(Context c, boolean notify) {
         try {
-            if (folder(c).isEmpty()) return "Choose a folder first";
+            if (folder(c).isEmpty()) return new BackupOutcome(false, "Choose a folder first");
             Uri tree = Uri.parse(folder(c));
 
             // Step 1: Read lossless snapshot from provider
@@ -91,31 +99,37 @@ public final class BackupManager {
             String stamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(new Date());
             boolean encrypted = prefs(c).getBoolean("encrypted", false);
             String password = encrypted ? loadEncryptionPassword(c) : null;
-            if (encrypted && (password == null || password.isEmpty())) return "Set an encryption password first";
+            if (encrypted && (password == null || password.isEmpty())) return new BackupOutcome(false, "Set an encryption password first");
 
             ByteArrayOutputStream zipOutput = new ByteArrayOutputStream();
             BackupArchiveWriter.writeArchive(c, snapshot, zipOutput);
             byte[] archive = zipOutput.toByteArray();
             if (encrypted) archive = encryptArchive(archive, password);
 
-            writeArchive(c, tree, "librecontacts_" + stamp + (encrypted ? ".lcb.enc" : ".lcb"), archive);
-            trim(c, tree);
+            saveToFolder(c, tree, "librecontacts_" + stamp + (encrypted ? ".lcb.enc" : ".lcb"), archive);
+            // The backup itself is already safely written at this point — a
+            // failure trimming old backups afterward must not turn a
+            // successful backup into a reported failure.
+            try {
+                trim(c, tree);
+            } catch (Exception e) {
+                Log.w("LibreContactsBackup", "Failed to trim old backups", e);
+            }
             prefs(c).edit().putLong("last", System.currentTimeMillis()).apply();
 
-            if (notify) MainActivity.notice(c, "Backup complete",
-                    "Saved " + snapshot.getContactCount() + " contacts");
-            return "Saved " + snapshot.getContactCount() + " contacts";
+            String message = "Saved " + snapshot.getContactCount() + " contacts";
+            if (notify) MainActivity.notice(c, "Backup complete", message);
+            return new BackupOutcome(true, message);
         } catch (Exception e) {
             if (notify) MainActivity.notice(c, "Backup failed", e.getMessage());
-            return "Backup failed: " + e.getMessage();
+            return new BackupOutcome(false, "Backup failed: " + e.getMessage());
         }
     }
 
     /**
      * Opens, decrypts, and decodes a .lcb backup file, without restoring
-     * anything. Split out from {@link #restoreWithResult} so callers can
-     * analyze the backup and let the user choose restore categories before
-     * any restore actually runs.
+     * anything, so callers can analyze the backup and let the user choose
+     * restore categories before any restore actually runs.
      */
     public static BackupArchiveReader.ArchiveData openArchive(Context c, Uri file, String password,
                                                                RestoreProgress progress) throws Exception {
@@ -159,20 +173,6 @@ public final class BackupManager {
         } else {
             throw new IOException("Invalid backup format");
         }
-    }
-
-    /**
-     * Restores contacts from a .lcb backup file, materializing every
-     * supported category. Handles both new format (canonical snapshot) and
-     * legacy format (VCF-only). Returns a RestoreResult with detailed
-     * statistics. Kept for callers that don't need category selection.
-     */
-    public static RestoreResult restoreWithResult(Context c, Uri file, String password,
-                                                    RestoreProgress progress) throws Exception {
-        BackupArchiveReader.ArchiveData archiveData = openArchive(c, file, password, progress);
-        AndroidContactsSnapshot snapshot = resolveSnapshot(archiveData);
-        return ContactsSnapshotRestorer.restoreExact(c, snapshot,
-                (message, current, total) -> progress.update(message, current, total));
     }
 
     /**
@@ -224,8 +224,13 @@ public final class BackupManager {
 
     public static void saveEncryptionPassword(Context c, String password) throws Exception {
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding"); cipher.init(Cipher.ENCRYPT_MODE, key()); byte[] iv = cipher.getIV();
-        byte[] encrypted = cipher.doFinal(password.getBytes(StandardCharsets.UTF_8)); ByteArrayOutputStream data = new ByteArrayOutputStream(); data.write(iv); data.write(encrypted);
-        prefs(c).edit().putString("password", Base64.encodeToString(data.toByteArray(), Base64.NO_WRAP)).apply();
+        byte[] passwordBytes = password.getBytes(StandardCharsets.UTF_8);
+        try {
+            byte[] encrypted = cipher.doFinal(passwordBytes); ByteArrayOutputStream data = new ByteArrayOutputStream(); data.write(iv); data.write(encrypted);
+            prefs(c).edit().putString("password", Base64.encodeToString(data.toByteArray(), Base64.NO_WRAP)).apply();
+        } finally {
+            Arrays.fill(passwordBytes, (byte) 0);
+        }
     }
 
     private static String loadEncryptionPassword(Context c) throws Exception {
@@ -251,7 +256,19 @@ public final class BackupManager {
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding"); cipher.init(Cipher.DECRYPT_MODE, deriveKey(password, salt), new GCMParameterSpec(128, iv)); return cipher.doFinal(input, 36, input.length - 36);
     }
 
-    private static SecretKey deriveKey(String password, byte[] salt) throws Exception { PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 120000, 256); byte[] bytes = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).getEncoded(); return new javax.crypto.spec.SecretKeySpec(bytes, "AES"); }
+    // 600,000 iterations follows OWASP's current PBKDF2-HMAC-SHA256 guidance;
+    // this only runs once per backup/restore, not on any hot path.
+    private static final int KEY_DERIVATION_ITERATIONS = 600_000;
+
+    private static SecretKey deriveKey(String password, byte[] salt) throws Exception {
+        PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, KEY_DERIVATION_ITERATIONS, 256);
+        try {
+            byte[] bytes = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).getEncoded();
+            return new javax.crypto.spec.SecretKeySpec(bytes, "AES");
+        } finally {
+            spec.clearPassword();
+        }
+    }
 
     public static boolean isEncrypted(Context c, Uri file) throws Exception { try (InputStream in = c.getContentResolver().openInputStream(file)) { byte[] header = new byte[8]; int read = in.read(header); return read == 8 && Arrays.equals(header, MAGIC); } }
 
@@ -261,7 +278,7 @@ public final class BackupManager {
     // Archive I/O
     // ============================================================
 
-    private static void writeArchive(Context c, Uri tree, String name, byte[] bytes) throws Exception {
+    private static void saveToFolder(Context c, Uri tree, String name, byte[] bytes) throws Exception {
         Uri parent = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree));
         Uri file = DocumentsContract.createDocument(c.getContentResolver(), parent, "application/octet-stream", name);
         if (file == null) throw new IOException("Cannot create backup file");
@@ -278,10 +295,43 @@ public final class BackupManager {
     // ============================================================
 
     private static void trim(Context c, Uri tree) throws Exception {
-        int keep = prefs(c).getInt("keep", 5); Uri children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree)); LinkedHashMap<String, ArrayList<Uri>> sets = new LinkedHashMap<>(); ArrayList<Uri> legacy = new ArrayList<>();
-        Cursor q = c.getContentResolver().query(children, new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME}, null, null, null);
-        if (q != null) { while (q.moveToNext()) { String name = q.getString(1); if (!name.startsWith("librecontacts_")) continue; Uri file = DocumentsContract.buildDocumentUriUsingTree(tree, q.getString(0)); if (!(name.endsWith(".lcb") || name.endsWith(".lcb.enc"))) { legacy.add(file); continue; } String base = name; for (String suffix : new String[]{".enc", ".lcb"}) if (base.endsWith(suffix)) base = base.substring(0, base.length() - suffix.length()); sets.computeIfAbsent(base, k -> new ArrayList<>()).add(file); } q.close(); }
-        for (Uri file : legacy) DocumentsContract.deleteDocument(c.getContentResolver(), file); ArrayList<String> names = new ArrayList<>(sets.keySet()); names.sort(Collections.reverseOrder()); for (int i = keep; i < names.size(); i++) for (Uri file : sets.get(names.get(i))) DocumentsContract.deleteDocument(c.getContentResolver(), file);
+        int keep = prefs(c).getInt("keep", 5);
+        Uri children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree));
+        LinkedHashMap<String, ArrayList<Uri>> sets = new LinkedHashMap<>();
+        // Files with our naming prefix that don't end in .lcb/.lcb.enc aren't
+        // part of any versioned backup set this retention logic tracks (e.g.
+        // a leftover from an interrupted write) — not real backups worth
+        // keeping, so removed outright rather than accumulating forever.
+        ArrayList<Uri> notABackup = new ArrayList<>();
+
+        try (Cursor q = c.getContentResolver().query(children,
+                new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME},
+                null, null, null)) {
+            if (q != null) {
+                while (q.moveToNext()) {
+                    String name = q.getString(1);
+                    if (!name.startsWith("librecontacts_")) continue;
+                    Uri file = DocumentsContract.buildDocumentUriUsingTree(tree, q.getString(0));
+                    if (!(name.endsWith(".lcb") || name.endsWith(".lcb.enc"))) {
+                        notABackup.add(file);
+                        continue;
+                    }
+                    String base = name;
+                    for (String suffix : new String[]{".enc", ".lcb"}) {
+                        if (base.endsWith(suffix)) base = base.substring(0, base.length() - suffix.length());
+                    }
+                    sets.computeIfAbsent(base, k -> new ArrayList<>()).add(file);
+                }
+            }
+        }
+
+        for (Uri file : notABackup) DocumentsContract.deleteDocument(c.getContentResolver(), file);
+
+        ArrayList<String> names = new ArrayList<>(sets.keySet());
+        names.sort(Collections.reverseOrder());
+        for (int i = keep; i < names.size(); i++) {
+            for (Uri file : sets.get(names.get(i))) DocumentsContract.deleteDocument(c.getContentResolver(), file);
+        }
     }
 
     // ============================================================
