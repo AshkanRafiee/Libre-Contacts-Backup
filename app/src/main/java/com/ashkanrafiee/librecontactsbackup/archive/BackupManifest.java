@@ -48,15 +48,7 @@ public final class BackupManifest {
         return LEGACY_FORMAT.equals(format) || schemaVersion < 2;
     }
 
-    public boolean isCompatible() {
-        return FORMAT_NAME.equals(format) && schemaVersion >= 2;
-    }
-
     public void addFile(String name, String sha256) {
-        files.put(name, new FileEntry(sha256));
-    }
-
-    public void setFileChecksum(String name, String sha256) {
         files.put(name, new FileEntry(sha256));
     }
 

@@ -50,8 +50,7 @@ public final class BackupArchiveWriter {
                                      AndroidContactsSnapshot snapshot,
                                      OutputStream outputStream) throws IOException {
 
-        try {
-            ZipOutputStream zip = new ZipOutputStream(outputStream);
+        try (ZipOutputStream zip = new ZipOutputStream(outputStream)) {
 
             // 1. Canonical lossless snapshot
             byte[] canonicalJson = NormalizedJsonExporter.exportCanonical(snapshot).getBytes(StandardCharsets.UTF_8);
@@ -90,20 +89,10 @@ public final class BackupArchiveWriter {
             addEntry(zip, "contacts.csv", csv);
 
             zip.finish();
-            zip.close();
 
         } catch (JSONException e) {
             throw new IOException("Failed to generate manifest JSON", e);
         }
-    }
-
-    /**
-     * Reads the full snapshot and writes the .lcb archive to the output stream.
-     */
-    public static void writeBackup(Context context,
-                                    AndroidContactsSnapshot snapshot,
-                                    OutputStream outputStream) throws IOException {
-        writeArchive(context, snapshot, outputStream);
     }
 
     private static void addEntry(ZipOutputStream zip, String name, byte[] data) throws IOException {
