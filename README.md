@@ -2,12 +2,12 @@
 
 A free, open-source, native Android app that backs up your contacts — fully offline, fully local, fully yours.
 
-- **Libre & open source** — GPLv3, no proprietary bits, buildable from source, [available on F-Droid](https://f-droid.org/en/packages/com.ashkanrafiee.librecontactsbackup/).
+- **Libre & open source** — GPL-3.0, no proprietary bits, buildable from source, [available on F-Droid](https://f-droid.org/en/packages/com.ashkanrafiee.librecontactsbackup/).
 - **Private by design** — no account, no cloud, no analytics, no network permission at all. Contacts are only read when a backup runs.
 - **Local by design** — backups are written to a folder you choose on your own device (or SD card); nothing is ever uploaded anywhere.
 - **Scheduled backups** — set a daily time and it runs automatically in the background, entirely on-device.
-- **As close to lossless as the Contacts Provider allows** — the backup preserves the full Contact → RawContact → Data hierarchy (every readable field, every account, every custom type), not a lossy flattened copy. Restore is lossless for whatever categories you select and the target device supports; anything it can't materialize is reported, not silently dropped, and stays intact in the backup either way.
-- **Optional encryption** — AES-256-GCM with a password, key wrapped by Android Keystore.
+- **As close to lossless as the Contacts Provider allows** — preserves the full Contact → RawContact → Data hierarchy (every readable field, every account, every custom type), not a lossy flattened copy.
+- **Optional encryption** — AES-256-GCM with a key derived from your password (PBKDF2, 600,000 iterations); the password itself is stored on-device behind an Android Keystore key so scheduled backups can run unattended.
 
 ## Backup format
 
@@ -22,12 +22,12 @@ Each backup is a single timestamped `.lcb` archive containing:
 
 On restore, contacts that originally belonged together (e.g. synced from Google *and* stored locally) are recreated as separate raw contacts, each keeping its own original source, and linked back together as one contact — without ever merging two different people who just happen to share a name.
 
-Libre Contacts Backup preserves contact information, including less-common and provider-specific data that may be missed by ordinary vCard backups. During restore, you choose which available categories to restore — contact information, photos, groups, additional/provider-specific data, and account information can each be included or skipped independently. A few things to know:
+Libre Contacts Backup preserves contact information, including less-common and provider-specific data that may be missed by ordinary vCard backups. During restore, you choose which available categories to include — contact information, photos, groups, additional/provider-specific data, and account information can each be restored or skipped independently. A few things to know:
 
 - Contact IDs and RawContact IDs may change on restore; the app does not try to recreate Android's internal provider bookkeeping.
-- Provider/account metadata may not be restorable on every device (e.g. if the original account isn't set up there).
-- Anything you don't select stays fully intact inside the `.lcb` — the archive is never modified by what you restore.
-- The same backup can be restored again later with a different selection.
+- Provider/account metadata may not be restorable on every device, and preserving it doesn't guarantee the original app (e.g. a messaging app) will recognize the contact as its own.
+- Anything a selected category can't restore is reported, not silently dropped.
+- Anything you don't select stays fully intact inside the `.lcb` — the archive is never modified by what you restore, and it can be restored again later with a different selection.
 
 ## Build
 
