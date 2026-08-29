@@ -33,7 +33,7 @@ public class MainActivity extends Activity {
     static final int FOLDER = 10, FILE = 11, MANUAL_CSV = 30, MANUAL_VCF = 31, MANUAL_XLS = 32;
     final int mint = Color.rgb(143, 240, 208), background = Color.rgb(10, 14, 24);
     final int card = Color.rgb(20, 27, 42), muted = Color.rgb(151, 161, 181);
-    TextView status, folderValue, scheduleValue, keepValue, restoreStatus;
+    TextView status, folderValue, scheduleValue, keepValue, languageValue, restoreStatus;
     Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat; boolean pendingBackup; boolean pendingScheduleTime; String pendingNotificationActions; boolean compact;
     Button backupButton;
     ProgressBar backupProgress;
@@ -57,6 +57,10 @@ public class MainActivity extends Activity {
     LinearLayout.LayoutParams margins(int left, int top, int right, int bottom) {
         LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
         p.setMargins(dp(left), dp(top), dp(right), dp(bottom)); return p;
+    }
+
+    @Override protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleHelper.wrap(base));
     }
 
     @Override public void onCreate(Bundle state) {
@@ -100,51 +104,60 @@ public class MainActivity extends Activity {
         LinearLayout header = new LinearLayout(this); header.setGravity(Gravity.CENTER_VERTICAL);
         TextView mark = label("L", compact ? 16 : 18, background); mark.setGravity(Gravity.CENTER); mark.setTypeface(null, android.graphics.Typeface.BOLD); mark.setBackground(rounded(mint, 12)); header.addView(mark, new LinearLayout.LayoutParams(dp(v(38, 34)), dp(v(38, 34))));
         LinearLayout name = new LinearLayout(this); name.setOrientation(LinearLayout.VERTICAL);
-        name.addView(label("Libre Contacts Backup", compact ? 20 : 22, Color.WHITE)); name.addView(label("Offline & encrypted", 12, muted));
-        LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(-2, -2); nameParams.setMargins(dp(10), 0, 0, 0); header.addView(name, nameParams); body.addView(header, margins(0, 0, 0, v(16, 10)));
+        name.addView(label(getString(R.string.app_name), compact ? 20 : 22, Color.WHITE)); name.addView(label(getString(R.string.tagline_offline_encrypted), 12, muted));
+        LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(-2, -2); nameParams.setMarginStart(dp(10)); header.addView(name, nameParams); body.addView(header, margins(0, 0, 0, v(16, 10)));
 
         LinearLayout hero = new LinearLayout(this); hero.setOrientation(LinearLayout.VERTICAL); hero.setPadding(dp(v(18, 14)), dp(v(17, 12)), dp(v(18, 14)), dp(v(16, 12)));
         hero.setBackground(gradient(new int[]{Color.rgb(41, 57, 91), Color.rgb(35, 34, 72)}, 22));
         FrameLayout heroTop = new FrameLayout(this);
         LinearLayout heroWords = new LinearLayout(this); heroWords.setOrientation(LinearLayout.VERTICAL);
-        heroWords.addView(label("YOUR CONTACTS", 10, mint));
-        status = label("Ready for a fresh backup", 18, Color.WHITE); status.setMaxLines(1); status.setEllipsize(TextUtils.TruncateAt.END); status.setPadding(0, dp(5), 0, dp(2)); heroWords.addView(status);
+        heroWords.addView(label(getString(R.string.hero_label), 10, mint));
+        status = label(getString(R.string.status_ready), 18, Color.WHITE); status.setMaxLines(1); status.setEllipsize(TextUtils.TruncateAt.END); status.setPadding(0, dp(5), 0, dp(2)); heroWords.addView(status);
         backupProgress = new ProgressBar(this);
         backupProgress.setIndeterminate(true);
         backupProgress.setVisibility(View.GONE);
         LinearLayout.LayoutParams progressParams = new LinearLayout.LayoutParams(dp(20), dp(20));
         progressParams.setMargins(0, dp(4), 0, 0);
         heroWords.addView(backupProgress, progressParams);
-        heroWords.addView(label(compact ? "Private & local." : "Private, local, and ready when you are.", 12, Color.rgb(201, 211, 230)));
+        heroWords.addView(label(compact ? getString(R.string.hero_tagline_compact) : getString(R.string.hero_tagline_full), 12, Color.rgb(201, 211, 230)));
         int widthDp = (int) (getResources().getDisplayMetrics().widthPixels / getResources().getDisplayMetrics().density);
         int orbitDp = compact ? Math.max(72, Math.min(82, (int) (widthDp * .23f))) : Math.max(88, Math.min(132, (int) (widthDp * .28f)));
-        FrameLayout.LayoutParams wordsParams = new FrameLayout.LayoutParams(-1, -2); wordsParams.rightMargin = dp(orbitDp + 12); heroTop.addView(heroWords, wordsParams);
-        heroTop.addView(new ContactOrbit(this), new FrameLayout.LayoutParams(dp(orbitDp), dp(orbitDp), Gravity.RIGHT | Gravity.TOP)); hero.addView(heroTop);
-        Button backup = button("Back up now", mint); backup.setTextColor(background); backup.setOnClickListener(v -> backup());
+        FrameLayout.LayoutParams wordsParams = new FrameLayout.LayoutParams(-1, -2); wordsParams.setMarginEnd(dp(orbitDp + 12)); heroTop.addView(heroWords, wordsParams);
+        heroTop.addView(new ContactOrbit(this), new FrameLayout.LayoutParams(dp(orbitDp), dp(orbitDp), Gravity.END | Gravity.TOP)); hero.addView(heroTop);
+        Button backup = button(getString(R.string.backup_now), mint); backup.setTextColor(background); backup.setOnClickListener(v -> backup());
         backupButton = backup;
         LinearLayout.LayoutParams actionParams = new LinearLayout.LayoutParams(-1, dp(v(48, 44))); actionParams.setMargins(0, dp(v(15, 10)), 0, 0); hero.addView(backup, actionParams); body.addView(hero, margins(0, 0, 0, v(22, 14)));
 
-        body.addView(label("KEEP IT IN YOUR POCKET", 10, muted), margins(0, 0, 0, v(8, 5)));
-        folderValue = label("Not selected", 13, Color.rgb(190, 184, 255));
-        body.addView(setting("Backup folder", "Where timestamped files are saved", folderValue, false, v -> chooseFolder()), margins(0, 0, 0, v(8, 5)));
-        scheduleValue = label("Off", 13, Color.rgb(190, 184, 255));
-        body.addView(setting("Schedule", "When automatic backups run", scheduleValue, false, v -> scheduleDialog()), margins(0, 0, 0, v(8, 5)));
-        keepValue = label("5 sets", 13, Color.rgb(190, 184, 255));
-        body.addView(setting("Keep last backups", "Older backup sets are removed together", keepValue, false, v -> retentionDialog()), margins(0, 0, 0, v(8, 5)));
-        body.addView(setting("Encryption", "Protect exported files with AES", null, true, v -> {}), margins(0, 0, 0, v(20, 12)));
+        body.addView(label(getString(R.string.section_pocket), 10, muted), margins(0, 0, 0, v(8, 5)));
+        folderValue = label(BackupManager.folderLabel(this), 13, Color.rgb(190, 184, 255));
+        body.addView(setting(getString(R.string.setting_folder_title), getString(R.string.setting_folder_subtitle), folderValue, false, v -> chooseFolder()), margins(0, 0, 0, v(8, 5)));
+        scheduleValue = label(AlarmScheduler.displayLabel(this), 13, Color.rgb(190, 184, 255));
+        body.addView(setting(getString(R.string.setting_schedule_title), getString(R.string.setting_schedule_subtitle), scheduleValue, false, v -> scheduleDialog()), margins(0, 0, 0, v(8, 5)));
+        keepValue = label(keepLabel(this, BackupManager.prefs(this).getInt("keep", 5)), 13, Color.rgb(190, 184, 255));
+        body.addView(setting(getString(R.string.setting_keep_title), getString(R.string.setting_keep_subtitle), keepValue, false, v -> retentionDialog()), margins(0, 0, 0, v(8, 5)));
+        body.addView(setting(getString(R.string.setting_encryption_title), getString(R.string.setting_encryption_subtitle), null, true, v -> {}), margins(0, 0, 0, v(20, 12)));
 
-        body.addView(label("EXPORT A COPY", 10, muted), margins(0, 0, 0, 3));
-        body.addView(label(compact ? "Manual copies: unencrypted, not retained." : "Manual copies are not encrypted and are never removed by retention.", 11, Color.rgb(222, 184, 112)), margins(0, 0, 0, v(8, 5)));
+        body.addView(label(getString(R.string.section_export), 10, muted), margins(0, 0, 0, 3));
+        body.addView(label(compact ? getString(R.string.export_note_compact) : getString(R.string.export_note_full), 11, Color.rgb(222, 184, 112)), margins(0, 0, 0, v(8, 5)));
         LinearLayout exports = new LinearLayout(this); exports.setOrientation(LinearLayout.HORIZONTAL);
-        Button csv = button("CSV", Color.rgb(28, 38, 55)); Button vcf = button("VCF", Color.rgb(28, 38, 55)); Button xls = button("Excel", Color.rgb(28, 38, 55));
+        Button csv = button(getString(R.string.export_csv), Color.rgb(28, 38, 55)); Button vcf = button(getString(R.string.export_vcf), Color.rgb(28, 38, 55)); Button xls = button(getString(R.string.export_excel), Color.rgb(28, 38, 55));
         csv.setOnClickListener(v -> manualExport("csv")); vcf.setOnClickListener(v -> manualExport("vcf")); xls.setOnClickListener(v -> manualExport("xls"));
         exports.addView(csv, new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1)); LinearLayout.LayoutParams exportGap = new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1); exportGap.setMargins(dp(v(8, 5)), 0, 0, 0); exports.addView(vcf, exportGap); LinearLayout.LayoutParams excelGap = new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1); excelGap.setMargins(dp(v(8, 5)), 0, 0, 0); exports.addView(xls, excelGap); body.addView(exports, margins(0, 0, 0, v(20, 12)));
 
-        body.addView(label("BRING CONTACTS BACK", 10, muted), margins(0, 0, 0, v(8, 5)));
-        Button restore = button("Restore from backup  ›", Color.rgb(28, 38, 55)); restore.setTextColor(Color.rgb(211, 219, 235)); restore.setOnClickListener(v -> chooseFile());
+        body.addView(label(getString(R.string.section_restore), 10, muted), margins(0, 0, 0, v(8, 5)));
+        Button restore = button(getString(R.string.restore_button), Color.rgb(28, 38, 55)); restore.setTextColor(Color.rgb(211, 219, 235)); restore.setOnClickListener(v -> chooseFile());
         LinearLayout.LayoutParams restoreParams = new LinearLayout.LayoutParams(-1, dp(v(48, 42))); restoreParams.setMargins(0, 0, 0, dp(v(12, 7))); body.addView(restore, restoreParams);
-        restoreStatus = label("No restore performed yet", 11, Color.rgb(103, 115, 136)); restoreStatus.setGravity(Gravity.CENTER); if (compact) restoreStatus.setVisibility(View.GONE); body.addView(restoreStatus, margins(0, 0, 0, 0));
-        LinearLayout footer = new LinearLayout(this); footer.setGravity(Gravity.CENTER); TextView footerText = label(compact ? "Libre Contacts Backup  ·  " : "Local by design  ·  Libre Contacts Backup  ·  ", 11, Color.rgb(103, 115, 136)); TextView about = label("About", 11, Color.rgb(190, 184, 255)); about.setPaintFlags(about.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG); about.setOnClickListener(v -> startActivity(new Intent(this, AboutActivity.class))); footer.addView(footerText); footer.addView(about); body.addView(footer, margins(0, v(18, 8), 0, 0));
+        restoreStatus = label(getString(R.string.restore_status_none), 11, Color.rgb(103, 115, 136)); restoreStatus.setGravity(Gravity.CENTER); if (compact) restoreStatus.setVisibility(View.GONE); body.addView(restoreStatus, margins(0, 0, 0, 0));
+        LinearLayout footer = new LinearLayout(this); footer.setGravity(Gravity.CENTER);
+        TextView footerText = label(compact ? getString(R.string.footer_compact) : getString(R.string.footer_full), 11, Color.rgb(103, 115, 136));
+        String currentLanguage = LocaleHelper.currentTag(this);
+        languageValue = label(currentLanguage.isEmpty() ? getString(R.string.language_system_default) : LocaleHelper.displayName(currentLanguage), 11, Color.rgb(190, 184, 255));
+        languageValue.setPaintFlags(languageValue.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
+        languageValue.setOnClickListener(v -> languageDialog());
+        TextView footerSeparator = label("  ·  ", 11, Color.rgb(103, 115, 136));
+        TextView about = label(getString(R.string.footer_about), 11, Color.rgb(190, 184, 255)); about.setPaintFlags(about.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG); about.setOnClickListener(v -> startActivity(new Intent(this, AboutActivity.class)));
+        footer.addView(footerText); footer.addView(about); footer.addView(footerSeparator); footer.addView(languageValue);
+        body.addView(footer, margins(0, v(18, 8), 0, 0));
         Space breathingRoom = new Space(this); body.addView(breathingRoom, new LinearLayout.LayoutParams(1, 0, 1)); load();
     }
 
@@ -153,15 +166,16 @@ public class MainActivity extends Activity {
         box.setBackground(rounded(card, 15));
         LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
         words.addView(label(title, compact ? 14 : 15, Color.WHITE)); words.addView(label(subtitle, compact ? 10 : 11, muted));
-        LinearLayout.LayoutParams wordParams = new LinearLayout.LayoutParams(0, -2, 1); wordParams.setMargins(0, 0, dp(8), 0); box.addView(words, wordParams);
+        LinearLayout.LayoutParams wordParams = new LinearLayout.LayoutParams(0, -2, 1); wordParams.setMarginEnd(dp(8)); box.addView(words, wordParams);
         if (toggle) {
             Switch sw = new Switch(this); encryptionSwitch = sw; sw.setChecked(BackupManager.prefs(this).getBoolean("encrypted", false));
             sw.setOnCheckedChangeListener((button, checked) -> configureEncryption(checked)); box.addView(sw);
         } else {
-            value.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL); value.setMaxLines(1); value.setEllipsize(TextUtils.TruncateAt.END); value.setPadding(0, 0, dp(8), 0);
+            value.setGravity(Gravity.END | Gravity.CENTER_VERTICAL); value.setMaxLines(1); value.setEllipsize(TextUtils.TruncateAt.END); value.setPadding(0, 0, dp(8), 0);
             int widthDp = (int) (getResources().getDisplayMetrics().widthPixels / getResources().getDisplayMetrics().density);
             int valueWidth = widthDp < 360 ? 84 : widthDp < 420 ? 96 : 110;
-            box.addView(value, new LinearLayout.LayoutParams(dp(valueWidth), dp(v(42, 36)))); TextView arrow = label("›", 24, muted); arrow.setGravity(Gravity.CENTER); arrow.setPadding(dp(6), 0, 0, 0);
+            boolean rtl = getResources().getConfiguration().getLayoutDirection() == View.LAYOUT_DIRECTION_RTL;
+            box.addView(value, new LinearLayout.LayoutParams(dp(valueWidth), dp(v(42, 36)))); TextView arrow = label(rtl ? "‹" : "›", 24, muted); arrow.setGravity(Gravity.CENTER); arrow.setPadding(dp(6), 0, 0, 0);
             box.addView(arrow, new LinearLayout.LayoutParams(dp(28), dp(v(42, 36)))); box.setOnClickListener(click);
         }
         return box;
@@ -172,11 +186,17 @@ public class MainActivity extends Activity {
     void load() {
         folderValue.setText(BackupManager.folderLabel(this));
         long last = BackupManager.prefs(this).getLong("last", 0);
-        if (last > 0) status.setText("Last backup " + new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(last)));
+        if (last > 0) status.setText(getString(R.string.status_last_backup, new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(last))));
         scheduleValue.setText(AlarmScheduler.displayLabel(this));
-        int keep = BackupManager.prefs(this).getInt("keep", 5); keepValue.setText(keepLabel(keep));
+        int keep = BackupManager.prefs(this).getInt("keep", 5); keepValue.setText(keepLabel(this, keep));
+        String currentLanguage = LocaleHelper.currentTag(this);
+        languageValue.setText(currentLanguage.isEmpty() ? getString(R.string.language_system_default) : LocaleHelper.displayName(currentLanguage));
         long restored = BackupManager.prefs(this).getLong("lastRestore", 0); int restoredCount = BackupManager.prefs(this).getInt("lastRestoreCount", 0);
-        if (restored > 0) { restoreStatus.setVisibility(View.VISIBLE); restoreStatus.setText("Restored " + restoredCount + " contacts  ·  " + new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(restored))); } else if (compact) restoreStatus.setVisibility(View.GONE);
+        if (restored > 0) {
+            restoreStatus.setVisibility(View.VISIBLE);
+            String contactsPart = getResources().getQuantityString(R.plurals.contacts_count, restoredCount, restoredCount);
+            restoreStatus.setText(getString(R.string.restore_status_done, contactsPart, new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(restored))));
+        } else if (compact) restoreStatus.setVisibility(View.GONE);
     }
     void chooseFolder() { startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION), FOLDER); }
     void chooseFile() { startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("application/octet-stream").addCategory(Intent.CATEGORY_OPENABLE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), FILE); }
@@ -189,28 +209,40 @@ public class MainActivity extends Activity {
         backupRunning = true;
         backupButton.setEnabled(false);
         backupProgress.setVisibility(View.VISIBLE);
-        status.setText("Backing up...");
+        status.setText(getString(R.string.status_backing_up));
         new Thread(() -> { BackupManager.BackupOutcome result = BackupManager.runBackup(this, true); runOnUiThread(() -> { status.setText(result.message); backupButton.setEnabled(true); backupProgress.setVisibility(View.GONE); backupRunning = false; }); }).start();
     }
     void scheduleDialog() {
-        new AlertDialog.Builder(this).setTitle("Backup schedule").setItems(new String[]{"Off", "Daily at a specific time..."}, (dialog, which) -> {
-            if (which == 0) { BackupManager.prefs(this).edit().putString("schedule", "Off").apply(); scheduleValue.setText("Off"); AlarmScheduler.scheduleNext(this); return; }
+        new AlertDialog.Builder(this).setTitle(getString(R.string.dialog_schedule_title)).setItems(new String[]{getString(R.string.schedule_option_off), getString(R.string.schedule_option_daily)}, (dialog, which) -> {
+            if (which == 0) { AlarmScheduler.setEnabled(this, false); scheduleValue.setText(getString(R.string.schedule_off)); AlarmScheduler.scheduleNext(this); return; }
             if (BackupManager.folder(this).isEmpty()) { pendingScheduleTime = true; chooseFolder(); return; }
             if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingScheduleTime = true; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 24); return; }
             pickScheduleTime();
         }).show();
     }
     void pickScheduleTime() {
-        new TimePickerDialog(this, (view, hour, minute) -> { String s = AlarmScheduler.dailyLabel(hour, minute); BackupManager.prefs(this).edit().putString("schedule", s).putInt("hour", hour).putInt("minute", minute).apply(); scheduleValue.setText(s); AlarmScheduler.setAtTime(this, hour, minute); }, 9, 0, true).show();
+        new TimePickerDialog(this, (view, hour, minute) -> { String s = AlarmScheduler.dailyLabel(this, hour, minute); AlarmScheduler.setAtTime(this, hour, minute); scheduleValue.setText(s); }, 9, 0, true).show();
     }
     void retentionDialog() {
-        final String[] options = {"1 backup set", "3 backup sets", "5 backup sets", "10 backup sets", "Keep all"};
-        new AlertDialog.Builder(this).setTitle("Keep backup sets").setItems(options, (dialog, which) -> { int keep = which == 4 ? 9999 : Integer.parseInt(options[which].split(" ")[0]); BackupManager.prefs(this).edit().putInt("keep", keep).apply(); keepValue.setText(keepLabel(keep)); }).show();
+        final int[] values = {1, 3, 5, 10, 9999};
+        final String[] options = new String[values.length];
+        for (int i = 0; i < values.length - 1; i++) options[i] = keepLabel(this, values[i]);
+        options[values.length - 1] = getString(R.string.keep_option_all);
+        new AlertDialog.Builder(this).setTitle(getString(R.string.dialog_keep_title)).setItems(options, (dialog, which) -> { int keep = values[which]; BackupManager.prefs(this).edit().putInt("keep", keep).apply(); keepValue.setText(keepLabel(this, keep)); }).show();
+    }
+    void languageDialog() {
+        String[] tags = LocaleHelper.SUPPORTED;
+        String[] labels = new String[tags.length];
+        for (int i = 0; i < tags.length; i++) labels[i] = tags[i].isEmpty() ? getString(R.string.language_system_default) : LocaleHelper.displayName(tags[i]);
+        new AlertDialog.Builder(this).setTitle(getString(R.string.dialog_language_title)).setItems(labels, (dialog, which) -> {
+            LocaleHelper.setLanguage(this, tags[which]);
+            recreate();
+        }).show();
     }
     @SuppressLint("WrongConstant") // data.getFlags() is masked to exactly the two accepted persistable flags below
     @Override protected void onActivityResult(int request, int result, Intent data) {
         super.onActivityResult(request, result, data); if (result != RESULT_OK || data == null) { if (request == FOLDER) { pendingBackup = false; pendingScheduleTime = false; pendingNotificationActions = null; } return; } Uri uri = data.getData();
-        try { if (request == MANUAL_CSV || request == MANUAL_VCF || request == MANUAL_XLS) { String format = request == MANUAL_CSV ? "csv" : request == MANUAL_VCF ? "vcf" : "xls"; new Thread(() -> { try { BackupManager.writeManualExport(this, uri, format); } catch (Exception e) { notice(this, "Export failed", e.getMessage()); } }).start(); }
+        try { if (request == MANUAL_CSV || request == MANUAL_VCF || request == MANUAL_XLS) { String format = request == MANUAL_CSV ? "csv" : request == MANUAL_VCF ? "vcf" : "xls"; new Thread(() -> { try { BackupManager.writeManualExport(this, uri, format); } catch (Exception e) { notice(this, getString(R.string.notice_export_failed_title), e.getMessage()); } }).start(); }
             else if (request == FOLDER) { getContentResolver().takePersistableUriPermission(uri, data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION)); BackupManager.prefs(this).edit().putString("folder", uri.toString()).apply(); load(); if (pendingBackup) { pendingBackup = false; backup(); } else if (pendingScheduleTime) { pendingScheduleTime = false; if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingScheduleTime = true; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 24); } else pickScheduleTime(); } else if (pendingNotificationActions != null) { String remaining = pendingNotificationActions; pendingNotificationActions = null; triggerNotificationAction(remaining); } }
             else {
                 // Restore needs READ_CONTACTS too, not just WRITE_CONTACTS: it queries
@@ -228,7 +260,7 @@ public class MainActivity extends Activity {
                 }
                 restoreSelected(uri);
             }
-        } catch (Exception e) { notice(this, "Could not open", e.getMessage()); }
+        } catch (Exception e) { notice(this, getString(R.string.notice_open_failed_title), e.getMessage()); }
     }
     @Override public void onRequestPermissionsResult(int request, String[] permissions, int[] results) { super.onRequestPermissionsResult(request, permissions, results); if (request == 21) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; boolean resume = pendingBackup; pendingBackup = false; if (granted && resume) backup(); } else if (request == 22) { boolean granted = results.length > 0; for (int r : results) if (r != PackageManager.PERMISSION_GRANTED) granted = false; Uri uri = pendingRestoreUri; pendingRestoreUri = null; if (granted && uri != null) restoreSelected(uri); } else if (request == 23 && results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED && pendingManualFormat != null) { String format = pendingManualFormat; pendingManualFormat = null; launchManualExport(format); } else if (request == 24) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; boolean resume = pendingScheduleTime; pendingScheduleTime = false; if (granted && resume) pickScheduleTime(); } else if (request == 25) { if (pendingNotificationActions != null) { String remaining = pendingNotificationActions; pendingNotificationActions = null; triggerNotificationAction(remaining); } } }
     void configureEncryption(boolean enabled) {
@@ -238,13 +270,13 @@ public class MainActivity extends Activity {
         // canceling the password dialog left the app believing backups should be
         // encrypted with no password actually saved, so every backup would then fail
         // with "Set an encryption password first" until the switch was toggled again.
-        passwordDialog("Set encryption password", true, password -> { try { BackupManager.saveEncryptionPassword(this, password); BackupManager.prefs(this).edit().putBoolean("encrypted", true).apply(); } catch (Exception e) { encryptionSwitch.setChecked(false); notice(this, "Encryption unavailable", e.getMessage()); } });
+        passwordDialog(getString(R.string.password_set_title), true, password -> { try { BackupManager.saveEncryptionPassword(this, password); BackupManager.prefs(this).edit().putBoolean("encrypted", true).apply(); } catch (Exception e) { encryptionSwitch.setChecked(false); notice(this, getString(R.string.notice_encryption_unavailable_title), e.getMessage()); } });
     }
     interface PasswordAction { void run(String password); }
     void passwordDialog(String title, boolean confirm, PasswordAction action) {
         LinearLayout form = new LinearLayout(this); form.setOrientation(LinearLayout.VERTICAL); form.setPadding(dp(24), dp(8), dp(24), 0);
-        EditText first = new EditText(this); first.setHint("Password"); first.setSingleLine(true); first.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD); form.addView(first, new LinearLayout.LayoutParams(-1, dp(54)));
-        EditText second = null; if (confirm) { second = new EditText(this); second.setHint("Repeat password"); second.setSingleLine(true); second.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD); form.addView(second, new LinearLayout.LayoutParams(-1, dp(54))); }
+        EditText first = new EditText(this); first.setHint(getString(R.string.password_hint)); first.setSingleLine(true); first.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD); form.addView(first, new LinearLayout.LayoutParams(-1, dp(54)));
+        EditText second = null; if (confirm) { second = new EditText(this); second.setHint(getString(R.string.password_repeat_hint)); second.setSingleLine(true); second.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD); form.addView(second, new LinearLayout.LayoutParams(-1, dp(54))); }
         final EditText repeated = second;
         // Reverting the switch must cover BOTH cancel paths: tapping the "Cancel"
         // button only dismisses the dialog (Dialog.dismiss(), not cancel()), so
@@ -252,17 +284,17 @@ public class MainActivity extends Activity {
         // Relying on just one of the two left the switch visibly ON with no password
         // ever saved whenever the user tapped Cancel explicitly.
         Runnable revertSwitchIfConfirm = () -> { if (confirm) encryptionSwitch.setChecked(false); };
-        AlertDialog dialog = new AlertDialog.Builder(this).setTitle(title).setMessage(confirm ? "Use at least 8 characters. Scheduled backups use this saved password." : "Enter the password used when this backup was created.").setView(form)
-                .setNegativeButton("Cancel", (dialogInterface, which) -> revertSwitchIfConfirm.run())
-                .setPositiveButton(confirm ? "Enable" : "Restore", null).create();
+        AlertDialog dialog = new AlertDialog.Builder(this).setTitle(title).setMessage(confirm ? getString(R.string.password_message_set) : getString(R.string.password_message_unlock)).setView(form)
+                .setNegativeButton(getString(R.string.action_cancel), (dialogInterface, which) -> revertSwitchIfConfirm.run())
+                .setPositiveButton(confirm ? getString(R.string.action_enable) : getString(R.string.action_restore), null).create();
         dialog.setOnCancelListener(ignored -> revertSwitchIfConfirm.run());
-        dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> { String password = first.getText().toString(); if (password.length() < 8 || (repeated != null && !password.equals(repeated.getText().toString()))) { first.setError(repeated == null ? "Use at least 8 characters" : "Passwords do not match"); return; } dialog.dismiss(); action.run(password); })); dialog.show();
+        dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> { String password = first.getText().toString(); if (password.length() < 8 || (repeated != null && !password.equals(repeated.getText().toString()))) { first.setError(repeated == null ? getString(R.string.password_error_length) : getString(R.string.password_error_mismatch)); return; } dialog.dismiss(); action.run(password); })); dialog.show();
     }
     void restoreSelected(Uri uri) {
-        showRestoreProgress("Checking backup"); new Thread(() -> { try { boolean encrypted = BackupManager.isEncrypted(this, uri); runOnUiThread(() -> { hideRestoreProgress(); if (encrypted) passwordDialog("Unlock encrypted backup", false, password -> restoreWithPassword(uri, password)); else restoreWithPassword(uri, null); }); } catch (Exception e) { hideRestoreProgress(); notice(this, "Restore failed", e.getMessage()); } }).start();
+        showRestoreProgress(getString(R.string.restore_progress_checking)); new Thread(() -> { try { boolean encrypted = BackupManager.isEncrypted(this, uri); runOnUiThread(() -> { hideRestoreProgress(); if (encrypted) passwordDialog(getString(R.string.password_unlock_title), false, password -> restoreWithPassword(uri, password)); else restoreWithPassword(uri, null); }); } catch (Exception e) { hideRestoreProgress(); notice(this, getString(R.string.notice_restore_failed_title), e.getMessage()); } }).start();
     }
     void restoreWithPassword(Uri uri, String password) {
-        showRestoreProgress("Preparing restore");
+        showRestoreProgress(getString(R.string.restore_progress_preparing));
         new Thread(() -> {
             try {
                 BackupArchiveReader.ArchiveData archiveData = BackupManager.openArchive(this, uri, password, (message, current, total) -> {
@@ -280,25 +312,26 @@ public class MainActivity extends Activity {
                 String message = (e instanceof javax.crypto.AEADBadTagException
                         || e instanceof javax.crypto.BadPaddingException
                         || e instanceof SecurityException)
-                        ? "Wrong password or invalid backup"
-                        : (e.getMessage() != null ? e.getMessage() : "Wrong password or invalid backup");
-                runOnUiThread(() -> { hideRestoreProgress(); notice(this, "Restore failed", message); });
+                        ? getString(R.string.error_wrong_password)
+                        : (e.getMessage() != null ? e.getMessage() : getString(R.string.error_wrong_password));
+                runOnUiThread(() -> { hideRestoreProgress(); notice(this, getString(R.string.notice_restore_failed_title), message); });
             }
         }).start();
     }
 
-    static String keepLabel(int keep) {
-        return keep > 100 ? "All sets" : keep + " set" + (keep == 1 ? "" : "s");
+    static String keepLabel(Context c, int keep) {
+        return keep > 100 ? c.getString(R.string.keep_all_label) : c.getResources().getQuantityString(R.plurals.backup_sets_count, keep, keep);
     }
 
     /** Plain-language "N things" label for a category's item count, e.g. "12 data fields". */
-    static String categoryCountLabel(RestoreCategory category, int count) {
+    static String categoryCountLabel(Context c, RestoreCategory category, int count) {
+        android.content.res.Resources r = c.getResources();
         switch (category) {
-            case CONTACT_INFO: return count + (count == 1 ? " data field" : " data fields");
-            case PHOTOS: return count + (count == 1 ? " photo" : " photos");
-            case GROUPS: return count + (count == 1 ? " group" : " groups");
-            case ADDITIONAL_DATA: return count + (count == 1 ? " field" : " fields");
-            case ACCOUNT_INFO: return count + (count == 1 ? " contact linked to an account" : " contacts linked to an account");
+            case CONTACT_INFO: return r.getQuantityString(R.plurals.data_fields_count, count, count);
+            case PHOTOS: return r.getQuantityString(R.plurals.photos_count, count, count);
+            case GROUPS: return r.getQuantityString(R.plurals.groups_count, count, count);
+            case ADDITIONAL_DATA: return r.getQuantityString(R.plurals.fields_count, count, count);
+            case ACCOUNT_INFO: return r.getQuantityString(R.plurals.account_contacts_count, count, count);
             default: return String.valueOf(count);
         }
     }
@@ -317,11 +350,11 @@ public class MainActivity extends Activity {
         panel.setPadding(dp(22), dp(20), dp(22), dp(16));
         panel.setBackground(rounded(card, 22));
 
-        panel.addView(label("Restore contacts", 18, Color.WHITE), margins(0, 0, 0, 4));
+        panel.addView(label(getString(R.string.restore_dialog_title), 18, Color.WHITE), margins(0, 0, 0, 4));
 
-        String summary = "This backup contains " + analysis.contactCount
-                + (analysis.contactCount == 1 ? " contact" : " contacts")
-                + " and " + analysis.dataRowCount + (analysis.dataRowCount == 1 ? " data field" : " data fields") + ".";
+        String contactsPart = getResources().getQuantityString(R.plurals.contacts_count, analysis.contactCount, analysis.contactCount);
+        String fieldsPart = getResources().getQuantityString(R.plurals.data_fields_count, analysis.dataRowCount, analysis.dataRowCount);
+        String summary = getString(R.string.restore_dialog_summary, contactsPart, fieldsPart);
         panel.addView(label(summary, 12, muted), margins(0, 0, 0, 14));
 
         ScrollView scroll = new ScrollView(this);
@@ -346,14 +379,14 @@ public class MainActivity extends Activity {
             row.addView(box, boxParams);
 
             LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
-            String count = categoryCountLabel(category, analysis.countFor(category));
-            words.addView(label(category.title + "  ·  " + count, 14, Color.WHITE));
-            words.addView(label(category.description + " " + category.example, 11, muted));
+            String count = categoryCountLabel(this, category, analysis.countFor(category));
+            words.addView(label(getString(category.titleRes) + "  ·  " + count, 14, Color.WHITE));
+            words.addView(label(getString(category.descriptionRes) + " " + getString(category.exampleRes), 11, muted));
             if (!category.recommended) {
-                words.addView(label("Not recommended — " + category.notRecommendedReason, 11, Color.rgb(222, 184, 112)));
+                words.addView(label(getString(R.string.restore_not_recommended, getString(category.notRecommendedReasonRes)), 11, Color.rgb(222, 184, 112)));
             }
             LinearLayout.LayoutParams wordParams = new LinearLayout.LayoutParams(0, -2, 1);
-            wordParams.setMargins(dp(10), 0, 0, 0);
+            wordParams.setMarginStart(dp(10));
             row.addView(words, wordParams);
 
             row.setOnClickListener(v -> box.toggle());
@@ -362,10 +395,10 @@ public class MainActivity extends Activity {
         panel.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
 
         LinearLayout buttons = new LinearLayout(this); buttons.setOrientation(LinearLayout.HORIZONTAL);
-        Button cancel = button("Cancel", Color.rgb(28, 38, 55)); cancel.setTextColor(Color.rgb(211, 219, 235));
-        Button restore = button("Restore", mint); restore.setTextColor(background);
+        Button cancel = button(getString(R.string.action_cancel), Color.rgb(28, 38, 55)); cancel.setTextColor(Color.rgb(211, 219, 235));
+        Button restore = button(getString(R.string.action_restore), mint); restore.setTextColor(background);
         buttons.addView(cancel, new LinearLayout.LayoutParams(0, dp(46), 1));
-        LinearLayout.LayoutParams restoreParams = new LinearLayout.LayoutParams(0, dp(46), 1); restoreParams.setMargins(dp(10), 0, 0, 0);
+        LinearLayout.LayoutParams restoreParams = new LinearLayout.LayoutParams(0, dp(46), 1); restoreParams.setMarginStart(dp(10));
         buttons.addView(restore, restoreParams);
         panel.addView(buttons, margins(0, 14, 0, 0));
 
@@ -388,7 +421,7 @@ public class MainActivity extends Activity {
     }
 
     void performRestore(AndroidContactsSnapshot snapshot, RestoreOptions options) {
-        showRestoreProgress("Restoring contacts");
+        showRestoreProgress(getString(R.string.restore_progress_restoring_contacts));
         new Thread(() -> {
             try {
                 RestoreResult result = BackupManager.restoreWithOptions(this, snapshot, options, (message, current, total) -> {
@@ -396,12 +429,12 @@ public class MainActivity extends Activity {
                 });
                 BackupManager.prefs(this).edit().putLong("lastRestore", System.currentTimeMillis())
                     .putInt("lastRestoreCount", result.contactsCreated).apply();
-                final String title = result.hasErrors() ? "Restore completed with issues"
-                        : result.hasWarnings() ? "Restore completed with warnings" : "Restore complete";
-                final String briefMsg = result.briefSummary();
+                final String title = result.hasErrors() ? getString(R.string.notice_restore_completed_issues_title)
+                        : result.hasWarnings() ? getString(R.string.notice_restore_completed_warnings_title) : getString(R.string.notice_restore_complete_title);
+                final String briefMsg = result.briefSummary(this);
                 runOnUiThread(() -> { hideRestoreProgress(); load(); notice(this, title, briefMsg); });
             } catch (Exception e) {
-                runOnUiThread(() -> { hideRestoreProgress(); notice(this, "Restore failed", e.getMessage()); });
+                runOnUiThread(() -> { hideRestoreProgress(); notice(this, getString(R.string.notice_restore_failed_title), e.getMessage()); });
             }
         }).start();
     }
@@ -409,9 +442,9 @@ public class MainActivity extends Activity {
         if (restoreProgress != null && restoreProgress.isShowing()) { restoreProgressText.setText(message); return; }
         LinearLayout panel = new LinearLayout(this); panel.setOrientation(LinearLayout.VERTICAL); panel.setGravity(Gravity.CENTER_HORIZONTAL); panel.setPadding(dp(28), dp(26), dp(28), dp(26)); panel.setBackground(rounded(card, 22));
         ProgressBar spinner = new ProgressBar(this); panel.addView(spinner, new LinearLayout.LayoutParams(dp(46), dp(46)));
-        TextView title = label("Restoring contacts", 18, Color.WHITE); title.setPadding(0, dp(16), 0, dp(5)); panel.addView(title);
+        TextView title = label(getString(R.string.restore_progress_restoring_contacts), 18, Color.WHITE); title.setPadding(0, dp(16), 0, dp(5)); panel.addView(title);
         restoreProgressText = label(message, 13, muted); restoreProgressText.setGravity(Gravity.CENTER); panel.addView(restoreProgressText);
-        TextView note = label("Please keep Libre Contacts Backup open", 11, Color.rgb(103, 115, 136)); note.setPadding(0, dp(14), 0, 0); panel.addView(note);
+        TextView note = label(getString(R.string.restore_progress_note), 11, Color.rgb(103, 115, 136)); note.setPadding(0, dp(14), 0, 0); panel.addView(note);
         restoreProgress = new Dialog(this); restoreProgress.setContentView(panel); restoreProgress.setCancelable(false); Window window = restoreProgress.getWindow(); if (window != null) { window.setBackgroundDrawableResource(android.R.color.transparent); window.setLayout(dp(300), -2); } restoreProgress.show(); if (restoreProgress.getWindow() != null) restoreProgress.getWindow().setLayout(dp(300), -2);
     }
     void hideRestoreProgress() { runOnUiThread(() -> { if (restoreProgress != null && restoreProgress.isShowing()) restoreProgress.dismiss(); restoreProgress = null; restoreProgressText = null; }); }
@@ -420,12 +453,12 @@ public class MainActivity extends Activity {
         try {
             final String channelId = "scheduled_backups";
             NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(new NotificationChannel(channelId, "Scheduled backups", NotificationManager.IMPORTANCE_DEFAULT));
+            if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(new NotificationChannel(channelId, context.getString(R.string.notification_channel_scheduled_backups), NotificationManager.IMPORTANCE_DEFAULT));
             Intent open = new Intent(context, MainActivity.class);
             if (reason != null) open.putExtra("notification_action", reason);
             PendingIntent pending = PendingIntent.getActivity(context, 91, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-            String title = success ? "Libre Contacts Backup complete" : "Libre Contacts Backup needs attention";
-            String message = success ? result : (result == null ? "The scheduled backup could not be completed." : result);
+            String title = success ? context.getString(R.string.notification_backup_complete_title) : context.getString(R.string.notification_backup_needs_attention_title);
+            String message = success ? result : (result == null ? context.getString(R.string.notification_backup_not_completed) : result);
             Notification.Builder builder = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(context, channelId) : new Notification.Builder(context);
             builder.setSmallIcon(R.drawable.ic_launcher).setContentTitle(title).setContentText(message).setAutoCancel(true).setContentIntent(pending).setCategory(Notification.CATEGORY_STATUS);
             manager.notify(91, builder.build());
@@ -435,7 +468,7 @@ public class MainActivity extends Activity {
 
     static final class ContactOrbit extends View {
         final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        ContactOrbit(Context context) { super(context); paint.setStrokeCap(Paint.Cap.ROUND); setContentDescription("Contact network illustration"); }
+        ContactOrbit(Context context) { super(context); paint.setStrokeCap(Paint.Cap.ROUND); setContentDescription(context.getString(R.string.contact_orbit_content_description)); }
         @Override protected void onDraw(Canvas canvas) {
             super.onDraw(canvas); float cx = getWidth() * .54f, cy = getHeight() * .50f;
             paint.setStyle(Paint.Style.STROKE); paint.setStrokeWidth(2); paint.setColor(Color.argb(90, 143, 240, 208));

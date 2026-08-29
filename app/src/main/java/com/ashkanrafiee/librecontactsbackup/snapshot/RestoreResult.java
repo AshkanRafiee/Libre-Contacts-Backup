@@ -1,5 +1,10 @@
 package com.ashkanrafiee.librecontactsbackup.snapshot;
 
+import android.content.Context;
+import android.content.res.Resources;
+
+import com.ashkanrafiee.librecontactsbackup.R;
+
 import java.util.ArrayList;
 
 /**
@@ -119,16 +124,20 @@ public final class RestoreResult {
      * Short, callable-facing description of the outcome, without restating
      * "restore complete" — callers already show that as the notification title.
      */
-    public String briefSummary() {
+    public String briefSummary(Context context) {
+        Resources r = context.getResources();
         String skippedSuffix = skippedByUserChoice > 0
-                ? " (" + skippedByUserChoice + " not selected)" : "";
+                ? context.getString(R.string.restore_skipped_suffix, skippedByUserChoice) : "";
         if (hasErrors()) {
-            return dataRowsRestored + " restored, " + dataRowsFailed + " failed" + skippedSuffix;
+            return context.getString(R.string.restore_brief_errors, dataRowsRestored, dataRowsFailed, skippedSuffix);
         }
         if (hasWarnings()) {
-            return dataRowsRestored + " data rows restored, with warnings" + skippedSuffix;
+            String dataFieldsPart = r.getQuantityString(R.plurals.data_fields_count, dataRowsRestored, dataRowsRestored);
+            return context.getString(R.string.restore_brief_warnings, dataFieldsPart, skippedSuffix);
         }
-        return contactsCreated + " contacts, " + dataRowsRestored + " data rows restored" + skippedSuffix;
+        String contactsPart = r.getQuantityString(R.plurals.contacts_count, contactsCreated, contactsCreated);
+        String dataFieldsPart = r.getQuantityString(R.plurals.data_fields_count, dataRowsRestored, dataRowsRestored);
+        return context.getString(R.string.restore_brief_success, contactsPart, dataFieldsPart, skippedSuffix);
     }
 
     public static final class FailedRow {

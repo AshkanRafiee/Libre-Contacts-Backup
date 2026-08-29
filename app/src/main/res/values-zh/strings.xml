@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Libre Contacts Backup</string>
+    <string name="tagline_offline_encrypted">离线且加密</string>
+    <string name="contact_orbit_content_description">联系人网络插图</string>
+
+    <string name="hero_label">你的联系人</string>
+    <string name="status_ready">已准备好进行新的备份</string>
+    <string name="status_backing_up">正在备份…</string>
+    <string name="status_last_backup">上次备份于 %1$s</string>
+    <string name="hero_tagline_full">私密、本地保存，随时可用。</string>
+    <string name="hero_tagline_compact">私密且本地保存。</string>
+    <string name="backup_now">立即备份</string>
+
+    <string name="section_pocket">随身携带</string>
+    <string name="section_export">导出副本</string>
+    <string name="section_restore">恢复联系人</string>
+
+    <string name="setting_folder_title">备份文件夹</string>
+    <string name="setting_folder_subtitle">带时间戳的文件保存位置</string>
+    <string name="folder_not_selected">尚未选择</string>
+    <string name="folder_selected_generic">已选择</string>
+    <string name="setting_schedule_title">计划任务</string>
+    <string name="setting_schedule_subtitle">自动备份的执行时间</string>
+    <string name="setting_keep_title">保留最近的备份</string>
+    <string name="setting_keep_subtitle">较旧的备份集会被一并删除</string>
+    <string name="setting_encryption_title">加密</string>
+    <string name="setting_encryption_subtitle">使用 AES 保护导出的文件</string>
+    <string name="language_system_default">跟随系统</string>
+
+    <string name="export_note_full">手动导出的副本未加密，且不受保留策略影响，不会被自动删除。</string>
+    <string name="export_note_compact">手动副本：未加密，不予保留。</string>
+    <string name="export_csv">CSV</string>
+    <string name="export_vcf">VCF</string>
+    <string name="export_excel">Excel</string>
+
+    <string name="restore_button">从备份恢复  ›</string>
+    <string name="restore_status_none">尚未执行过恢复操作</string>
+    <string name="restore_status_done">已恢复：%1$s  ·  %2$s</string>
+
+    <string name="footer_full">从设计上即为本地运行  ·  Libre Contacts Backup  ·  </string>
+    <string name="footer_compact">Libre Contacts Backup  ·  </string>
+    <string name="footer_about">关于</string>
+
+    <string name="dialog_schedule_title">备份计划</string>
+    <string name="schedule_option_off">关闭</string>
+    <string name="schedule_option_daily">每天在指定时间…</string>
+    <string name="schedule_off">关闭</string>
+    <string name="schedule_daily_at">每天 %1$s</string>
+
+    <string name="dialog_keep_title">要保留的备份集数量</string>
+    <string name="keep_option_all">全部保留</string>
+    <string name="keep_all_label">全部备份集</string>
+
+    <string name="dialog_language_title">应用语言</string>
+
+    <string name="password_set_title">设置加密密码</string>
+    <string name="password_unlock_title">解锁已加密的备份</string>
+    <string name="password_hint">密码</string>
+    <string name="password_repeat_hint">重复密码</string>
+    <string name="password_message_set">请至少使用 8 个字符。计划备份将使用此已保存的密码。</string>
+    <string name="password_message_unlock">请输入创建此备份时使用的密码。</string>
+    <string name="password_error_length">请至少使用 8 个字符</string>
+    <string name="password_error_mismatch">两次输入的密码不一致</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_enable">启用</string>
+    <string name="action_restore">恢复</string>
+
+    <string name="notice_export_failed_title">导出失败</string>
+    <string name="notice_open_failed_title">无法打开</string>
+    <string name="notice_encryption_unavailable_title">加密不可用</string>
+    <string name="notice_restore_failed_title">恢复失败</string>
+    <string name="notice_backup_complete_title">备份完成</string>
+    <string name="notice_backup_failed_title">备份失败</string>
+    <string name="notice_manual_export_complete_title">手动导出完成</string>
+    <string name="notice_restore_completed_issues_title">恢复完成，但存在问题</string>
+    <string name="notice_restore_completed_warnings_title">恢复完成，但有警告</string>
+    <string name="notice_restore_complete_title">恢复完成</string>
+    <string name="error_wrong_password">密码错误或备份文件无效</string>
+    <string name="error_choose_folder_first">请先选择一个文件夹</string>
+    <string name="error_set_password_first">请先设置加密密码</string>
+    <string name="error_cannot_open_export_destination">无法打开导出目标位置</string>
+    <string name="error_cannot_create_backup_file">无法创建备份文件</string>
+    <string name="backup_failed_prefix">备份失败：%1$s</string>
+    <string name="saved_contacts_message">已保存：%1$s</string>
+
+    <string name="restore_progress_checking">正在检查备份</string>
+    <string name="restore_progress_preparing">正在准备恢复</string>
+    <string name="restore_progress_restoring_contacts">正在恢复联系人</string>
+    <string name="restore_progress_note">请保持 Libre Contacts Backup 处于打开状态</string>
+
+    <string name="restore_dialog_title">恢复联系人</string>
+    <string name="restore_dialog_summary">此备份包含 %1$s 和 %2$s。</string>
+    <string name="restore_not_recommended">不建议 — %1$s</string>
+
+    <string name="category_contact_info_title">联系人信息</string>
+    <string name="category_contact_info_description">姓名、电话号码、电子邮件、地址、单位、备注、生日以及其他常见联系人字段。</string>
+    <string name="category_contact_info_example">例如“张三 · +86 138 0013 8000 · zhangsan@example.com”</string>
+
+    <string name="category_photos_title">联系人照片</string>
+    <string name="category_photos_description">你为联系人设置的照片。</string>
+    <string name="category_photos_example">例如某联系人的头像照片</string>
+
+    <string name="category_groups_title">分组</string>
+    <string name="category_groups_description">联系人分组及其成员。</string>
+    <string name="category_groups_example">例如“家人”“同事”“读书会”</string>
+
+    <string name="category_additional_title">附加联系人数据</string>
+    <string name="category_additional_description">携带来自其他应用（例如某聊天应用）专属数据的条目，以及一些不常见的、特定服务商专有的字段。此类条目只能整体恢复——将其全部数据与原始账号一并恢复，或完全不恢复——因为不完整的版本（例如只有一个姓名，缺少让该条目成立的信息，或缺少该应用用来识别其归属的账号）与原始内容不符，单独存在也没有意义。请注意：恢复后的条目是否真的会被该应用识别为自己的数据，取决于该应用本身，而非此设置——有些应用无论如何都可能自行新建一条数据。</string>
+    <string name="category_additional_example">例如某条与聊天应用关联的数据，恢复时保留其全部数据和账号信息，或完全不恢复</string>
+    <string name="category_additional_not_recommended">很少需要开启，在此设备上可能无法正常显示，此类条目只能整体恢复而不能部分恢复，也不能保证对方应用不会另行创建属于自己的新条目</string>
+
+    <string name="category_account_title">账号/来源信息</string>
+    <string name="category_account_description">保留普通联系人的原始账号（例如 Google 账号），使其继续与该账号保持关联。这与“附加联系人数据”不同，后者在被选中时始终会将其自身条目的账号与数据一并保留。</string>
+    <string name="category_account_example">例如某联系人与你的 Google 账号存在关联</string>
+    <string name="category_account_not_recommended">恢复到其他设备或账号时不建议开启——联系人仍会被恢复，但会作为本地联系人。请注意：保留账号信息并不能保证该应用会将此联系人识别为已同步——这取决于该应用本身，而非此设置</string>
+
+    <string name="restore_brief_errors">已恢复：%1$d，失败：%2$d%3$s</string>
+    <string name="restore_brief_warnings">已恢复：%1$s（有警告）%2$s</string>
+    <string name="restore_brief_success">已恢复：%1$s，%2$s%3$s</string>
+    <string name="restore_skipped_suffix">（%1$d 项未选中）</string>
+
+    <string name="about_title">关于</string>
+    <string name="about_section_heading">关于本应用</string>
+    <string name="about_section_body">一款以隐私和本地优先为原则的联系人备份工具。你的计划备份会保存在你选择的存储位置，加密的存档由你的密码加以保护。</string>
+    <string name="about_created_by_label">开发者</string>
+    <string name="about_license_label">许可协议</string>
+    <string name="about_source_label">源代码</string>
+    <string name="about_github_label">GitHub 主页</string>
+    <string name="about_website_label">官方网站</string>
+    <string name="about_suggestions_label">意见反馈</string>
+    <string name="about_footer">Libre Contacts Backup · 版本 %1$s</string>
+    <string name="about_no_browser">没有可用的浏览器</string>
+    <string name="about_no_email_app">没有可用的邮件应用</string>
+
+    <string name="notification_channel_scheduled_backups">计划备份</string>
+    <string name="notification_backup_complete_title">Libre Contacts Backup 备份完成</string>
+    <string name="notification_backup_needs_attention_title">Libre Contacts Backup 需要处理</string>
+    <string name="notification_backup_not_completed">计划备份未能完成。</string>
+    <string name="scheduled_backup_skipped">已跳过计划备份：%1$s。请打开应用进行处理。</string>
+    <string name="issue_folder_not_configured">尚未设置备份文件夹</string>
+    <string name="issue_folder_not_accessible">备份文件夹已无法访问</string>
+    <string name="issue_permission_not_granted">尚未授予联系人权限</string>
+
+    <plurals name="contacts_count">
+        <item quantity="other">%1$d 位联系人</item>
+    </plurals>
+    <plurals name="data_fields_count">
+        <item quantity="other">%1$d 个数据字段</item>
+    </plurals>
+    <plurals name="photos_count">
+        <item quantity="other">%1$d 张照片</item>
+    </plurals>
+    <plurals name="groups_count">
+        <item quantity="other">%1$d 个分组</item>
+    </plurals>
+    <plurals name="fields_count">
+        <item quantity="other">%1$d 个字段</item>
+    </plurals>
+    <plurals name="account_contacts_count">
+        <item quantity="other">%1$d 位联系人已关联账号</item>
+    </plurals>
+    <plurals name="backup_sets_count">
+        <item quantity="other">%1$d 个备份集</item>
+    </plurals>
+</resources>

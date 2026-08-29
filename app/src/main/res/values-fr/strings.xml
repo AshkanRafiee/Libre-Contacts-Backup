@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Libre Contacts Backup</string>
+    <string name="tagline_offline_encrypted">Hors ligne et chiffré</string>
+    <string name="contact_orbit_content_description">Illustration du réseau de contacts</string>
+
+    <string name="hero_label">VOS CONTACTS</string>
+    <string name="status_ready">Prêt pour une nouvelle sauvegarde</string>
+    <string name="status_backing_up">Sauvegarde en cours…</string>
+    <string name="status_last_backup">Dernière sauvegarde %1$s</string>
+    <string name="hero_tagline_full">Privé, local, et prêt quand vous l\'êtes.</string>
+    <string name="hero_tagline_compact">Privé et local.</string>
+    <string name="backup_now">Sauvegarder maintenant</string>
+
+    <string name="section_pocket">TOUJOURS SUR VOUS</string>
+    <string name="section_export">EXPORTER UNE COPIE</string>
+    <string name="section_restore">RÉCUPÉRER LES CONTACTS</string>
+
+    <string name="setting_folder_title">Dossier de sauvegarde</string>
+    <string name="setting_folder_subtitle">Où les fichiers horodatés sont enregistrés</string>
+    <string name="folder_not_selected">Non sélectionné</string>
+    <string name="folder_selected_generic">Sélectionné</string>
+    <string name="setting_schedule_title">Planification</string>
+    <string name="setting_schedule_subtitle">Quand les sauvegardes automatiques s\'exécutent</string>
+    <string name="setting_keep_title">Conserver les dernières sauvegardes</string>
+    <string name="setting_keep_subtitle">Les anciens jeux de sauvegarde sont supprimés ensemble</string>
+    <string name="setting_encryption_title">Chiffrement</string>
+    <string name="setting_encryption_subtitle">Protéger les fichiers exportés avec AES</string>
+    <string name="language_system_default">Langue du système</string>
+
+    <string name="export_note_full">Les copies manuelles ne sont pas chiffrées et ne sont jamais supprimées par la rétention.</string>
+    <string name="export_note_compact">Copies manuelles : non chiffrées, non conservées.</string>
+    <string name="export_csv">CSV</string>
+    <string name="export_vcf">VCF</string>
+    <string name="export_excel">Excel</string>
+
+    <string name="restore_button">Restaurer une sauvegarde  ›</string>
+    <string name="restore_status_none">Aucune restauration effectuée</string>
+    <string name="restore_status_done">Restauré : %1$s  ·  %2$s</string>
+
+    <string name="footer_full">Local par conception  ·  Libre Contacts Backup  ·  </string>
+    <string name="footer_compact">Libre Contacts Backup  ·  </string>
+    <string name="footer_about">À propos</string>
+
+    <string name="dialog_schedule_title">Planification des sauvegardes</string>
+    <string name="schedule_option_off">Désactivée</string>
+    <string name="schedule_option_daily">Chaque jour à une heure précise…</string>
+    <string name="schedule_off">Désactivée</string>
+    <string name="schedule_daily_at">Chaque jour à %1$s</string>
+
+    <string name="dialog_keep_title">Jeux de sauvegarde à conserver</string>
+    <string name="keep_option_all">Tout conserver</string>
+    <string name="keep_all_label">Tous les jeux</string>
+
+    <string name="dialog_language_title">Langue de l\'application</string>
+
+    <string name="password_set_title">Définir le mot de passe de chiffrement</string>
+    <string name="password_unlock_title">Déverrouiller la sauvegarde chiffrée</string>
+    <string name="password_hint">Mot de passe</string>
+    <string name="password_repeat_hint">Répéter le mot de passe</string>
+    <string name="password_message_set">Utilisez au moins 8 caractères. Les sauvegardes planifiées utilisent ce mot de passe enregistré.</string>
+    <string name="password_message_unlock">Saisissez le mot de passe utilisé lors de la création de cette sauvegarde.</string>
+    <string name="password_error_length">Utilisez au moins 8 caractères</string>
+    <string name="password_error_mismatch">Les mots de passe ne correspondent pas</string>
+    <string name="action_cancel">Annuler</string>
+    <string name="action_enable">Activer</string>
+    <string name="action_restore">Restaurer</string>
+
+    <string name="notice_export_failed_title">Échec de l\'export</string>
+    <string name="notice_open_failed_title">Impossible d\'ouvrir</string>
+    <string name="notice_encryption_unavailable_title">Chiffrement indisponible</string>
+    <string name="notice_restore_failed_title">Échec de la restauration</string>
+    <string name="notice_backup_complete_title">Sauvegarde terminée</string>
+    <string name="notice_backup_failed_title">Échec de la sauvegarde</string>
+    <string name="notice_manual_export_complete_title">Export manuel terminé</string>
+    <string name="notice_restore_completed_issues_title">Restauration terminée avec des problèmes</string>
+    <string name="notice_restore_completed_warnings_title">Restauration terminée avec des avertissements</string>
+    <string name="notice_restore_complete_title">Restauration terminée</string>
+    <string name="error_wrong_password">Mot de passe incorrect ou sauvegarde invalide</string>
+    <string name="error_choose_folder_first">Choisissez d\'abord un dossier</string>
+    <string name="error_set_password_first">Définissez d\'abord un mot de passe de chiffrement</string>
+    <string name="error_cannot_open_export_destination">Impossible d\'ouvrir la destination de l\'export</string>
+    <string name="error_cannot_create_backup_file">Impossible de créer le fichier de sauvegarde</string>
+    <string name="backup_failed_prefix">Échec de la sauvegarde : %1$s</string>
+    <string name="saved_contacts_message">Enregistré : %1$s</string>
+
+    <string name="restore_progress_checking">Vérification de la sauvegarde</string>
+    <string name="restore_progress_preparing">Préparation de la restauration</string>
+    <string name="restore_progress_restoring_contacts">Restauration des contacts</string>
+    <string name="restore_progress_note">Veuillez garder Libre Contacts Backup ouvert</string>
+
+    <string name="restore_dialog_title">Restaurer les contacts</string>
+    <string name="restore_dialog_summary">Cette sauvegarde contient %1$s et %2$s.</string>
+    <string name="restore_not_recommended">Non recommandé — %1$s</string>
+
+    <string name="category_contact_info_title">Informations de contact</string>
+    <string name="category_contact_info_description">Noms, numéros de téléphone, e-mails, adresses, organisations, notes, anniversaires et autres champs de contact courants.</string>
+    <string name="category_contact_info_example">ex. « Jean Dupont · +33 6 12 34 56 78 · jean@exemple.com »</string>
+
+    <string name="category_photos_title">Photos de contact</string>
+    <string name="category_photos_description">Les photos que vous avez définies pour vos contacts.</string>
+    <string name="category_photos_example">ex. la photo de profil d\'un contact</string>
+
+    <string name="category_groups_title">Groupes</string>
+    <string name="category_groups_description">Les groupes de contacts et leurs membres.</string>
+    <string name="category_groups_example">ex. « Famille », « Travail », « Club de lecture »</string>
+
+    <string name="category_additional_title">Données de contact supplémentaires</string>
+    <string name="category_additional_description">Entrées qui contiennent leurs propres données provenant d\'une autre appli (par ex. une appli de messagerie), ainsi que des champs spécifiques à un fournisseur, moins courants. Chacune de ces entrées est restaurée intégralement — toutes ses données ET son compte d\'origine ensemble, ou rien du tout — car une version partielle (par ex. juste un nom, sans ce qui faisait de cette entrée ce qu\'elle est, ou sans le compte que cette appli reconnaît comme le sien) ne correspondrait pas à l\'original et serait inutile en soi. Remarque : le fait que cette appli reconnaisse réellement l\'entrée restaurée comme la sienne dépend de cette appli, pas de ce paramètre — certaines applis peuvent quand même créer une nouvelle entrée qui leur est propre.</string>
+    <string name="category_additional_example">ex. une entrée liée à une appli de messagerie restaurée avec toutes ses données et son compte intacts, ou pas du tout</string>
+    <string name="category_additional_not_recommended">rarement nécessaire, peut ne pas s\'afficher correctement sur cet appareil, ne restaure chaque entrée qu\'intégralement, jamais partiellement, et ne garantit pas que l\'autre appli ne créera pas quand même sa propre entrée</string>
+
+    <string name="category_account_title">Informations de compte/source</string>
+    <string name="category_account_description">Conserve le compte d\'origine de vos contacts habituels (par ex. un compte Google) afin qu\'ils y restent liés. Ceci est distinct des Données de contact supplémentaires, qui conservent toujours le compte de leurs propres entrées avec leurs données lorsqu\'elles sont sélectionnées.</string>
+    <string name="category_account_example">ex. qu\'un contact est lié à votre compte Google</string>
+    <string name="category_account_not_recommended">non recommandé lors d\'une restauration vers un autre appareil ou compte — le contact est quand même restauré, mais comme contact local. Remarque : conserver un compte ne garantit pas que cette appli reconnaîtra le contact comme déjà synchronisé — cela dépend de l\'appli, pas de ce paramètre</string>
+
+    <string name="restore_brief_errors">Restauré : %1$d, échec : %2$d%3$s</string>
+    <string name="restore_brief_warnings">Restauré : %1$s (avec avertissements)%2$s</string>
+    <string name="restore_brief_success">Restauré : %1$s, %2$s%3$s</string>
+    <string name="restore_skipped_suffix"> (%1$d non sélectionné(s))</string>
+
+    <string name="about_title">À propos</string>
+    <string name="about_section_heading">À PROPOS DE CETTE APPLICATION</string>
+    <string name="about_section_body">Un outil de sauvegarde de contacts privé et local avant tout. Vos sauvegardes planifiées restent sur l\'emplacement de stockage que vous choisissez, et les archives chiffrées sont protégées par votre mot de passe.</string>
+    <string name="about_created_by_label">Créé par</string>
+    <string name="about_license_label">Licence</string>
+    <string name="about_source_label">Code source</string>
+    <string name="about_github_label">Profil GitHub</string>
+    <string name="about_website_label">Site web</string>
+    <string name="about_suggestions_label">Suggestions</string>
+    <string name="about_footer">Libre Contacts Backup · Version %1$s</string>
+    <string name="about_no_browser">Aucun navigateur disponible</string>
+    <string name="about_no_email_app">Aucune application e-mail disponible</string>
+
+    <string name="notification_channel_scheduled_backups">Sauvegardes planifiées</string>
+    <string name="notification_backup_complete_title">Sauvegarde Libre Contacts Backup terminée</string>
+    <string name="notification_backup_needs_attention_title">Libre Contacts Backup nécessite votre attention</string>
+    <string name="notification_backup_not_completed">La sauvegarde planifiée n\'a pas pu être effectuée.</string>
+    <string name="scheduled_backup_skipped">Sauvegarde planifiée ignorée : %1$s. Ouvrez l\'application pour résoudre le problème.</string>
+    <string name="issue_folder_not_configured">le dossier de sauvegarde n\'est pas configuré</string>
+    <string name="issue_folder_not_accessible">le dossier de sauvegarde n\'est plus accessible</string>
+    <string name="issue_permission_not_granted">l\'autorisation d\'accès aux contacts n\'est pas accordée</string>
+
+    <plurals name="contacts_count">
+        <item quantity="one">%1$d contact</item>
+        <item quantity="other">%1$d contacts</item>
+    </plurals>
+    <plurals name="data_fields_count">
+        <item quantity="one">%1$d champ de données</item>
+        <item quantity="other">%1$d champs de données</item>
+    </plurals>
+    <plurals name="photos_count">
+        <item quantity="one">%1$d photo</item>
+        <item quantity="other">%1$d photos</item>
+    </plurals>
+    <plurals name="groups_count">
+        <item quantity="one">%1$d groupe</item>
+        <item quantity="other">%1$d groupes</item>
+    </plurals>
+    <plurals name="fields_count">
+        <item quantity="one">%1$d champ</item>
+        <item quantity="other">%1$d champs</item>
+    </plurals>
+    <plurals name="account_contacts_count">
+        <item quantity="one">%1$d contact lié à un compte</item>
+        <item quantity="other">%1$d contacts liés à un compte</item>
+    </plurals>
+    <plurals name="backup_sets_count">
+        <item quantity="one">%1$d jeu</item>
+        <item quantity="other">%1$d jeux</item>
+    </plurals>
+</resources>

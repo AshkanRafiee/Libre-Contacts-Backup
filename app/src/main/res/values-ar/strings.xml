@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Libre Contacts Backup</string>
+    <string name="tagline_offline_encrypted">دون اتصال ومشفّرة</string>
+    <string name="contact_orbit_content_description">رسم توضيحي لشبكة جهات الاتصال</string>
+
+    <string name="hero_label">جهات اتصالك</string>
+    <string name="status_ready">جاهز لنسخة احتياطية جديدة</string>
+    <string name="status_backing_up">جارٍ إنشاء نسخة احتياطية…</string>
+    <string name="status_last_backup">آخر نسخة احتياطية %1$s</string>
+    <string name="hero_tagline_full">خاصة ومحلية، وجاهزة متى كنت مستعدًا.</string>
+    <string name="hero_tagline_compact">خاصة ومحلية.</string>
+    <string name="backup_now">إنشاء نسخة احتياطية الآن</string>
+
+    <string name="section_pocket">دائمًا في متناول يدك</string>
+    <string name="section_export">تصدير نسخة</string>
+    <string name="section_restore">استعادة جهات الاتصال</string>
+
+    <string name="setting_folder_title">مجلد النسخ الاحتياطي</string>
+    <string name="setting_folder_subtitle">مكان حفظ الملفات المُختَّمة زمنيًا</string>
+    <string name="folder_not_selected">غير محدَّد</string>
+    <string name="folder_selected_generic">محدَّد</string>
+    <string name="setting_schedule_title">الجدولة</string>
+    <string name="setting_schedule_subtitle">وقت تشغيل النسخ الاحتياطي التلقائي</string>
+    <string name="setting_keep_title">الاحتفاظ بآخر النسخ الاحتياطية</string>
+    <string name="setting_keep_subtitle">تُحذف المجموعات الاحتياطية القديمة معًا</string>
+    <string name="setting_encryption_title">التشفير</string>
+    <string name="setting_encryption_subtitle">حماية الملفات المُصدَّرة باستخدام AES</string>
+    <string name="language_system_default">لغة النظام</string>
+
+    <string name="export_note_full">النسخ اليدوية غير مشفّرة ولا تُحذف أبدًا بواسطة سياسة الاحتفاظ.</string>
+    <string name="export_note_compact">النسخ اليدوية: غير مشفّرة، ولا يُحتفَظ بها.</string>
+    <string name="export_csv">CSV</string>
+    <string name="export_vcf">VCF</string>
+    <string name="export_excel">Excel</string>
+
+    <string name="restore_button">‹  الاستعادة من نسخة احتياطية</string>
+    <string name="restore_status_none">لم تُجرَ أي عملية استعادة بعد</string>
+    <string name="restore_status_done">تمت الاستعادة: %1$s  ·  %2$s</string>
+
+    <string name="footer_full">محلي بالتصميم  ·  Libre Contacts Backup  ·  </string>
+    <string name="footer_compact">Libre Contacts Backup  ·  </string>
+    <string name="footer_about">حول التطبيق</string>
+
+    <string name="dialog_schedule_title">جدولة النسخ الاحتياطي</string>
+    <string name="schedule_option_off">إيقاف</string>
+    <string name="schedule_option_daily">يوميًا في وقت محدد…</string>
+    <string name="schedule_off">إيقاف</string>
+    <string name="schedule_daily_at">يوميًا في %1$s</string>
+
+    <string name="dialog_keep_title">مجموعات النسخ الاحتياطي المُحتفَظ بها</string>
+    <string name="keep_option_all">الاحتفاظ بالكل</string>
+    <string name="keep_all_label">جميع المجموعات</string>
+
+    <string name="dialog_language_title">لغة التطبيق</string>
+
+    <string name="password_set_title">تعيين كلمة مرور التشفير</string>
+    <string name="password_unlock_title">فتح النسخة الاحتياطية المشفّرة</string>
+    <string name="password_hint">كلمة المرور</string>
+    <string name="password_repeat_hint">إعادة إدخال كلمة المرور</string>
+    <string name="password_message_set">استخدم 8 أحرف على الأقل. تستخدم النسخ الاحتياطية المجدولة كلمة المرور المحفوظة هذه.</string>
+    <string name="password_message_unlock">أدخل كلمة المرور المستخدمة عند إنشاء هذه النسخة الاحتياطية.</string>
+    <string name="password_error_length">استخدم 8 أحرف على الأقل</string>
+    <string name="password_error_mismatch">كلمتا المرور غير متطابقتين</string>
+    <string name="action_cancel">إلغاء</string>
+    <string name="action_enable">تفعيل</string>
+    <string name="action_restore">استعادة</string>
+
+    <string name="notice_export_failed_title">فشل التصدير</string>
+    <string name="notice_open_failed_title">تعذّر الفتح</string>
+    <string name="notice_encryption_unavailable_title">التشفير غير متاح</string>
+    <string name="notice_restore_failed_title">فشلت الاستعادة</string>
+    <string name="notice_backup_complete_title">اكتملت النسخة الاحتياطية</string>
+    <string name="notice_backup_failed_title">فشلت النسخة الاحتياطية</string>
+    <string name="notice_manual_export_complete_title">اكتمل التصدير اليدوي</string>
+    <string name="notice_restore_completed_issues_title">اكتملت الاستعادة مع بعض المشكلات</string>
+    <string name="notice_restore_completed_warnings_title">اكتملت الاستعادة مع بعض التحذيرات</string>
+    <string name="notice_restore_complete_title">اكتملت الاستعادة</string>
+    <string name="error_wrong_password">كلمة مرور خاطئة أو نسخة احتياطية غير صالحة</string>
+    <string name="error_choose_folder_first">اختر مجلدًا أولًا</string>
+    <string name="error_set_password_first">عيّن كلمة مرور للتشفير أولًا</string>
+    <string name="error_cannot_open_export_destination">تعذّر فتح وجهة التصدير</string>
+    <string name="error_cannot_create_backup_file">تعذّر إنشاء ملف النسخة الاحتياطية</string>
+    <string name="backup_failed_prefix">فشلت النسخة الاحتياطية: %1$s</string>
+    <string name="saved_contacts_message">تم الحفظ: %1$s</string>
+
+    <string name="restore_progress_checking">جارٍ التحقق من النسخة الاحتياطية</string>
+    <string name="restore_progress_preparing">جارٍ تحضير الاستعادة</string>
+    <string name="restore_progress_restoring_contacts">جارٍ استعادة جهات الاتصال</string>
+    <string name="restore_progress_note">يُرجى إبقاء Libre Contacts Backup مفتوحًا</string>
+
+    <string name="restore_dialog_title">استعادة جهات الاتصال</string>
+    <string name="restore_dialog_summary">تحتوي هذه النسخة الاحتياطية على %1$s و%2$s.</string>
+    <string name="restore_not_recommended">غير موصى به — %1$s</string>
+
+    <string name="category_contact_info_title">معلومات جهة الاتصال</string>
+    <string name="category_contact_info_description">الأسماء وأرقام الهواتف والبريد الإلكتروني والعناوين والمؤسسات والملاحظات وأعياد الميلاد وحقول جهات الاتصال الشائعة الأخرى.</string>
+    <string name="category_contact_info_example">مثال: «أحمد محمد · ‎+966 5X XXX XXXX‎ · ahmed@example.com»</string>
+
+    <string name="category_photos_title">صور جهات الاتصال</string>
+    <string name="category_photos_description">الصور التي عيّنتها لجهات اتصالك.</string>
+    <string name="category_photos_example">مثال: الصورة الرمزية لجهة اتصال</string>
+
+    <string name="category_groups_title">المجموعات</string>
+    <string name="category_groups_description">مجموعات جهات الاتصال ومن ينتمي إليها.</string>
+    <string name="category_groups_example">مثال: «العائلة»، «العمل»، «نادي الكتاب»</string>
+
+    <string name="category_additional_title">بيانات جهة اتصال إضافية</string>
+    <string name="category_additional_description">مدخلات تحمل بياناتها الخاصة من تطبيق آخر (مثل تطبيق مراسلة)، وحقول أقل شيوعًا خاصة بمزوّد معيّن. تُستعاد كل مدخلة من هذا النوع ككل متكامل فقط — جميع بياناتها مع حسابها الأصلي معًا، أو لا شيء إطلاقًا — لأن نسخة جزئية (مثل اسم فقط، من دون ما جعل هذه المدخلة كما هي، أو من دون الحساب الذي يتعرّف عليه ذلك التطبيق كحسابه الخاص) لن تطابق الأصل ولن تكون مفيدة بمفردها. ملاحظة: تعرّف ذلك التطبيق فعليًا على المدخلة المُستعادة كحساب خاص به أمر يعود لذلك التطبيق، وليس لهذا الإعداد — فقد تُنشئ بعض التطبيقات مدخلة جديدة خاصة بها على أي حال.</string>
+    <string name="category_additional_example">مثال: مدخلة مرتبطة بتطبيق مراسلة تُستعاد بكل بياناتها وحسابها سليمَين، أو لا تُستعاد إطلاقًا</string>
+    <string name="category_additional_not_recommended">نادرًا ما تكون ضرورية، وقد لا تظهر بشكل صحيح على هذا الجهاز، وتستعيد كل مدخلة من هذا النوع بشكل كامل فقط لا جزئيًا أبدًا، ولا تضمن ألّا يُنشئ التطبيق الآخر مدخلته الخاصة على أي حال</string>
+
+    <string name="category_account_title">معلومات الحساب/المصدر</string>
+    <string name="category_account_description">يحافظ على الحساب الأصلي لجهات اتصالك العادية (مثل حساب Google) لتبقى مرتبطة به. يختلف هذا عن بيانات جهة الاتصال الإضافية، التي تحتفظ دائمًا بحساب مدخلاتها الخاصة مع بياناتها عند تحديدها.</string>
+    <string name="category_account_example">مثال: أن تكون جهة اتصال مرتبطة بحساب Google الخاص بك</string>
+    <string name="category_account_not_recommended">غير موصى به عند الاستعادة إلى جهاز أو حساب مختلف — تُستعاد جهة الاتصال على أي حال، ولكن كجهة اتصال محلية. ملاحظة: الاحتفاظ بحساب لا يضمن أن يتعرّف ذلك التطبيق على جهة الاتصال كمتزامنة مسبقًا — فهذا يعتمد على التطبيق، لا على هذا الإعداد</string>
+
+    <string name="restore_brief_errors">تمت الاستعادة: %1$d، فشل: %2$d%3$s</string>
+    <string name="restore_brief_warnings">تمت الاستعادة: %1$s (مع تحذيرات)%2$s</string>
+    <string name="restore_brief_success">تمت الاستعادة: %1$s، %2$s%3$s</string>
+    <string name="restore_skipped_suffix"> (%1$d غير محدَّد)</string>
+
+    <string name="about_title">حول التطبيق</string>
+    <string name="about_section_heading">حول هذا التطبيق</string>
+    <string name="about_section_body">أداة خاصة ومحلية أولًا للنسخ الاحتياطي لجهات الاتصال. تبقى نسخك الاحتياطية المجدولة في موقع التخزين الذي تختاره، والأرشيفات المشفّرة محمية بكلمة مرورك.</string>
+    <string name="about_created_by_label">أُنشئ بواسطة</string>
+    <string name="about_license_label">الترخيص</string>
+    <string name="about_source_label">الشيفرة المصدرية</string>
+    <string name="about_github_label">الملف الشخصي على GitHub</string>
+    <string name="about_website_label">الموقع الإلكتروني</string>
+    <string name="about_suggestions_label">اقتراحات</string>
+    <string name="about_footer">Libre Contacts Backup · الإصدار %1$s</string>
+    <string name="about_no_browser">لا يوجد متصفح متاح</string>
+    <string name="about_no_email_app">لا يوجد تطبيق بريد إلكتروني متاح</string>
+
+    <string name="notification_channel_scheduled_backups">النسخ الاحتياطية المجدولة</string>
+    <string name="notification_backup_complete_title">اكتملت نسخة Libre Contacts Backup الاحتياطية</string>
+    <string name="notification_backup_needs_attention_title">يحتاج Libre Contacts Backup إلى انتباهك</string>
+    <string name="notification_backup_not_completed">تعذّر إكمال النسخة الاحتياطية المجدولة.</string>
+    <string name="scheduled_backup_skipped">تم تخطي النسخة الاحتياطية المجدولة: %1$s. افتح التطبيق لإصلاح ذلك.</string>
+    <string name="issue_folder_not_configured">لم يتم تكوين مجلد النسخ الاحتياطي</string>
+    <string name="issue_folder_not_accessible">لم يعد الوصول إلى مجلد النسخ الاحتياطي ممكنًا</string>
+    <string name="issue_permission_not_granted">لم يتم منح إذن الوصول إلى جهات الاتصال</string>
+
+    <plurals name="contacts_count">
+        <item quantity="zero">لا توجد جهات اتصال</item>
+        <item quantity="one">جهة اتصال واحدة</item>
+        <item quantity="two">جهتا اتصال</item>
+        <item quantity="few">%1$d جهات اتصال</item>
+        <item quantity="many">%1$d جهة اتصال</item>
+        <item quantity="other">%1$d جهة اتصال</item>
+    </plurals>
+    <plurals name="data_fields_count">
+        <item quantity="zero">لا توجد حقول بيانات</item>
+        <item quantity="one">حقل بيانات واحد</item>
+        <item quantity="two">حقلا بيانات</item>
+        <item quantity="few">%1$d حقول بيانات</item>
+        <item quantity="many">%1$d حقل بيانات</item>
+        <item quantity="other">%1$d حقل بيانات</item>
+    </plurals>
+    <plurals name="photos_count">
+        <item quantity="zero">لا توجد صور</item>
+        <item quantity="one">صورة واحدة</item>
+        <item quantity="two">صورتان</item>
+        <item quantity="few">%1$d صور</item>
+        <item quantity="many">%1$d صورة</item>
+        <item quantity="other">%1$d صورة</item>
+    </plurals>
+    <plurals name="groups_count">
+        <item quantity="zero">لا توجد مجموعات</item>
+        <item quantity="one">مجموعة واحدة</item>
+        <item quantity="two">مجموعتان</item>
+        <item quantity="few">%1$d مجموعات</item>
+        <item quantity="many">%1$d مجموعة</item>
+        <item quantity="other">%1$d مجموعة</item>
+    </plurals>
+    <plurals name="fields_count">
+        <item quantity="zero">لا توجد حقول</item>
+        <item quantity="one">حقل واحد</item>
+        <item quantity="two">حقلان</item>
+        <item quantity="few">%1$d حقول</item>
+        <item quantity="many">%1$d حقلًا</item>
+        <item quantity="other">%1$d حقل</item>
+    </plurals>
+    <plurals name="account_contacts_count">
+        <item quantity="zero">لا توجد جهات اتصال مرتبطة بحساب</item>
+        <item quantity="one">جهة اتصال واحدة مرتبطة بحساب</item>
+        <item quantity="two">جهتا اتصال مرتبطتان بحساب</item>
+        <item quantity="few">%1$d جهات اتصال مرتبطة بحساب</item>
+        <item quantity="many">%1$d جهة اتصال مرتبطة بحساب</item>
+        <item quantity="other">%1$d جهة اتصال مرتبطة بحساب</item>
+    </plurals>
+    <plurals name="backup_sets_count">
+        <item quantity="zero">لا توجد مجموعات نسخ احتياطي</item>
+        <item quantity="one">مجموعة نسخ احتياطي واحدة</item>
+        <item quantity="two">مجموعتا نسخ احتياطي</item>
+        <item quantity="few">%1$d مجموعات نسخ احتياطي</item>
+        <item quantity="many">%1$d مجموعة نسخ احتياطي</item>
+        <item quantity="other">%1$d مجموعة نسخ احتياطي</item>
+    </plurals>
+</resources>

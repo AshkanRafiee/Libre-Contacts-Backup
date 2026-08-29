@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Libre Contacts Backup</string>
+    <string name="tagline_offline_encrypted">آفلاین و رمزگذاری‌شده</string>
+    <string name="contact_orbit_content_description">تصویر شبکهٔ مخاطبین</string>
+
+    <string name="hero_label">مخاطبین شما</string>
+    <string name="status_ready">آماده برای پشتیبان‌گیری جدید</string>
+    <string name="status_backing_up">در حال پشتیبان‌گیری…</string>
+    <string name="status_last_backup">آخرین پشتیبان %1$s</string>
+    <string name="hero_tagline_full">خصوصی، محلی، و هر وقت آماده باشید، آماده است.</string>
+    <string name="hero_tagline_compact">خصوصی و محلی.</string>
+    <string name="backup_now">هم‌اکنون پشتیبان‌گیری کن</string>
+
+    <string name="section_pocket">همیشه همراه شما</string>
+    <string name="section_export">خروجی گرفتن از یک نسخه</string>
+    <string name="section_restore">بازگرداندن مخاطبین</string>
+
+    <string name="setting_folder_title">پوشهٔ پشتیبان</string>
+    <string name="setting_folder_subtitle">محل ذخیرهٔ فایل‌های دارای مهر زمانی</string>
+    <string name="folder_not_selected">انتخاب نشده</string>
+    <string name="folder_selected_generic">انتخاب شده</string>
+    <string name="setting_schedule_title">زمان‌بندی</string>
+    <string name="setting_schedule_subtitle">زمان اجرای پشتیبان‌گیری‌های خودکار</string>
+    <string name="setting_keep_title">نگه‌داری آخرین پشتیبان‌ها</string>
+    <string name="setting_keep_subtitle">مجموعه‌های قدیمی‌تر با هم حذف می‌شوند</string>
+    <string name="setting_encryption_title">رمزگذاری</string>
+    <string name="setting_encryption_subtitle">محافظت از فایل‌های خروجی با AES</string>
+    <string name="language_system_default">پیش‌فرض سیستم</string>
+
+    <string name="export_note_full">نسخه‌های دستی رمزگذاری نمی‌شوند و هرگز توسط سیاست نگه‌داری حذف نمی‌شوند.</string>
+    <string name="export_note_compact">نسخه‌های دستی: بدون رمزگذاری، نگه‌داری نمی‌شوند.</string>
+    <string name="export_csv">CSV</string>
+    <string name="export_vcf">VCF</string>
+    <string name="export_excel">Excel</string>
+
+    <string name="restore_button">‹  بازگرداندن از پشتیبان</string>
+    <string name="restore_status_none">هنوز بازگردانی انجام نشده است</string>
+    <string name="restore_status_done">بازگردانی‌شده: %1$s  ·  %2$s</string>
+
+    <string name="footer_full">محلی از پایه  ·  Libre Contacts Backup  ·  </string>
+    <string name="footer_compact">Libre Contacts Backup  ·  </string>
+    <string name="footer_about">درباره</string>
+
+    <string name="dialog_schedule_title">زمان‌بندی پشتیبان‌گیری</string>
+    <string name="schedule_option_off">خاموش</string>
+    <string name="schedule_option_daily">هر روز در ساعتی مشخص…</string>
+    <string name="schedule_off">خاموش</string>
+    <string name="schedule_daily_at">هر روز ساعت %1$s</string>
+
+    <string name="dialog_keep_title">مجموعه‌های پشتیبان برای نگه‌داری</string>
+    <string name="keep_option_all">نگه‌داری همه</string>
+    <string name="keep_all_label">همهٔ مجموعه‌ها</string>
+
+    <string name="dialog_language_title">زبان برنامه</string>
+
+    <string name="password_set_title">تعیین رمز عبور رمزگذاری</string>
+    <string name="password_unlock_title">باز کردن قفل پشتیبان رمزگذاری‌شده</string>
+    <string name="password_hint">رمز عبور</string>
+    <string name="password_repeat_hint">تکرار رمز عبور</string>
+    <string name="password_message_set">حداقل از ۸ نویسه استفاده کنید. پشتیبان‌گیری‌های زمان‌بندی‌شده از همین رمز ذخیره‌شده استفاده می‌کنند.</string>
+    <string name="password_message_unlock">رمز عبوری را که هنگام ساخت این پشتیبان استفاده شده وارد کنید.</string>
+    <string name="password_error_length">حداقل از ۸ نویسه استفاده کنید</string>
+    <string name="password_error_mismatch">رمزهای عبور مطابقت ندارند</string>
+    <string name="action_cancel">لغو</string>
+    <string name="action_enable">فعال‌سازی</string>
+    <string name="action_restore">بازگردانی</string>
+
+    <string name="notice_export_failed_title">خروجی گرفتن ناموفق بود</string>
+    <string name="notice_open_failed_title">باز کردن ممکن نشد</string>
+    <string name="notice_encryption_unavailable_title">رمزگذاری در دسترس نیست</string>
+    <string name="notice_restore_failed_title">بازگردانی ناموفق بود</string>
+    <string name="notice_backup_complete_title">پشتیبان‌گیری کامل شد</string>
+    <string name="notice_backup_failed_title">پشتیبان‌گیری ناموفق بود</string>
+    <string name="notice_manual_export_complete_title">خروجی دستی کامل شد</string>
+    <string name="notice_restore_completed_issues_title">بازگردانی با اشکالاتی کامل شد</string>
+    <string name="notice_restore_completed_warnings_title">بازگردانی با هشدارهایی کامل شد</string>
+    <string name="notice_restore_complete_title">بازگردانی کامل شد</string>
+    <string name="error_wrong_password">رمز عبور نادرست یا پشتیبان نامعتبر</string>
+    <string name="error_choose_folder_first">ابتدا یک پوشه انتخاب کنید</string>
+    <string name="error_set_password_first">ابتدا یک رمز عبور رمزگذاری تعیین کنید</string>
+    <string name="error_cannot_open_export_destination">مقصد خروجی باز نشد</string>
+    <string name="error_cannot_create_backup_file">فایل پشتیبان ساخته نشد</string>
+    <string name="backup_failed_prefix">پشتیبان‌گیری ناموفق بود: %1$s</string>
+    <string name="saved_contacts_message">ذخیره شد: %1$s</string>
+
+    <string name="restore_progress_checking">در حال بررسی پشتیبان</string>
+    <string name="restore_progress_preparing">در حال آماده‌سازی بازگردانی</string>
+    <string name="restore_progress_restoring_contacts">در حال بازگردانی مخاطبین</string>
+    <string name="restore_progress_note">لطفاً Libre Contacts Backup را باز نگه دارید</string>
+
+    <string name="restore_dialog_title">بازگردانی مخاطبین</string>
+    <string name="restore_dialog_summary">این پشتیبان شامل %1$s و %2$s است.</string>
+    <string name="restore_not_recommended">توصیه نمی‌شود — %1$s</string>
+
+    <string name="category_contact_info_title">اطلاعات مخاطب</string>
+    <string name="category_contact_info_description">نام‌ها، شماره تلفن‌ها، ایمیل‌ها، نشانی‌ها، سازمان‌ها، یادداشت‌ها، تاریخ تولد و دیگر فیلدهای رایج مخاطب.</string>
+    <string name="category_contact_info_example">مثلاً «علی رضایی · ۰۹۱۲۱۲۳۴۵۶۷ · ali@example.com»</string>
+
+    <string name="category_photos_title">عکس‌های مخاطبین</string>
+    <string name="category_photos_description">عکس‌هایی که برای مخاطبین خود تنظیم کرده‌اید.</string>
+    <string name="category_photos_example">مثلاً عکس پروفایل یک مخاطب</string>
+
+    <string name="category_groups_title">گروه‌ها</string>
+    <string name="category_groups_description">گروه‌های مخاطبین و اعضای آن‌ها.</string>
+    <string name="category_groups_example">مثلاً «خانواده»، «کار»، «باشگاه کتاب‌خوانی»</string>
+
+    <string name="category_additional_title">داده‌های تکمیلی مخاطب</string>
+    <string name="category_additional_description">مدخل‌هایی که داده‌های اختصاصی خود را از برنامه‌ای دیگر (مثلاً یک برنامهٔ پیام‌رسان) همراه دارند، و فیلدهای کم‌کاربردتر مخصوص ارائه‌دهنده. هر یک از این مدخل‌ها فقط به‌صورت کامل بازگردانده می‌شود — همهٔ داده‌هایش به‌همراه حساب اصلی‌اش با هم، یا هیچ‌کدام — زیرا یک نسخهٔ ناقص (مثلاً فقط یک نام، بدون آنچه آن مدخل را می‌ساخت، یا بدون حسابی که آن برنامه از آن خود می‌داند) با نسخهٔ اصلی مطابقت نخواهد داشت و به‌تنهایی مفید نیست. توجه: اینکه آن برنامه واقعاً مدخل بازگردانده‌شده را از آن خود بشناسد، به آن برنامه بستگی دارد نه به این تنظیم — برخی برنامه‌ها ممکن است در هر صورت مدخل تازه‌ای برای خود بسازند.</string>
+    <string name="category_additional_example">مثلاً مدخلی مرتبط با یک برنامهٔ پیام‌رسان که با همهٔ داده‌ها و حساب دست‌نخورده‌اش بازگردانده می‌شود، یا اصلاً بازگردانده نمی‌شود</string>
+    <string name="category_additional_not_recommended">به‌ندرت لازم است، ممکن است در این دستگاه درست نمایش داده نشود، هر مدخل را فقط به‌طور کامل بازمی‌گرداند، هرگز به‌صورت ناقص، و تضمین نمی‌کند که برنامهٔ دیگر باز هم مدخل خودش را نسازد</string>
+
+    <string name="category_account_title">اطلاعات حساب/منبع</string>
+    <string name="category_account_description">حساب اصلی مخاطبین معمولی شما (مثلاً یک حساب گوگل) را حفظ می‌کند تا با آن مرتبط بمانند. این جدا از داده‌های تکمیلی مخاطب است که در صورت انتخاب، همیشه حساب مدخل‌های خود را همراه با داده‌هایشان نگه می‌دارد.</string>
+    <string name="category_account_example">مثلاً اینکه یک مخاطب به حساب گوگل شما مرتبط است</string>
+    <string name="category_account_not_recommended">هنگام بازگردانی به دستگاه یا حساب دیگر توصیه نمی‌شود — مخاطب همچنان بازگردانده می‌شود، اما به‌صورت مخاطب محلی. توجه: نگه‌داشتن یک حساب تضمین نمی‌کند که آن برنامه مخاطب را از پیش همگام‌شده بشناسد — این به برنامه بستگی دارد نه به این تنظیم</string>
+
+    <string name="restore_brief_errors">بازگردانی‌شده: %1$d، ناموفق: %2$d%3$s</string>
+    <string name="restore_brief_warnings">بازگردانی‌شده: %1$s (با هشدار)%2$s</string>
+    <string name="restore_brief_success">بازگردانی‌شده: %1$s، %2$s%3$s</string>
+    <string name="restore_skipped_suffix"> (%1$d انتخاب نشده)</string>
+
+    <string name="about_title">درباره</string>
+    <string name="about_section_heading">دربارهٔ این برنامه</string>
+    <string name="about_section_body">ابزاری خصوصی و محلی برای پشتیبان‌گیری از مخاطبین. پشتیبان‌های زمان‌بندی‌شدهٔ شما در محل ذخیره‌سازی انتخابی‌تان باقی می‌مانند و آرشیوهای رمزگذاری‌شده با رمز عبور شما محافظت می‌شوند.</string>
+    <string name="about_created_by_label">ساخته‌شده توسط</string>
+    <string name="about_license_label">مجوز</string>
+    <string name="about_source_label">کد منبع</string>
+    <string name="about_github_label">پروفایل گیت‌هاب</string>
+    <string name="about_website_label">وب‌سایت</string>
+    <string name="about_suggestions_label">پیشنهادها</string>
+    <string name="about_footer">Libre Contacts Backup · نسخهٔ %1$s</string>
+    <string name="about_no_browser">مرورگری در دسترس نیست</string>
+    <string name="about_no_email_app">برنامهٔ ایمیلی در دسترس نیست</string>
+
+    <string name="notification_channel_scheduled_backups">پشتیبان‌گیری‌های زمان‌بندی‌شده</string>
+    <string name="notification_backup_complete_title">پشتیبان‌گیری Libre Contacts Backup کامل شد</string>
+    <string name="notification_backup_needs_attention_title">Libre Contacts Backup نیاز به توجه دارد</string>
+    <string name="notification_backup_not_completed">پشتیبان‌گیری زمان‌بندی‌شده انجام نشد.</string>
+    <string name="scheduled_backup_skipped">پشتیبان‌گیری زمان‌بندی‌شده رد شد: %1$s. برای رفع آن برنامه را باز کنید.</string>
+    <string name="issue_folder_not_configured">پوشهٔ پشتیبان تنظیم نشده است</string>
+    <string name="issue_folder_not_accessible">پوشهٔ پشتیبان دیگر در دسترس نیست</string>
+    <string name="issue_permission_not_granted">اجازهٔ دسترسی به مخاطبین داده نشده است</string>
+
+    <plurals name="contacts_count">
+        <item quantity="other">%1$d مخاطب</item>
+    </plurals>
+    <plurals name="data_fields_count">
+        <item quantity="other">%1$d فیلد داده</item>
+    </plurals>
+    <plurals name="photos_count">
+        <item quantity="other">%1$d عکس</item>
+    </plurals>
+    <plurals name="groups_count">
+        <item quantity="other">%1$d گروه</item>
+    </plurals>
+    <plurals name="fields_count">
+        <item quantity="other">%1$d فیلد</item>
+    </plurals>
+    <plurals name="account_contacts_count">
+        <item quantity="other">%1$d مخاطب مرتبط با یک حساب</item>
+    </plurals>
+    <plurals name="backup_sets_count">
+        <item quantity="other">%1$d مجموعه</item>
+    </plurals>
+</resources>

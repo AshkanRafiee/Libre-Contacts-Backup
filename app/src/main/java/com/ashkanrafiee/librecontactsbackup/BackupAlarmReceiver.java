@@ -9,16 +9,17 @@ import android.net.Uri;
 import android.provider.DocumentsContract;
 
 public class BackupAlarmReceiver extends BroadcastReceiver {
-    @Override public void onReceive(Context context, Intent intent) {
+    @Override public void onReceive(Context rawContext, Intent intent) {
+        Context context = LocaleHelper.wrap(rawContext);
         if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction()) || Intent.ACTION_MY_PACKAGE_REPLACED.equals(intent.getAction())) { AlarmScheduler.scheduleNext(context); return; }
         java.util.List<String> issues = new java.util.ArrayList<>();
         java.util.List<String> actions = new java.util.ArrayList<>();
         String folder = BackupManager.folder(context);
-        if (folder.isEmpty()) { issues.add("backup folder not configured"); actions.add("folder_missing"); }
-        else if (!isFolderAccessible(context, folder)) { issues.add("backup folder is no longer accessible"); actions.add("folder_revoked"); }
-        if (context.checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { issues.add("contacts permission not granted"); actions.add("permission_missing"); }
+        if (folder.isEmpty()) { issues.add(context.getString(R.string.issue_folder_not_configured)); actions.add("folder_missing"); }
+        else if (!isFolderAccessible(context, folder)) { issues.add(context.getString(R.string.issue_folder_not_accessible)); actions.add("folder_revoked"); }
+        if (context.checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { issues.add(context.getString(R.string.issue_permission_not_granted)); actions.add("permission_missing"); }
         if (!issues.isEmpty()) {
-            String msg = "Scheduled backup skipped: " + String.join(", ", issues) + ". Open the app to fix.";
+            String msg = context.getString(R.string.scheduled_backup_skipped, String.join(", ", issues));
             MainActivity.showScheduledNotification(context, msg, false, String.join(",", actions));
             AlarmScheduler.scheduleNext(context);
             return;

@@ -1,0 +1,10 @@
+Libre Contacts Backup est une application Android native et libre (FLOSS) pour des sauvegardes de contacts privées et axées sur le local. Aucun compte, aucun cloud, aucun pistage — vos contacts ne quittent jamais votre appareil, sauf si vous déplacez vous-même le fichier de sauvegarde.
+
+Fonctionnalités :
+* Sauvegarde sans perte préservant toute la hiérarchie Contact → RawContact → Data, y compris les groupes de contacts
+* Sauvegardes locales quotidiennes planifiées à l'heure de votre choix, sans connexion internet requise
+* Archives LCB en un seul fichier contenant des exports JSON canoniques, VCF, CSV et normalisés
+* Chiffrement optionnel protégé par mot de passe en AES-256-GCM (basé sur l'Android Keystore)
+* La restauration regroupe correctement chaque contact source, sans fusionner des personnes différentes qui partagent un même nom
+* Exports manuels aux formats CSV, VCF et compatible Excel
+* Rétention des archives de sauvegarde automatique contrôlée par l'utilisateur

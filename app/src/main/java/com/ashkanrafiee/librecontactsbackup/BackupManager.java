@@ -63,14 +63,14 @@ public final class BackupManager {
     public static String folder(Context c) { return prefs(c).getString(KEY_URI, ""); }
 
     public static String folderLabel(Context c) {
-        String value = folder(c); if (value.isEmpty()) return "Not selected";
+        String value = folder(c); if (value.isEmpty()) return c.getString(R.string.folder_not_selected);
         try {
             Uri tree = Uri.parse(value); Uri document = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree));
             try (Cursor cursor = c.getContentResolver().query(document, new String[]{DocumentsContract.Document.COLUMN_DISPLAY_NAME}, null, null, null)) {
                 if (cursor != null && cursor.moveToFirst() && cursor.getString(0) != null) return cursor.getString(0);
             }
         } catch (Exception ignored) { }
-        String id = Uri.decode(Uri.parse(value).getPath()); if (id == null) return "Selected"; int colon = id.lastIndexOf(':'); if (colon >= 0) id = id.substring(colon + 1); int slash = id.lastIndexOf('/'); return slash >= 0 ? id.substring(slash + 1) : id;
+        String id = Uri.decode(Uri.parse(value).getPath()); if (id == null) return c.getString(R.string.folder_selected_generic); int colon = id.lastIndexOf(':'); if (colon >= 0) id = id.substring(colon + 1); int slash = id.lastIndexOf('/'); return slash >= 0 ? id.substring(slash + 1) : id;
     }
 
     /**
@@ -89,7 +89,7 @@ public final class BackupManager {
 
     public static BackupOutcome runBackup(Context c, boolean notify) {
         try {
-            if (folder(c).isEmpty()) return new BackupOutcome(false, "Choose a folder first");
+            if (folder(c).isEmpty()) return new BackupOutcome(false, c.getString(R.string.error_choose_folder_first));
             Uri tree = Uri.parse(folder(c));
 
             // Step 1: Read lossless snapshot from provider
@@ -99,7 +99,7 @@ public final class BackupManager {
             String stamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(new Date());
             boolean encrypted = prefs(c).getBoolean("encrypted", false);
             String password = encrypted ? loadEncryptionPassword(c) : null;
-            if (encrypted && (password == null || password.isEmpty())) return new BackupOutcome(false, "Set an encryption password first");
+            if (encrypted && (password == null || password.isEmpty())) return new BackupOutcome(false, c.getString(R.string.error_set_password_first));
 
             ByteArrayOutputStream zipOutput = new ByteArrayOutputStream();
             BackupArchiveWriter.writeArchive(c, snapshot, zipOutput);
@@ -117,13 +117,18 @@ public final class BackupManager {
             }
             prefs(c).edit().putLong("last", System.currentTimeMillis()).apply();
 
-            String message = "Saved " + snapshot.getContactCount() + " contacts";
-            if (notify) MainActivity.notice(c, "Backup complete", message);
+            String message = savedContactsMessage(c, snapshot.getContactCount());
+            if (notify) MainActivity.notice(c, c.getString(R.string.notice_backup_complete_title), message);
             return new BackupOutcome(true, message);
         } catch (Exception e) {
-            if (notify) MainActivity.notice(c, "Backup failed", e.getMessage());
-            return new BackupOutcome(false, "Backup failed: " + e.getMessage());
+            if (notify) MainActivity.notice(c, c.getString(R.string.notice_backup_failed_title), e.getMessage());
+            return new BackupOutcome(false, c.getString(R.string.backup_failed_prefix, e.getMessage()));
         }
+    }
+
+    private static String savedContactsMessage(Context c, int contactCount) {
+        String contactsPart = c.getResources().getQuantityString(R.plurals.contacts_count, contactCount, contactCount);
+        return c.getString(R.string.saved_contacts_message, contactsPart);
     }
 
     /**
@@ -212,10 +217,10 @@ public final class BackupManager {
         }
 
         try (OutputStream out = c.getContentResolver().openOutputStream(destination)) {
-            if (out == null) throw new IOException("Cannot open export destination");
+            if (out == null) throw new IOException(c.getString(R.string.error_cannot_open_export_destination));
             out.write(value.getBytes(StandardCharsets.UTF_8));
         }
-        MainActivity.notice(c, "Manual export complete", "Saved " + snapshot.getContactCount() + " contacts");
+        MainActivity.notice(c, c.getString(R.string.notice_manual_export_complete_title), savedContactsMessage(c, snapshot.getContactCount()));
     }
 
     // ============================================================
@@ -281,7 +286,7 @@ public final class BackupManager {
     private static void saveToFolder(Context c, Uri tree, String name, byte[] bytes) throws Exception {
         Uri parent = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree));
         Uri file = DocumentsContract.createDocument(c.getContentResolver(), parent, "application/octet-stream", name);
-        if (file == null) throw new IOException("Cannot create backup file");
+        if (file == null) throw new IOException(c.getString(R.string.error_cannot_create_backup_file));
         try (OutputStream out = c.getContentResolver().openOutputStream(file)) { out.write(bytes); }
     }
 

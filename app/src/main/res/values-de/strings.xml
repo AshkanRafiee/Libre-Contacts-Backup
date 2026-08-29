@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Libre Contacts Backup</string>
+    <string name="tagline_offline_encrypted">Offline &amp; verschlüsselt</string>
+    <string name="contact_orbit_content_description">Illustration des Kontaktnetzwerks</string>
+
+    <string name="hero_label">DEINE KONTAKTE</string>
+    <string name="status_ready">Bereit für eine neue Sicherung</string>
+    <string name="status_backing_up">Sicherung läuft…</string>
+    <string name="status_last_backup">Letzte Sicherung %1$s</string>
+    <string name="hero_tagline_full">Privat, lokal und einsatzbereit, wann immer du willst.</string>
+    <string name="hero_tagline_compact">Privat &amp; lokal.</string>
+    <string name="backup_now">Jetzt sichern</string>
+
+    <string name="section_pocket">IMMER GRIFFBEREIT</string>
+    <string name="section_export">KOPIE EXPORTIEREN</string>
+    <string name="section_restore">KONTAKTE WIEDERHERSTELLEN</string>
+
+    <string name="setting_folder_title">Sicherungsordner</string>
+    <string name="setting_folder_subtitle">Wo die zeitgestempelten Dateien gespeichert werden</string>
+    <string name="folder_not_selected">Nicht ausgewählt</string>
+    <string name="folder_selected_generic">Ausgewählt</string>
+    <string name="setting_schedule_title">Zeitplan</string>
+    <string name="setting_schedule_subtitle">Wann automatische Sicherungen ausgeführt werden</string>
+    <string name="setting_keep_title">Letzte Sicherungen aufbewahren</string>
+    <string name="setting_keep_subtitle">Ältere Sicherungssätze werden gemeinsam entfernt</string>
+    <string name="setting_encryption_title">Verschlüsselung</string>
+    <string name="setting_encryption_subtitle">Exportierte Dateien mit AES schützen</string>
+    <string name="language_system_default">Systemsprache</string>
+
+    <string name="export_note_full">Manuelle Kopien sind nicht verschlüsselt und werden nie durch die Aufbewahrungsregel gelöscht.</string>
+    <string name="export_note_compact">Manuelle Kopien: unverschlüsselt, werden nicht aufbewahrt.</string>
+    <string name="export_csv">CSV</string>
+    <string name="export_vcf">VCF</string>
+    <string name="export_excel">Excel</string>
+
+    <string name="restore_button">Aus Sicherung wiederherstellen  ›</string>
+    <string name="restore_status_none">Noch keine Wiederherstellung durchgeführt</string>
+    <string name="restore_status_done">Wiederhergestellt: %1$s  ·  %2$s</string>
+
+    <string name="footer_full">Lokal von Grund auf  ·  Libre Contacts Backup  ·  </string>
+    <string name="footer_compact">Libre Contacts Backup  ·  </string>
+    <string name="footer_about">Info</string>
+
+    <string name="dialog_schedule_title">Sicherungszeitplan</string>
+    <string name="schedule_option_off">Aus</string>
+    <string name="schedule_option_daily">Täglich zu einer bestimmten Uhrzeit…</string>
+    <string name="schedule_off">Aus</string>
+    <string name="schedule_daily_at">Täglich um %1$s</string>
+
+    <string name="dialog_keep_title">Sicherungssätze aufbewahren</string>
+    <string name="keep_option_all">Alle behalten</string>
+    <string name="keep_all_label">Alle Sätze</string>
+
+    <string name="dialog_language_title">App-Sprache</string>
+
+    <string name="password_set_title">Verschlüsselungspasswort festlegen</string>
+    <string name="password_unlock_title">Verschlüsselte Sicherung entsperren</string>
+    <string name="password_hint">Passwort</string>
+    <string name="password_repeat_hint">Passwort wiederholen</string>
+    <string name="password_message_set">Verwende mindestens 8 Zeichen. Geplante Sicherungen nutzen dieses gespeicherte Passwort.</string>
+    <string name="password_message_unlock">Gib das Passwort ein, das beim Erstellen dieser Sicherung verwendet wurde.</string>
+    <string name="password_error_length">Verwende mindestens 8 Zeichen</string>
+    <string name="password_error_mismatch">Die Passwörter stimmen nicht überein</string>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="action_enable">Aktivieren</string>
+    <string name="action_restore">Wiederherstellen</string>
+
+    <string name="notice_export_failed_title">Export fehlgeschlagen</string>
+    <string name="notice_open_failed_title">Öffnen nicht möglich</string>
+    <string name="notice_encryption_unavailable_title">Verschlüsselung nicht verfügbar</string>
+    <string name="notice_restore_failed_title">Wiederherstellung fehlgeschlagen</string>
+    <string name="notice_backup_complete_title">Sicherung abgeschlossen</string>
+    <string name="notice_backup_failed_title">Sicherung fehlgeschlagen</string>
+    <string name="notice_manual_export_complete_title">Manueller Export abgeschlossen</string>
+    <string name="notice_restore_completed_issues_title">Wiederherstellung mit Problemen abgeschlossen</string>
+    <string name="notice_restore_completed_warnings_title">Wiederherstellung mit Warnungen abgeschlossen</string>
+    <string name="notice_restore_complete_title">Wiederherstellung abgeschlossen</string>
+    <string name="error_wrong_password">Falsches Passwort oder ungültige Sicherung</string>
+    <string name="error_choose_folder_first">Wähle zuerst einen Ordner aus</string>
+    <string name="error_set_password_first">Lege zuerst ein Verschlüsselungspasswort fest</string>
+    <string name="error_cannot_open_export_destination">Exportziel kann nicht geöffnet werden</string>
+    <string name="error_cannot_create_backup_file">Sicherungsdatei kann nicht erstellt werden</string>
+    <string name="backup_failed_prefix">Sicherung fehlgeschlagen: %1$s</string>
+    <string name="saved_contacts_message">Gespeichert: %1$s</string>
+
+    <string name="restore_progress_checking">Sicherung wird geprüft</string>
+    <string name="restore_progress_preparing">Wiederherstellung wird vorbereitet</string>
+    <string name="restore_progress_restoring_contacts">Kontakte werden wiederhergestellt</string>
+    <string name="restore_progress_note">Bitte Libre Contacts Backup geöffnet lassen</string>
+
+    <string name="restore_dialog_title">Kontakte wiederherstellen</string>
+    <string name="restore_dialog_summary">Diese Sicherung enthält %1$s und %2$s.</string>
+    <string name="restore_not_recommended">Nicht empfohlen — %1$s</string>
+
+    <string name="category_contact_info_title">Kontaktinformationen</string>
+    <string name="category_contact_info_description">Namen, Telefonnummern, E-Mail-Adressen, Adressen, Organisationen, Notizen, Geburtstage und andere alltägliche Kontaktfelder.</string>
+    <string name="category_contact_info_example">z. B. „Max Mustermann · +49 151 23456789 · max@beispiel.de“</string>
+
+    <string name="category_photos_title">Kontaktfotos</string>
+    <string name="category_photos_description">Fotos, die du für deine Kontakte festgelegt hast.</string>
+    <string name="category_photos_example">z. B. das Profilbild eines Kontakts</string>
+
+    <string name="category_groups_title">Gruppen</string>
+    <string name="category_groups_description">Kontaktgruppen und ihre Mitglieder.</string>
+    <string name="category_groups_example">z. B. „Familie“, „Arbeit“, „Buchclub“</string>
+
+    <string name="category_additional_title">Zusätzliche Kontaktdaten</string>
+    <string name="category_additional_description">Einträge, die eigene Daten aus einer anderen App mitbringen (z. B. einer Messaging-App), sowie seltenere anbieterspezifische Felder. Jeder solche Eintrag wird nur als Ganzes wiederhergestellt — alle seine Daten UND sein ursprüngliches Konto zusammen, oder gar nichts —, da eine Teilversion (z. B. nur ein Name, ohne das, was diesen Eintrag ausgemacht hat, oder ohne das Konto, das die App als ihr eigenes erkennt) nicht dem Original entsprechen und für sich allein nutzlos wäre. Hinweis: Ob diese App den wiederhergestellten Eintrag tatsächlich als ihren eigenen erkennt, liegt an dieser App, nicht an dieser Einstellung — manche Apps legen unabhängig davon trotzdem einen neuen eigenen Eintrag an.</string>
+    <string name="category_additional_example">z. B. ein mit einer Messaging-App verknüpfter Eintrag, der mit allen eigenen Daten und intaktem Konto wiederhergestellt wird, oder gar nicht</string>
+    <string name="category_additional_not_recommended">selten benötigt, wird auf diesem Gerät möglicherweise nicht korrekt angezeigt, stellt jeden solchen Eintrag nur vollständig wieder her, nie teilweise, und garantiert nicht, dass die andere App nicht trotzdem einen eigenen Eintrag anlegt</string>
+
+    <string name="category_account_title">Konto-/Quellinformationen</string>
+    <string name="category_account_description">Bewahrt das ursprüngliche Konto deiner gewöhnlichen Kontakte (z. B. ein Google-Konto), damit sie damit verknüpft bleiben. Dies ist getrennt von den zusätzlichen Kontaktdaten, die bei Auswahl immer das Konto ihrer eigenen Einträge zusammen mit deren Daten behalten.</string>
+    <string name="category_account_example">z. B. dass ein Kontakt mit deinem Google-Konto verknüpft ist</string>
+    <string name="category_account_not_recommended">nicht empfohlen bei einer Wiederherstellung auf ein anderes Gerät oder Konto — der Kontakt wird trotzdem wiederhergestellt, jedoch als lokaler Kontakt. Hinweis: Das Beibehalten eines Kontos garantiert nicht, dass diese App den Kontakt als bereits synchronisiert erkennt — das hängt von der App ab, nicht von dieser Einstellung</string>
+
+    <string name="restore_brief_errors">Wiederhergestellt: %1$d, fehlgeschlagen: %2$d%3$s</string>
+    <string name="restore_brief_warnings">Wiederhergestellt: %1$s (mit Warnungen)%2$s</string>
+    <string name="restore_brief_success">Wiederhergestellt: %1$s, %2$s%3$s</string>
+    <string name="restore_skipped_suffix"> (%1$d nicht ausgewählt)</string>
+
+    <string name="about_title">Info</string>
+    <string name="about_section_heading">ÜBER DIESE APP</string>
+    <string name="about_section_body">Ein privates, lokal ausgerichtetes Tool zur Kontaktsicherung. Deine geplanten Sicherungen bleiben an dem von dir gewählten Speicherort, und verschlüsselte Archive sind durch dein Passwort geschützt.</string>
+    <string name="about_created_by_label">Erstellt von</string>
+    <string name="about_license_label">Lizenz</string>
+    <string name="about_source_label">Quellcode</string>
+    <string name="about_github_label">GitHub-Profil</string>
+    <string name="about_website_label">Website</string>
+    <string name="about_suggestions_label">Vorschläge</string>
+    <string name="about_footer">Libre Contacts Backup · Version %1$s</string>
+    <string name="about_no_browser">Kein Browser verfügbar</string>
+    <string name="about_no_email_app">Keine E-Mail-App verfügbar</string>
+
+    <string name="notification_channel_scheduled_backups">Geplante Sicherungen</string>
+    <string name="notification_backup_complete_title">Libre Contacts Backup abgeschlossen</string>
+    <string name="notification_backup_needs_attention_title">Libre Contacts Backup benötigt Aufmerksamkeit</string>
+    <string name="notification_backup_not_completed">Die geplante Sicherung konnte nicht abgeschlossen werden.</string>
+    <string name="scheduled_backup_skipped">Geplante Sicherung übersprungen: %1$s. Öffne die App, um das zu beheben.</string>
+    <string name="issue_folder_not_configured">kein Sicherungsordner konfiguriert</string>
+    <string name="issue_folder_not_accessible">Sicherungsordner ist nicht mehr erreichbar</string>
+    <string name="issue_permission_not_granted">Kontakte-Berechtigung nicht erteilt</string>
+
+    <plurals name="contacts_count">
+        <item quantity="one">%1$d Kontakt</item>
+        <item quantity="other">%1$d Kontakte</item>
+    </plurals>
+    <plurals name="data_fields_count">
+        <item quantity="one">%1$d Datenfeld</item>
+        <item quantity="other">%1$d Datenfelder</item>
+    </plurals>
+    <plurals name="photos_count">
+        <item quantity="one">%1$d Foto</item>
+        <item quantity="other">%1$d Fotos</item>
+    </plurals>
+    <plurals name="groups_count">
+        <item quantity="one">%1$d Gruppe</item>
+        <item quantity="other">%1$d Gruppen</item>
+    </plurals>
+    <plurals name="fields_count">
+        <item quantity="one">%1$d Feld</item>
+        <item quantity="other">%1$d Felder</item>
+    </plurals>
+    <plurals name="account_contacts_count">
+        <item quantity="one">%1$d Kontakt mit einem Konto verknüpft</item>
+        <item quantity="other">%1$d Kontakte mit einem Konto verknüpft</item>
+    </plurals>
+    <plurals name="backup_sets_count">
+        <item quantity="one">%1$d Satz</item>
+        <item quantity="other">%1$d Sätze</item>
+    </plurals>
+</resources>

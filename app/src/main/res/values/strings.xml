@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Libre Contacts Backup</string>
+    <string name="tagline_offline_encrypted">Offline &amp; encrypted</string>
+    <string name="contact_orbit_content_description">Contact network illustration</string>
+
+    <!-- Hero / status -->
+    <string name="hero_label">YOUR CONTACTS</string>
+    <string name="status_ready">Ready for a fresh backup</string>
+    <string name="status_backing_up">Backing up…</string>
+    <string name="status_last_backup">Last backup %1$s</string>
+    <string name="hero_tagline_full">Private, local, and ready when you are.</string>
+    <string name="hero_tagline_compact">Private &amp; local.</string>
+    <string name="backup_now">Back up now</string>
+
+    <!-- Section headers -->
+    <string name="section_pocket">KEEP IT IN YOUR POCKET</string>
+    <string name="section_export">EXPORT A COPY</string>
+    <string name="section_restore">BRING CONTACTS BACK</string>
+
+    <!-- Settings rows -->
+    <string name="setting_folder_title">Backup folder</string>
+    <string name="setting_folder_subtitle">Where timestamped files are saved</string>
+    <string name="folder_not_selected">Not selected</string>
+    <string name="folder_selected_generic">Selected</string>
+    <string name="setting_schedule_title">Schedule</string>
+    <string name="setting_schedule_subtitle">When automatic backups run</string>
+    <string name="setting_keep_title">Keep last backups</string>
+    <string name="setting_keep_subtitle">Older backup sets are removed together</string>
+    <string name="setting_encryption_title">Encryption</string>
+    <string name="setting_encryption_subtitle">Protect exported files with AES</string>
+    <string name="language_system_default">System default</string>
+
+    <!-- Export section -->
+    <string name="export_note_full">Manual copies are not encrypted and are never removed by retention.</string>
+    <string name="export_note_compact">Manual copies: unencrypted, not retained.</string>
+    <string name="export_csv">CSV</string>
+    <string name="export_vcf">VCF</string>
+    <string name="export_excel">Excel</string>
+
+    <!-- Restore section -->
+    <string name="restore_button">Restore from backup  ›</string>
+    <string name="restore_status_none">No restore performed yet</string>
+    <string name="restore_status_done">Restored: %1$s  ·  %2$s</string>
+
+    <!-- Footer -->
+    <string name="footer_full">Local by design  ·  Libre Contacts Backup  ·  </string>
+    <string name="footer_compact">Libre Contacts Backup  ·  </string>
+    <string name="footer_about">About</string>
+
+    <!-- Schedule dialog -->
+    <string name="dialog_schedule_title">Backup schedule</string>
+    <string name="schedule_option_off">Off</string>
+    <string name="schedule_option_daily">Daily at a specific time…</string>
+    <string name="schedule_off">Off</string>
+    <string name="schedule_daily_at">Daily at %1$s</string>
+
+    <!-- Keep backups dialog -->
+    <string name="dialog_keep_title">Keep backup sets</string>
+    <string name="keep_option_all">Keep all</string>
+    <string name="keep_all_label">All sets</string>
+
+    <!-- Language dialog -->
+    <string name="dialog_language_title">App language</string>
+
+    <!-- Password dialogs -->
+    <string name="password_set_title">Set encryption password</string>
+    <string name="password_unlock_title">Unlock encrypted backup</string>
+    <string name="password_hint">Password</string>
+    <string name="password_repeat_hint">Repeat password</string>
+    <string name="password_message_set">Use at least 8 characters. Scheduled backups use this saved password.</string>
+    <string name="password_message_unlock">Enter the password used when this backup was created.</string>
+    <string name="password_error_length">Use at least 8 characters</string>
+    <string name="password_error_mismatch">Passwords do not match</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_enable">Enable</string>
+    <string name="action_restore">Restore</string>
+
+    <!-- Notices / toasts -->
+    <string name="notice_export_failed_title">Export failed</string>
+    <string name="notice_open_failed_title">Could not open</string>
+    <string name="notice_encryption_unavailable_title">Encryption unavailable</string>
+    <string name="notice_restore_failed_title">Restore failed</string>
+    <string name="notice_backup_complete_title">Backup complete</string>
+    <string name="notice_backup_failed_title">Backup failed</string>
+    <string name="notice_manual_export_complete_title">Manual export complete</string>
+    <string name="notice_restore_completed_issues_title">Restore completed with issues</string>
+    <string name="notice_restore_completed_warnings_title">Restore completed with warnings</string>
+    <string name="notice_restore_complete_title">Restore complete</string>
+    <string name="error_wrong_password">Wrong password or invalid backup</string>
+    <string name="error_choose_folder_first">Choose a folder first</string>
+    <string name="error_set_password_first">Set an encryption password first</string>
+    <string name="error_cannot_open_export_destination">Cannot open export destination</string>
+    <string name="error_cannot_create_backup_file">Cannot create backup file</string>
+    <string name="backup_failed_prefix">Backup failed: %1$s</string>
+    <string name="saved_contacts_message">Saved: %1$s</string>
+
+    <!-- Restore progress dialog -->
+    <string name="restore_progress_checking">Checking backup</string>
+    <string name="restore_progress_preparing">Preparing restore</string>
+    <string name="restore_progress_restoring_contacts">Restoring contacts</string>
+    <string name="restore_progress_note">Please keep Libre Contacts Backup open</string>
+
+    <!-- Restore selection dialog -->
+    <string name="restore_dialog_title">Restore contacts</string>
+    <string name="restore_dialog_summary">This backup contains %1$s and %2$s.</string>
+    <string name="restore_not_recommended">Not recommended — %1$s</string>
+
+    <!-- Restore category labels -->
+    <string name="category_contact_info_title">Contact information</string>
+    <string name="category_contact_info_description">Names, phone numbers, emails, addresses, organizations, notes, birthdays, and other everyday contact fields.</string>
+    <string name="category_contact_info_example">e.g. “John Smith · +1 555-0100 · john@example.com”</string>
+
+    <string name="category_photos_title">Contact photos</string>
+    <string name="category_photos_description">Photos you\'ve set for your contacts.</string>
+    <string name="category_photos_example">e.g. a contact\'s profile picture</string>
+
+    <string name="category_groups_title">Groups</string>
+    <string name="category_groups_description">Contact groups and who belongs to them.</string>
+    <string name="category_groups_example">e.g. “Family”, “Work”, “Book Club”</string>
+
+    <string name="category_additional_title">Additional contact data</string>
+    <string name="category_additional_description">Entries that carry their own data from another app (e.g. a messaging app), and less common provider-specific fields. Each such entry is restored exactly as a whole — all of its data AND its original account together, or none of it at all — since a partial version (e.g. just a name, without what made it that entry, or without the account that app recognizes as its own) wouldn\'t match the original and isn\'t useful on its own. Note: whether that app actually recognizes the restored entry as its own is up to that app, not this setting — some apps may still add a new entry of their own regardless.</string>
+    <string name="category_additional_example">e.g. a messaging-app-linked entry restored with all its own data and its account intact, or not at all</string>
+    <string name="category_additional_not_recommended">rarely needed, may not display correctly on this device, restores each such entry only in full, never partially, and doesn\'t guarantee the other app won\'t still create its own entry too</string>
+
+    <string name="category_account_title">Account/source information</string>
+    <string name="category_account_description">Preserve your ordinary contacts\' original account (e.g. a Google account) so they stay linked to it. This is separate from Additional contact data, which always keeps its own entries\' accounts together with their data when selected.</string>
+    <string name="category_account_example">e.g. that a contact is linked to your Google account</string>
+    <string name="category_account_not_recommended">not recommended when restoring to a different device or account — the contact still restores, just as a local contact. Note: keeping an account doesn\'t guarantee that app will recognize the contact as already synced — that depends on the app, not this setting</string>
+
+    <!-- Restore brief summary (toast after a restore finishes) -->
+    <string name="restore_brief_errors">Restored: %1$d, failed: %2$d%3$s</string>
+    <string name="restore_brief_warnings">Restored: %1$s (with warnings)%2$s</string>
+    <string name="restore_brief_success">Restored: %1$s, %2$s%3$s</string>
+    <string name="restore_skipped_suffix"> (%1$d not selected)</string>
+
+    <!-- About screen -->
+    <string name="about_title">About</string>
+    <string name="about_section_heading">ABOUT THIS APP</string>
+    <string name="about_section_body">A private, local-first contact backup tool. Your scheduled backups stay on the storage location you choose, and encrypted archives are protected with your password.</string>
+    <string name="about_created_by_label">Created by</string>
+    <string name="about_license_label">License</string>
+    <string name="about_source_label">Source code</string>
+    <string name="about_github_label">GitHub profile</string>
+    <string name="about_website_label">Website</string>
+    <string name="about_suggestions_label">Suggestions</string>
+    <string name="about_footer">Libre Contacts Backup · Version %1$s</string>
+    <string name="about_no_browser">No browser available</string>
+    <string name="about_no_email_app">No email app available</string>
+
+    <!-- Scheduled backup notifications -->
+    <string name="notification_channel_scheduled_backups">Scheduled backups</string>
+    <string name="notification_backup_complete_title">Libre Contacts Backup complete</string>
+    <string name="notification_backup_needs_attention_title">Libre Contacts Backup needs attention</string>
+    <string name="notification_backup_not_completed">The scheduled backup could not be completed.</string>
+    <string name="scheduled_backup_skipped">Scheduled backup skipped: %1$s. Open the app to fix.</string>
+    <string name="issue_folder_not_configured">backup folder not configured</string>
+    <string name="issue_folder_not_accessible">backup folder is no longer accessible</string>
+    <string name="issue_permission_not_granted">contacts permission not granted</string>
+
+    <!-- Plurals -->
+    <plurals name="contacts_count">
+        <item quantity="one">%1$d contact</item>
+        <item quantity="other">%1$d contacts</item>
+    </plurals>
+    <plurals name="data_fields_count">
+        <item quantity="one">%1$d data field</item>
+        <item quantity="other">%1$d data fields</item>
+    </plurals>
+    <plurals name="photos_count">
+        <item quantity="one">%1$d photo</item>
+        <item quantity="other">%1$d photos</item>
+    </plurals>
+    <plurals name="groups_count">
+        <item quantity="one">%1$d group</item>
+        <item quantity="other">%1$d groups</item>
+    </plurals>
+    <plurals name="fields_count">
+        <item quantity="one">%1$d field</item>
+        <item quantity="other">%1$d fields</item>
+    </plurals>
+    <plurals name="account_contacts_count">
+        <item quantity="one">%1$d contact linked to an account</item>
+        <item quantity="other">%1$d contacts linked to an account</item>
+    </plurals>
+    <plurals name="backup_sets_count">
+        <item quantity="one">%1$d set</item>
+        <item quantity="other">%1$d sets</item>
+    </plurals>
+</resources>

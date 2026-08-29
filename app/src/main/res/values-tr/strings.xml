@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Libre Contacts Backup</string>
+    <string name="tagline_offline_encrypted">Çevrimdışı ve şifreli</string>
+    <string name="contact_orbit_content_description">Kişi ağı görseli</string>
+
+    <string name="hero_label">KİŞİLERİN</string>
+    <string name="status_ready">Yeni bir yedekleme için hazır</string>
+    <string name="status_backing_up">Yedekleniyor…</string>
+    <string name="status_last_backup">Son yedekleme %1$s</string>
+    <string name="hero_tagline_full">Özel, yerel ve sen hazır olduğunda hazır.</string>
+    <string name="hero_tagline_compact">Özel ve yerel.</string>
+    <string name="backup_now">Şimdi yedekle</string>
+
+    <string name="section_pocket">HER ZAMAN YANINDA</string>
+    <string name="section_export">KOPYA DIŞA AKTAR</string>
+    <string name="section_restore">KİŞİLERİ GERİ GETİR</string>
+
+    <string name="setting_folder_title">Yedekleme klasörü</string>
+    <string name="setting_folder_subtitle">Zaman damgalı dosyaların kaydedildiği yer</string>
+    <string name="folder_not_selected">Seçilmedi</string>
+    <string name="folder_selected_generic">Seçildi</string>
+    <string name="setting_schedule_title">Zamanlama</string>
+    <string name="setting_schedule_subtitle">Otomatik yedeklemelerin ne zaman çalışacağı</string>
+    <string name="setting_keep_title">Son yedeklemeleri sakla</string>
+    <string name="setting_keep_subtitle">Eski yedekleme setleri birlikte silinir</string>
+    <string name="setting_encryption_title">Şifreleme</string>
+    <string name="setting_encryption_subtitle">Dışa aktarılan dosyaları AES ile koru</string>
+    <string name="language_system_default">Sistem varsayılanı</string>
+
+    <string name="export_note_full">Manuel kopyalar şifrelenmez ve saklama süresi tarafından asla silinmez.</string>
+    <string name="export_note_compact">Manuel kopyalar: şifresiz, saklanmaz.</string>
+    <string name="export_csv">CSV</string>
+    <string name="export_vcf">VCF</string>
+    <string name="export_excel">Excel</string>
+
+    <string name="restore_button">Yedekten geri yükle  ›</string>
+    <string name="restore_status_none">Henüz geri yükleme yapılmadı</string>
+    <string name="restore_status_done">Geri yüklendi: %1$s  ·  %2$s</string>
+
+    <string name="footer_full">Tasarımı gereği yerel  ·  Libre Contacts Backup  ·  </string>
+    <string name="footer_compact">Libre Contacts Backup  ·  </string>
+    <string name="footer_about">Hakkında</string>
+
+    <string name="dialog_schedule_title">Yedekleme zamanlaması</string>
+    <string name="schedule_option_off">Kapalı</string>
+    <string name="schedule_option_daily">Her gün belirli bir saatte…</string>
+    <string name="schedule_off">Kapalı</string>
+    <string name="schedule_daily_at">Her gün saat %1$s</string>
+
+    <string name="dialog_keep_title">Saklanacak yedekleme setleri</string>
+    <string name="keep_option_all">Tümünü sakla</string>
+    <string name="keep_all_label">Tüm setler</string>
+
+    <string name="dialog_language_title">Uygulama dili</string>
+
+    <string name="password_set_title">Şifreleme parolası belirle</string>
+    <string name="password_unlock_title">Şifreli yedeklemenin kilidini aç</string>
+    <string name="password_hint">Parola</string>
+    <string name="password_repeat_hint">Parolayı tekrar gir</string>
+    <string name="password_message_set">En az 8 karakter kullan. Zamanlanmış yedeklemeler bu kayıtlı parolayı kullanır.</string>
+    <string name="password_message_unlock">Bu yedekleme oluşturulurken kullanılan parolayı gir.</string>
+    <string name="password_error_length">En az 8 karakter kullan</string>
+    <string name="password_error_mismatch">Parolalar eşleşmiyor</string>
+    <string name="action_cancel">İptal</string>
+    <string name="action_enable">Etkinleştir</string>
+    <string name="action_restore">Geri yükle</string>
+
+    <string name="notice_export_failed_title">Dışa aktarma başarısız oldu</string>
+    <string name="notice_open_failed_title">Açılamadı</string>
+    <string name="notice_encryption_unavailable_title">Şifreleme kullanılamıyor</string>
+    <string name="notice_restore_failed_title">Geri yükleme başarısız oldu</string>
+    <string name="notice_backup_complete_title">Yedekleme tamamlandı</string>
+    <string name="notice_backup_failed_title">Yedekleme başarısız oldu</string>
+    <string name="notice_manual_export_complete_title">Manuel dışa aktarma tamamlandı</string>
+    <string name="notice_restore_completed_issues_title">Geri yükleme sorunlarla tamamlandı</string>
+    <string name="notice_restore_completed_warnings_title">Geri yükleme uyarılarla tamamlandı</string>
+    <string name="notice_restore_complete_title">Geri yükleme tamamlandı</string>
+    <string name="error_wrong_password">Yanlış parola veya geçersiz yedekleme</string>
+    <string name="error_choose_folder_first">Önce bir klasör seç</string>
+    <string name="error_set_password_first">Önce bir şifreleme parolası belirle</string>
+    <string name="error_cannot_open_export_destination">Dışa aktarma hedefi açılamıyor</string>
+    <string name="error_cannot_create_backup_file">Yedekleme dosyası oluşturulamıyor</string>
+    <string name="backup_failed_prefix">Yedekleme başarısız oldu: %1$s</string>
+    <string name="saved_contacts_message">Kaydedildi: %1$s</string>
+
+    <string name="restore_progress_checking">Yedekleme denetleniyor</string>
+    <string name="restore_progress_preparing">Geri yükleme hazırlanıyor</string>
+    <string name="restore_progress_restoring_contacts">Kişiler geri yükleniyor</string>
+    <string name="restore_progress_note">Lütfen Libre Contacts Backup\'ı açık tut</string>
+
+    <string name="restore_dialog_title">Kişileri geri yükle</string>
+    <string name="restore_dialog_summary">Bu yedekleme %1$s ve %2$s içeriyor.</string>
+    <string name="restore_not_recommended">Önerilmez — %1$s</string>
+
+    <string name="category_contact_info_title">Kişi bilgileri</string>
+    <string name="category_contact_info_description">Adlar, telefon numaraları, e-postalar, adresler, kurumlar, notlar, doğum günleri ve diğer günlük kişi alanları.</string>
+    <string name="category_contact_info_example">örn. “Ahmet Yılmaz · +90 532 123 45 67 · ahmet@ornek.com”</string>
+
+    <string name="category_photos_title">Kişi fotoğrafları</string>
+    <string name="category_photos_description">Kişilerin için ayarladığın fotoğraflar.</string>
+    <string name="category_photos_example">örn. bir kişinin profil fotoğrafı</string>
+
+    <string name="category_groups_title">Gruplar</string>
+    <string name="category_groups_description">Kişi grupları ve kimlerin bu gruplara ait olduğu.</string>
+    <string name="category_groups_example">örn. “Aile”, “İş”, “Kitap Kulübü”</string>
+
+    <string name="category_additional_title">Ek kişi verileri</string>
+    <string name="category_additional_description">Başka bir uygulamadan (örn. bir mesajlaşma uygulaması) kendi verisini taşıyan kayıtlar ve daha az yaygın, sağlayıcıya özgü alanlar. Bu tür her kayıt yalnızca bir bütün olarak geri yüklenir — tüm verisi VE özgün hesabı birlikte, ya da hiçbiri — çünkü kısmi bir sürüm (örn. yalnızca bir ad, o kaydı o kayıt yapan şey olmadan, ya da o uygulamanın kendisine ait olarak tanıdığı hesap olmadan) özgünle eşleşmez ve tek başına işe yaramaz. Not: geri yüklenen kaydın o uygulama tarafından gerçekten kendisine ait olarak tanınıp tanınmayacağı bu ayara değil, o uygulamaya bağlıdır — bazı uygulamalar yine de kendi yeni bir kaydını oluşturabilir.</string>
+    <string name="category_additional_example">örn. bir mesajlaşma uygulamasıyla bağlantılı bir kaydın tüm verisi ve hesabıyla birlikte geri yüklenmesi, ya da hiç geri yüklenmemesi</string>
+    <string name="category_additional_not_recommended">nadiren gereklidir, bu cihazda doğru görüntülenmeyebilir, bu tür her kaydı yalnızca tam olarak geri yükler, asla kısmi olarak değil, ve diğer uygulamanın yine de kendi kaydını oluşturmayacağını garanti etmez</string>
+
+    <string name="category_account_title">Hesap/kaynak bilgileri</string>
+    <string name="category_account_description">Sıradan kişilerinin özgün hesabını (örn. bir Google hesabı) koruyarak o hesapla bağlantılı kalmalarını sağlar. Bu, seçildiğinde kendi kayıtlarının hesabını her zaman verisiyle birlikte tutan Ek kişi verilerinden ayrıdır.</string>
+    <string name="category_account_example">örn. bir kişinin Google hesabınla bağlantılı olması</string>
+    <string name="category_account_not_recommended">başka bir cihaza veya hesaba geri yüklerken önerilmez — kişi yine de geri yüklenir, ama yerel bir kişi olarak. Not: bir hesabı korumak, o uygulamanın kişiyi zaten eşitlenmiş olarak tanıyacağını garanti etmez — bu, ayara değil uygulamaya bağlıdır</string>
+
+    <string name="restore_brief_errors">Geri yüklendi: %1$d, başarısız: %2$d%3$s</string>
+    <string name="restore_brief_warnings">Geri yüklendi: %1$s (uyarılarla)%2$s</string>
+    <string name="restore_brief_success">Geri yüklendi: %1$s, %2$s%3$s</string>
+    <string name="restore_skipped_suffix"> (%1$d seçilmedi)</string>
+
+    <string name="about_title">Hakkında</string>
+    <string name="about_section_heading">BU UYGULAMA HAKKINDA</string>
+    <string name="about_section_body">Özel, önce yerel bir kişi yedekleme aracı. Zamanlanmış yedeklemelerin seçtiğin depolama konumunda kalır ve şifreli arşivler parolanla korunur.</string>
+    <string name="about_created_by_label">Oluşturan</string>
+    <string name="about_license_label">Lisans</string>
+    <string name="about_source_label">Kaynak kodu</string>
+    <string name="about_github_label">GitHub profili</string>
+    <string name="about_website_label">Web sitesi</string>
+    <string name="about_suggestions_label">Öneriler</string>
+    <string name="about_footer">Libre Contacts Backup · Sürüm %1$s</string>
+    <string name="about_no_browser">Kullanılabilir tarayıcı yok</string>
+    <string name="about_no_email_app">Kullanılabilir e-posta uygulaması yok</string>
+
+    <string name="notification_channel_scheduled_backups">Zamanlanmış yedeklemeler</string>
+    <string name="notification_backup_complete_title">Libre Contacts Backup tamamlandı</string>
+    <string name="notification_backup_needs_attention_title">Libre Contacts Backup dikkat gerektiriyor</string>
+    <string name="notification_backup_not_completed">Zamanlanmış yedekleme tamamlanamadı.</string>
+    <string name="scheduled_backup_skipped">Zamanlanmış yedekleme atlandı: %1$s. Düzeltmek için uygulamayı aç.</string>
+    <string name="issue_folder_not_configured">yedekleme klasörü yapılandırılmadı</string>
+    <string name="issue_folder_not_accessible">yedekleme klasörüne artık erişilemiyor</string>
+    <string name="issue_permission_not_granted">kişiler izni verilmedi</string>
+
+    <plurals name="contacts_count">
+        <item quantity="other">%1$d kişi</item>
+    </plurals>
+    <plurals name="data_fields_count">
+        <item quantity="other">%1$d veri alanı</item>
+    </plurals>
+    <plurals name="photos_count">
+        <item quantity="other">%1$d fotoğraf</item>
+    </plurals>
+    <plurals name="groups_count">
+        <item quantity="other">%1$d grup</item>
+    </plurals>
+    <plurals name="fields_count">
+        <item quantity="other">%1$d alan</item>
+    </plurals>
+    <plurals name="account_contacts_count">
+        <item quantity="other">%1$d kişi bir hesaba bağlı</item>
+    </plurals>
+    <plurals name="backup_sets_count">
+        <item quantity="other">%1$d set</item>
+    </plurals>
+</resources>
