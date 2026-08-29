@@ -27,6 +27,7 @@
     <string name="setting_encryption_title">Cifrado</string>
     <string name="setting_encryption_subtitle">Proteger los archivos exportados con AES</string>
     <string name="language_system_default">Idioma del sistema</string>
+    <string name="footer_language">Idioma</string>
 
     <string name="export_note_full">Las copias manuales no están cifradas y nunca se eliminan por la política de retención.</string>
     <string name="export_note_compact">Copias manuales: sin cifrar, no se conservan.</string>

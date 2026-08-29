@@ -27,6 +27,7 @@
     <string name="setting_encryption_title">التشفير</string>
     <string name="setting_encryption_subtitle">حماية الملفات المُصدَّرة باستخدام AES</string>
     <string name="language_system_default">لغة النظام</string>
+    <string name="footer_language">اللغة</string>
 
     <string name="export_note_full">النسخ اليدوية غير مشفّرة ولا تُحذف أبدًا بواسطة سياسة الاحتفاظ.</string>
     <string name="export_note_compact">النسخ اليدوية: غير مشفّرة، ولا يُحتفَظ بها.</string>

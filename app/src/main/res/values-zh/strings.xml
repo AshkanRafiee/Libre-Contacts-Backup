@@ -27,6 +27,7 @@
     <string name="setting_encryption_title">加密</string>
     <string name="setting_encryption_subtitle">使用 AES 保护导出的文件</string>
     <string name="language_system_default">跟随系统</string>
+    <string name="footer_language">语言</string>
 
     <string name="export_note_full">手动导出的副本未加密，且不受保留策略影响，不会被自动删除。</string>
     <string name="export_note_compact">手动副本：未加密，不予保留。</string>

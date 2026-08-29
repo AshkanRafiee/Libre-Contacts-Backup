@@ -27,6 +27,7 @@
     <string name="setting_encryption_title">Şifreleme</string>
     <string name="setting_encryption_subtitle">Dışa aktarılan dosyaları AES ile koru</string>
     <string name="language_system_default">Sistem varsayılanı</string>
+    <string name="footer_language">Dil</string>
 
     <string name="export_note_full">Manuel kopyalar şifrelenmez ve saklama süresi tarafından asla silinmez.</string>
     <string name="export_note_compact">Manuel kopyalar: şifresiz, saklanmaz.</string>

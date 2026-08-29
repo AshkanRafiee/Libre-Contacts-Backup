@@ -35,6 +35,8 @@ public class MainActivity extends Activity {
     final int card = Color.rgb(20, 27, 42), muted = Color.rgb(151, 161, 181);
     TextView status, folderValue, scheduleValue, keepValue, languageValue, restoreStatus;
     Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat; boolean pendingBackup; boolean pendingScheduleTime; String pendingNotificationActions; boolean compact;
+    /** Spacing-only tightening: true on small screens (like {@link #compact}) OR any non-English language. Never used for font sizes or control heights — see {@link #build()}. */
+    boolean dense;
     Button backupButton;
     ProgressBar backupProgress;
     boolean backupRunning;
@@ -42,6 +44,7 @@ public class MainActivity extends Activity {
 
     int dp(float value) { return (int) (value * getResources().getDisplayMetrics().density + .5f); }
     int v(int normal, int small) { return compact ? small : normal; }
+    int d(int normal, int small) { return dense ? small : normal; }
     int[] windowPixels() { if (Build.VERSION.SDK_INT >= 30) { Rect bounds = getWindowManager().getCurrentWindowMetrics().getBounds(); return new int[]{bounds.width(), bounds.height()}; } android.util.DisplayMetrics metrics = new android.util.DisplayMetrics(); getWindowManager().getDefaultDisplay().getMetrics(metrics); return new int[]{metrics.widthPixels, metrics.heightPixels}; }
     TextView label(String value, float size, int color) {
         TextView view = new TextView(this);
@@ -93,6 +96,15 @@ public class MainActivity extends Activity {
     void build() {
         int[] window = windowPixels(); int widthPixels = window[0]; int heightPixels = window[1]; // Responsive breakpoint: narrow/short windows compact; large windows keep the spacious composition.
         compact = widthPixels <= 1080 || heightPixels < 2700;
+        // Translated strings routinely run a little longer than their English
+        // source, which on an otherwise spacious screen can be just enough to
+        // force a scroll English never needs. Shrinking text or control sizes to
+        // compensate would make the UI visibly smaller than English, so instead
+        // only the whitespace between elements (via d(), below) tightens up for
+        // any non-English language — same fonts, same button heights, just a
+        // little less air around them.
+        boolean nonEnglish = !"en".equals(getResources().getConfiguration().getLocales().get(0).getLanguage());
+        dense = compact || nonEnglish;
         LinearLayout root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(20), dp(v(14, 8)), dp(20), dp(v(14, 8))); root.setBackgroundColor(background);
         root.setOnApplyWindowInsetsListener((view, insets) -> { int top; int bottom; if (Build.VERSION.SDK_INT >= 30) { android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars()); top = bars.top; bottom = bars.bottom; } else { top = insets.getSystemWindowInsetTop(); bottom = insets.getSystemWindowInsetBottom(); } view.setPadding(dp(20), top + dp(v(14, 8)), dp(20), bottom + dp(v(14, 8))); return insets; });
@@ -107,7 +119,7 @@ public class MainActivity extends Activity {
         name.addView(label(getString(R.string.app_name), compact ? 20 : 22, Color.WHITE)); name.addView(label(getString(R.string.tagline_offline_encrypted), 12, muted));
         LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(-2, -2); nameParams.setMarginStart(dp(10)); header.addView(name, nameParams); body.addView(header, margins(0, 0, 0, v(16, 10)));
 
-        LinearLayout hero = new LinearLayout(this); hero.setOrientation(LinearLayout.VERTICAL); hero.setPadding(dp(v(18, 14)), dp(v(17, 12)), dp(v(18, 14)), dp(v(16, 12)));
+        LinearLayout hero = new LinearLayout(this); hero.setOrientation(LinearLayout.VERTICAL); hero.setPadding(dp(v(18, 14)), dp(d(17, 14)), dp(v(18, 14)), dp(d(16, 14)));
         hero.setBackground(gradient(new int[]{Color.rgb(41, 57, 91), Color.rgb(35, 34, 72)}, 22));
         FrameLayout heroTop = new FrameLayout(this);
         LinearLayout heroWords = new LinearLayout(this); heroWords.setOrientation(LinearLayout.VERTICAL);
@@ -126,7 +138,7 @@ public class MainActivity extends Activity {
         heroTop.addView(new ContactOrbit(this), new FrameLayout.LayoutParams(dp(orbitDp), dp(orbitDp), Gravity.END | Gravity.TOP)); hero.addView(heroTop);
         Button backup = button(getString(R.string.backup_now), mint); backup.setTextColor(background); backup.setOnClickListener(v -> backup());
         backupButton = backup;
-        LinearLayout.LayoutParams actionParams = new LinearLayout.LayoutParams(-1, dp(v(48, 44))); actionParams.setMargins(0, dp(v(15, 10)), 0, 0); hero.addView(backup, actionParams); body.addView(hero, margins(0, 0, 0, v(22, 14)));
+        LinearLayout.LayoutParams actionParams = new LinearLayout.LayoutParams(-1, dp(v(48, 44))); actionParams.setMargins(0, dp(v(15, 10)), 0, 0); hero.addView(backup, actionParams); body.addView(hero, margins(0, 0, 0, d(22, 18)));
 
         body.addView(label(getString(R.string.section_pocket), 10, muted), margins(0, 0, 0, v(8, 5)));
         folderValue = label(BackupManager.folderLabel(this), 13, Color.rgb(190, 184, 255));
@@ -135,14 +147,14 @@ public class MainActivity extends Activity {
         body.addView(setting(getString(R.string.setting_schedule_title), getString(R.string.setting_schedule_subtitle), scheduleValue, false, v -> scheduleDialog()), margins(0, 0, 0, v(8, 5)));
         keepValue = label(keepLabel(this, BackupManager.prefs(this).getInt("keep", 5)), 13, Color.rgb(190, 184, 255));
         body.addView(setting(getString(R.string.setting_keep_title), getString(R.string.setting_keep_subtitle), keepValue, false, v -> retentionDialog()), margins(0, 0, 0, v(8, 5)));
-        body.addView(setting(getString(R.string.setting_encryption_title), getString(R.string.setting_encryption_subtitle), null, true, v -> {}), margins(0, 0, 0, v(20, 12)));
+        body.addView(setting(getString(R.string.setting_encryption_title), getString(R.string.setting_encryption_subtitle), null, true, v -> {}), margins(0, 0, 0, d(20, 16)));
 
         body.addView(label(getString(R.string.section_export), 10, muted), margins(0, 0, 0, 3));
         body.addView(label(compact ? getString(R.string.export_note_compact) : getString(R.string.export_note_full), 11, Color.rgb(222, 184, 112)), margins(0, 0, 0, v(8, 5)));
         LinearLayout exports = new LinearLayout(this); exports.setOrientation(LinearLayout.HORIZONTAL);
         Button csv = button(getString(R.string.export_csv), Color.rgb(28, 38, 55)); Button vcf = button(getString(R.string.export_vcf), Color.rgb(28, 38, 55)); Button xls = button(getString(R.string.export_excel), Color.rgb(28, 38, 55));
         csv.setOnClickListener(v -> manualExport("csv")); vcf.setOnClickListener(v -> manualExport("vcf")); xls.setOnClickListener(v -> manualExport("xls"));
-        exports.addView(csv, new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1)); LinearLayout.LayoutParams exportGap = new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1); exportGap.setMargins(dp(v(8, 5)), 0, 0, 0); exports.addView(vcf, exportGap); LinearLayout.LayoutParams excelGap = new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1); excelGap.setMargins(dp(v(8, 5)), 0, 0, 0); exports.addView(xls, excelGap); body.addView(exports, margins(0, 0, 0, v(20, 12)));
+        exports.addView(csv, new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1)); LinearLayout.LayoutParams exportGap = new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1); exportGap.setMargins(dp(v(8, 5)), 0, 0, 0); exports.addView(vcf, exportGap); LinearLayout.LayoutParams excelGap = new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1); excelGap.setMargins(dp(v(8, 5)), 0, 0, 0); exports.addView(xls, excelGap); body.addView(exports, margins(0, 0, 0, d(20, 16)));
 
         body.addView(label(getString(R.string.section_restore), 10, muted), margins(0, 0, 0, v(8, 5)));
         Button restore = button(getString(R.string.restore_button), Color.rgb(28, 38, 55)); restore.setTextColor(Color.rgb(211, 219, 235)); restore.setOnClickListener(v -> chooseFile());
@@ -150,19 +162,18 @@ public class MainActivity extends Activity {
         restoreStatus = label(getString(R.string.restore_status_none), 11, Color.rgb(103, 115, 136)); restoreStatus.setGravity(Gravity.CENTER); if (compact) restoreStatus.setVisibility(View.GONE); body.addView(restoreStatus, margins(0, 0, 0, 0));
         LinearLayout footer = new LinearLayout(this); footer.setGravity(Gravity.CENTER);
         TextView footerText = label(compact ? getString(R.string.footer_compact) : getString(R.string.footer_full), 11, Color.rgb(103, 115, 136));
-        String currentLanguage = LocaleHelper.currentTag(this);
-        languageValue = label(currentLanguage.isEmpty() ? getString(R.string.language_system_default) : LocaleHelper.displayName(currentLanguage), 11, Color.rgb(190, 184, 255));
+        TextView about = label(getString(R.string.footer_about), 11, Color.rgb(190, 184, 255)); about.setPaintFlags(about.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG); about.setOnClickListener(v -> startActivity(new Intent(this, AboutActivity.class)));
+        TextView footerSeparator = label("  ·  ", 11, Color.rgb(103, 115, 136));
+        languageValue = label(getString(R.string.footer_language), 11, Color.rgb(190, 184, 255));
         languageValue.setPaintFlags(languageValue.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
         languageValue.setOnClickListener(v -> languageDialog());
-        TextView footerSeparator = label("  ·  ", 11, Color.rgb(103, 115, 136));
-        TextView about = label(getString(R.string.footer_about), 11, Color.rgb(190, 184, 255)); about.setPaintFlags(about.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG); about.setOnClickListener(v -> startActivity(new Intent(this, AboutActivity.class)));
         footer.addView(footerText); footer.addView(about); footer.addView(footerSeparator); footer.addView(languageValue);
-        body.addView(footer, margins(0, v(18, 8), 0, 0));
+        body.addView(footer, margins(0, d(18, 14), 0, 0));
         Space breathingRoom = new Space(this); body.addView(breathingRoom, new LinearLayout.LayoutParams(1, 0, 1)); load();
     }
 
     LinearLayout setting(String title, String subtitle, TextView value, boolean toggle, View.OnClickListener click) {
-        LinearLayout box = new LinearLayout(this); box.setGravity(Gravity.CENTER_VERTICAL); box.setPadding(dp(14), dp(v(12, 6)), dp(10), dp(v(12, 6)));
+        LinearLayout box = new LinearLayout(this); box.setGravity(Gravity.CENTER_VERTICAL); box.setPadding(dp(14), dp(d(12, 10)), dp(10), dp(d(12, 10)));
         box.setBackground(rounded(card, 15));
         LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
         words.addView(label(title, compact ? 14 : 15, Color.WHITE)); words.addView(label(subtitle, compact ? 10 : 11, muted));
@@ -189,8 +200,6 @@ public class MainActivity extends Activity {
         if (last > 0) status.setText(getString(R.string.status_last_backup, new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(last))));
         scheduleValue.setText(AlarmScheduler.displayLabel(this));
         int keep = BackupManager.prefs(this).getInt("keep", 5); keepValue.setText(keepLabel(this, keep));
-        String currentLanguage = LocaleHelper.currentTag(this);
-        languageValue.setText(currentLanguage.isEmpty() ? getString(R.string.language_system_default) : LocaleHelper.displayName(currentLanguage));
         long restored = BackupManager.prefs(this).getLong("lastRestore", 0); int restoredCount = BackupManager.prefs(this).getInt("lastRestoreCount", 0);
         if (restored > 0) {
             restoreStatus.setVisibility(View.VISIBLE);
@@ -234,10 +243,15 @@ public class MainActivity extends Activity {
         String[] tags = LocaleHelper.SUPPORTED;
         String[] labels = new String[tags.length];
         for (int i = 0; i < tags.length; i++) labels[i] = tags[i].isEmpty() ? getString(R.string.language_system_default) : LocaleHelper.displayName(tags[i]);
-        new AlertDialog.Builder(this).setTitle(getString(R.string.dialog_language_title)).setItems(labels, (dialog, which) -> {
+        String current = LocaleHelper.currentTag(this);
+        int checkedIndex = 0;
+        for (int i = 0; i < tags.length; i++) if (tags[i].equals(current)) { checkedIndex = i; break; }
+        AlertDialog dialog = new AlertDialog.Builder(this).setTitle(getString(R.string.dialog_language_title)).setSingleChoiceItems(labels, checkedIndex, (dialogInterface, which) -> {
             LocaleHelper.setLanguage(this, tags[which]);
+            dialogInterface.dismiss();
             recreate();
-        }).show();
+        }).create();
+        dialog.show();
     }
     @SuppressLint("WrongConstant") // data.getFlags() is masked to exactly the two accepted persistable flags below
     @Override protected void onActivityResult(int request, int result, Intent data) {

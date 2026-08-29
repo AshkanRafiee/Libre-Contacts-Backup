@@ -30,6 +30,7 @@
     <string name="setting_encryption_title">Encryption</string>
     <string name="setting_encryption_subtitle">Protect exported files with AES</string>
     <string name="language_system_default">System default</string>
+    <string name="footer_language">Language</string>
 
     <!-- Export section -->
     <string name="export_note_full">Manual copies are not encrypted and are never removed by retention.</string>

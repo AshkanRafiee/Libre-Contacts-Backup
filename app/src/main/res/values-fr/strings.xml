@@ -27,6 +27,7 @@
     <string name="setting_encryption_title">Chiffrement</string>
     <string name="setting_encryption_subtitle">Protéger les fichiers exportés avec AES</string>
     <string name="language_system_default">Langue du système</string>
+    <string name="footer_language">Langue</string>
 
     <string name="export_note_full">Les copies manuelles ne sont pas chiffrées et ne sont jamais supprimées par la rétention.</string>
     <string name="export_note_compact">Copies manuelles : non chiffrées, non conservées.</string>

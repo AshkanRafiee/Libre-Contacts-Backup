@@ -27,6 +27,7 @@
     <string name="setting_encryption_title">رمزگذاری</string>
     <string name="setting_encryption_subtitle">محافظت از فایل‌های خروجی با AES</string>
     <string name="language_system_default">پیش‌فرض سیستم</string>
+    <string name="footer_language">زبان</string>
 
     <string name="export_note_full">نسخه‌های دستی رمزگذاری نمی‌شوند و هرگز توسط سیاست نگه‌داری حذف نمی‌شوند.</string>
     <string name="export_note_compact">نسخه‌های دستی: بدون رمزگذاری، نگه‌داری نمی‌شوند.</string>
