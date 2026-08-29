@@ -8,4 +8,4 @@ Fixed:
 - Non-English layouts no longer need to scroll to see content that fits on one screen in English
 - Encrypted backups now store their own encryption strength setting, so a future change to it won't create another cross-version restore gap like the one introduced in v2.2.0 (see below) — restoring one always uses the exact setting it was made with, with no guessing involved
 
-Reminder: v2.2.0 raised the password-based backup encryption strength. An ENCRYPTED backup made with v2.2.0 or later cannot be opened by v2.1.1 or earlier, and vice versa — use the app version that created it to restore it. Unencrypted backups are unaffected.
+Reminder: v2.2.0 raised the password-based backup encryption strength without yet storing that setting inside the backup file, so an ENCRYPTED backup made with v2.2.0 or later cannot be opened by v2.1.1 or earlier, and vice versa — use the app version that created it to restore it. Unencrypted backups are unaffected. This was a one-time gap: as of this version, encrypted backups store their own encryption setting, so a change like this will never break cross-version restore again.
