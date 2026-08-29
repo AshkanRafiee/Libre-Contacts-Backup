@@ -19,7 +19,17 @@ android { namespace = 'com.ashkanrafiee.librecontactsbackup'; compileSdk 35
             enableV3Signing true
         }
     } }
-    buildTypes { release { if (signingValues['storeFile']) signingConfig signingConfigs.release; minifyEnabled false } }
+    buildTypes { release {
+        if (signingValues['storeFile']) signingConfig signingConfigs.release
+        minifyEnabled false
+        // AGP embeds the local .git commit SHA into META-INF/version-control-info.textproto
+        // by default. F-Droid's build server checks out a clean source tree with no .git
+        // directory, so it can never reproduce that file, which fails F-Droid's byte-for-byte
+        // reproducible-build check against our published release binary even when the actual
+        // compiled code is identical (verified: classes.dex matches either way). Disabling
+        // this embedding is the documented fix for this exact class of non-reproducibility.
+        vcsInfo { include = false }
+    } }
     testOptions { managedDevices { localDevices { "pixel_6" { apiLevel = 34 } } } }
 }
 
