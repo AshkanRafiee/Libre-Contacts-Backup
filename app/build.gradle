@@ -23,14 +23,31 @@ android { namespace = 'com.ashkanrafiee.librecontactsbackup'; compileSdk 35
         if (signingValues['storeFile']) signingConfig signingConfigs.release
         minifyEnabled false
         // AGP embeds the local .git commit SHA into META-INF/version-control-info.textproto
-        // by default. F-Droid's build server checks out a clean source tree with no .git
-        // directory, so it can never reproduce that file, which fails F-Droid's byte-for-byte
-        // reproducible-build check against our published release binary even when the actual
-        // compiled code is identical (verified: classes.dex matches either way). Disabling
-        // this embedding is the documented fix for this exact class of non-reproducibility.
+        // by default. This isn't needed by anything we do and is one less
+        // build-environment-dependent file inside the APK, so it's turned off
+        // as a general reproducibility precaution (F-Droid's actual v2.2.0
+        // build failure turned out to be caused by something else — see the
+        // JavaCompile toolchain pin below — but this is still worth keeping).
         vcsInfo { include = false }
     } }
     testOptions { managedDevices { localDevices { "pixel_6" { apiLevel = 34 } } } }
+}
+
+// Different javac versions can emit subtly different bytecode for the same
+// source even when targeting the same old --release level (confirmed here:
+// JDK 21 produces a different classes.dex than JDK 17 from identical
+// source). Our GitHub release binaries are built with JDK 17 (see
+// .github/workflows/release.yml), but F-Droid's own build server uses
+// JDK 21, which broke its byte-for-byte reproducible-build check against
+// that binary even though the source and Gradle/AGP versions matched
+// exactly. Pinning a toolchain forces every compiler invocation onto JDK 17
+// regardless of whichever JDK actually launches Gradle, so the two always
+// agree. The foojay-resolver-convention plugin (settings.gradle) lets
+// Gradle auto-provision JDK 17 if it isn't already installed.
+tasks.withType(JavaCompile).configureEach {
+    javaCompiler.set(javaToolchains.compilerFor {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    })
 }
 
 dependencies {
