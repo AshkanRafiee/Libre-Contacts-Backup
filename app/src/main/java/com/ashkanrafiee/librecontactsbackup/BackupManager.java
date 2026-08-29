@@ -57,7 +57,13 @@ import android.security.keystore.KeyProperties;
  */
 public final class BackupManager {
     private static final String PREFS = "librecontacts", KEY_URI = "folder", KEY_ALIAS = "LibreContactsPasswordKey";
+    // v1 archives (pre-2.3.0) never stored their PBKDF2 iteration count, which is why
+    // restoring one requires guessing between the current and legacy counts (see
+    // decryptArchive). v2 archives store it explicitly right after the magic bytes, so
+    // any future change to KEY_DERIVATION_ITERATIONS never breaks restoring an archive
+    // written by this or a later version again — the count travels with the file.
     private static final byte[] MAGIC = "LIBRECB1".getBytes(StandardCharsets.US_ASCII);
+    private static final byte[] MAGIC_V2 = "LIBRECB2".getBytes(StandardCharsets.US_ASCII);
 
     public static SharedPreferences prefs(Context c) { return c.getSharedPreferences(PREFS, Context.MODE_PRIVATE); }
     public static String folder(Context c) { return prefs(c).getString(KEY_URI, ""); }
@@ -249,24 +255,75 @@ public final class BackupManager {
         return ((KeyStore.SecretKeyEntry) store.getEntry(KEY_ALIAS, null)).getSecretKey();
     }
 
+    // Writes the current, self-describing (v2) format: MAGIC_V2 + iterations(4 bytes,
+    // big-endian) + salt(16) + iv(12) + ciphertext. The header (everything before the
+    // ciphertext) is bound in as AEAD associated data, so tampering with the magic,
+    // iteration count, salt, or iv is caught by GCM's own authentication tag rather
+    // than just happening to derive a key that doesn't decrypt — the same guarantee
+    // the ciphertext itself already had.
     private static byte[] encryptArchive(byte[] input, String password) throws Exception {
         byte[] salt = new byte[16], iv = new byte[12]; SecureRandom random = new SecureRandom(); random.nextBytes(salt); random.nextBytes(iv);
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding"); cipher.init(Cipher.ENCRYPT_MODE, deriveKey(password, salt), new GCMParameterSpec(128, iv)); byte[] encrypted = cipher.doFinal(input);
-        ByteArrayOutputStream output = new ByteArrayOutputStream(); output.write(MAGIC); output.write(salt); output.write(iv); output.write(encrypted); return output.toByteArray();
+        ByteArrayOutputStream header = new ByteArrayOutputStream();
+        header.write(MAGIC_V2); header.write(intToBytes(KEY_DERIVATION_ITERATIONS)); header.write(salt); header.write(iv);
+        byte[] headerBytes = header.toByteArray();
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE, deriveKey(password, salt, KEY_DERIVATION_ITERATIONS), new GCMParameterSpec(128, iv));
+        cipher.updateAAD(headerBytes);
+        byte[] encrypted = cipher.doFinal(input);
+        ByteArrayOutputStream output = new ByteArrayOutputStream(); output.write(headerBytes); output.write(encrypted); return output.toByteArray();
     }
 
+    // v1 archives (pre-2.3.0) never stored their iteration count, so restoring one means
+    // trying the current count first and falling back to the one legacy value every such
+    // archive could have used; AES-GCM authenticates the ciphertext, so deriving the
+    // wrong key from the wrong count always fails loudly with AEADBadTagException rather
+    // than silently returning garbage, which is what makes trying both safe. v2 archives
+    // just read the count they were actually written with — no guessing.
     private static byte[] decryptArchive(byte[] input, String password) throws Exception {
+        if (input.length >= MAGIC_V2.length + 4 + 28 && Arrays.equals(Arrays.copyOf(input, MAGIC_V2.length), MAGIC_V2)) {
+            if (password == null || password.isEmpty()) throw new SecurityException("Password required");
+            int headerEnd = MAGIC_V2.length + 4 + 28;
+            byte[] headerBytes = Arrays.copyOf(input, headerEnd);
+            int iterations = bytesToInt(input, MAGIC_V2.length);
+            byte[] salt = Arrays.copyOfRange(input, MAGIC_V2.length + 4, MAGIC_V2.length + 20);
+            byte[] iv = Arrays.copyOfRange(input, MAGIC_V2.length + 20, headerEnd);
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(Cipher.DECRYPT_MODE, deriveKey(password, salt, iterations), new GCMParameterSpec(128, iv));
+            cipher.updateAAD(headerBytes);
+            return cipher.doFinal(input, headerEnd, input.length - headerEnd);
+        }
         if (input.length < MAGIC.length + 28 || !Arrays.equals(Arrays.copyOf(input, MAGIC.length), MAGIC)) return input;
         if (password == null || password.isEmpty()) throw new SecurityException("Password required"); byte[] salt = Arrays.copyOfRange(input, 8, 24), iv = Arrays.copyOfRange(input, 24, 36);
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding"); cipher.init(Cipher.DECRYPT_MODE, deriveKey(password, salt), new GCMParameterSpec(128, iv)); return cipher.doFinal(input, 36, input.length - 36);
+        try {
+            return decryptV1WithIterations(input, password, salt, iv, KEY_DERIVATION_ITERATIONS);
+        } catch (AEADBadTagException e) {
+            return decryptV1WithIterations(input, password, salt, iv, LEGACY_KEY_DERIVATION_ITERATIONS);
+        }
+    }
+
+    private static byte[] decryptV1WithIterations(byte[] input, String password, byte[] salt, byte[] iv, int iterations) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding"); cipher.init(Cipher.DECRYPT_MODE, deriveKey(password, salt, iterations), new GCMParameterSpec(128, iv)); return cipher.doFinal(input, 36, input.length - 36);
+    }
+
+    private static byte[] intToBytes(int value) {
+        return new byte[]{(byte) (value >>> 24), (byte) (value >>> 16), (byte) (value >>> 8), (byte) value};
+    }
+
+    private static int bytesToInt(byte[] bytes, int offset) {
+        return ((bytes[offset] & 0xFF) << 24) | ((bytes[offset + 1] & 0xFF) << 16)
+                | ((bytes[offset + 2] & 0xFF) << 8) | (bytes[offset + 3] & 0xFF);
     }
 
     // 600,000 iterations follows OWASP's current PBKDF2-HMAC-SHA256 guidance;
     // this only runs once per backup/restore, not on any hot path.
     private static final int KEY_DERIVATION_ITERATIONS = 600_000;
+    // What every v1-format backup (pre-2.3.0) actually used. Restore tries this only if
+    // KEY_DERIVATION_ITERATIONS fails to authenticate a v1 archive; v2 archives store
+    // their own count and never need this at all.
+    private static final int LEGACY_KEY_DERIVATION_ITERATIONS = 120_000;
 
-    private static SecretKey deriveKey(String password, byte[] salt) throws Exception {
-        PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, KEY_DERIVATION_ITERATIONS, 256);
+    private static SecretKey deriveKey(String password, byte[] salt, int iterations) throws Exception {
+        PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, iterations, 256);
         try {
             byte[] bytes = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).getEncoded();
             return new javax.crypto.spec.SecretKeySpec(bytes, "AES");
@@ -275,7 +332,7 @@ public final class BackupManager {
         }
     }
 
-    public static boolean isEncrypted(Context c, Uri file) throws Exception { try (InputStream in = c.getContentResolver().openInputStream(file)) { byte[] header = new byte[8]; int read = in.read(header); return read == 8 && Arrays.equals(header, MAGIC); } }
+    public static boolean isEncrypted(Context c, Uri file) throws Exception { try (InputStream in = c.getContentResolver().openInputStream(file)) { byte[] header = new byte[8]; int read = in.read(header); return read == 8 && (Arrays.equals(header, MAGIC) || Arrays.equals(header, MAGIC_V2)); } }
 
     public interface RestoreProgress { void update(String message, int current, int total); }
 
