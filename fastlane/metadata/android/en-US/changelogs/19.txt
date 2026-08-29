@@ -4,7 +4,7 @@ Added:
 - Right-to-left layout support for Persian and Arabic
 
 Fixed:
-- F-Droid builds of this app now reproduce byte-for-byte identical to the binary published on GitHub (a metadata file AGP embeds only when a .git folder is present was breaking the comparison, not the app itself)
+- F-Droid builds of this app now reproduce byte-for-byte identical to the binary published on GitHub (the compiler toolchain is now pinned to a specific Java version, since different Java versions were producing slightly different compiled code from identical source)
 - Non-English layouts no longer need to scroll to see content that fits on one screen in English
 
 Reminder: v2.2.0 raised the password-based backup encryption strength. An ENCRYPTED backup made with v2.2.0 or later cannot be opened by v2.1.1 or earlier, and vice versa — use the app version that created it to restore it. Unencrypted backups are unaffected.
