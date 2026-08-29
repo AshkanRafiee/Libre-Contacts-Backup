@@ -1,3 +1,6 @@
+Breaking change:
+- Password-protected backups now use a stronger key derivation setting. Because of this, an ENCRYPTED backup made with this version or later cannot be opened by v2.1.1 or earlier, and an encrypted backup made with v2.1.1 or earlier cannot be opened by this version or later — use the app version that created it to restore it. Unencrypted backups are not affected and remain compatible across versions.
+
 Changes:
 - Restoring a contact that came from more than one source (e.g. a phone contact also linked to a messaging app) now recreates each source separately and links them back together, instead of merging them into one row — this prevents duplicate contacts from reappearing after the other app re-syncs
 - Entries that only exist because of another app (e.g. a messaging app's internal contact data) are now restored completely or not at all, never as a stripped-down partial copy
