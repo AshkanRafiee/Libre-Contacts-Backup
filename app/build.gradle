@@ -1,7 +1,7 @@
 plugins { id 'com.android.application' }
 
 android { namespace = 'com.ashkanrafiee.librecontactsbackup'; compileSdk 35
-    defaultConfig { applicationId 'com.ashkanrafiee.librecontactsbackup'; minSdk 26; targetSdk 35; versionCode 19; versionName '2.3.0'
+    defaultConfig { applicationId 'com.ashkanrafiee.librecontactsbackup'; minSdk 26; targetSdk 35; versionCode 20; versionName '2.3.1'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     dependenciesInfo { includeInApk = false; includeInBundle = false }
@@ -34,19 +34,13 @@ android { namespace = 'com.ashkanrafiee.librecontactsbackup'; compileSdk 35
 }
 
 // Different javac versions can emit subtly different bytecode for the same
-// source even when targeting the same old --release level (confirmed here:
-// JDK 21 produces a different classes.dex than JDK 17 from identical
-// source). Our GitHub release binaries are built with JDK 17 (see
-// .github/workflows/release.yml), but F-Droid's own build server uses
-// JDK 21, which broke its byte-for-byte reproducible-build check against
-// that binary even though the source and Gradle/AGP versions matched
-// exactly. Pinning a toolchain forces every compiler invocation onto JDK 17
-// regardless of whichever JDK actually launches Gradle, so the two always
-// agree. The foojay-resolver-convention plugin (settings.gradle) lets
-// Gradle auto-provision JDK 17 if it isn't already installed.
+// source even when targeting the same old --release level. Pinning a
+// toolchain forces every compiler invocation onto the same JDK version
+// regardless of whichever JDK actually launches Gradle, so GitHub and
+// F-Droid builds always agree. Both environments provide JDK 21.
 tasks.withType(JavaCompile).configureEach {
     javaCompiler.set(javaToolchains.compilerFor {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
     })
 }
 

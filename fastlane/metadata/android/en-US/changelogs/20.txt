@@ -1,0 +1,2 @@
+Fixed:
+- F-Droid build now completes successfully by matching the Java toolchain version (21) available on the F-Droid build server, while keeping GitHub release builds on the same version to preserve reproducible builds
