@@ -1,0 +1,3 @@
+Added:
+- The app now follows your device's light or dark theme, automatically switching between a bright and a dark look
+- The main screen and the About screen both adapt instantly as you switch themes
