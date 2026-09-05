@@ -203,7 +203,7 @@ public class MainActivity extends Activity {
         return box;
     }
 
-    Button button(String value, int color) { Button b = new Button(this); b.setText(value); b.setTextColor(resColor(R.color.text_primary)); b.setTextSize(14); b.setAllCaps(false); b.setMinHeight(0); b.setMinimumHeight(0); b.setPadding(0, 0, 0, 0); b.setBackground(rounded(color, 14)); return b; }
+    Button button(String value, int color) { Button b = new Button(this); b.setText(value); b.setTextColor(resColor(R.color.text_primary)); b.setTextSize(14); b.setAllCaps(false); b.setMinHeight(0); b.setMinimumHeight(0); b.setPadding(0, 0, 0, 0); b.setBackgroundResource(color == mint ? R.drawable.btn_mint : R.drawable.btn_surface); b.setElevation(0); b.setStateListAnimator(null); b.setOutlineProvider(null); return b; }
 
     void load() {
         folderValue.setText(BackupManager.folderLabel(this));

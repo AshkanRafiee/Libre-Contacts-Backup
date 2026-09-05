@@ -10,8 +10,11 @@
     <color name="link">#BEB8FF</color>
     <color name="amber">#DEB870</color>
     <color name="button_surface">#1C2637</color>
+    <color name="button_surface_pressed">#27364F</color>
     <color name="button_text">#D3DBEB</color>
+    <color name="button_disabled">#27334A</color>
     <color name="accent">#8FF0D0</color>
+    <color name="accent_pressed">#B3F7DF</color>
     <color name="accent_ink">#0A0E18</color>
     <color name="hero_grad_start">#29395B</color>
     <color name="hero_grad_end">#232248</color>
