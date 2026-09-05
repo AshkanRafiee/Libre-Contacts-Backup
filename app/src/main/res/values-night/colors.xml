@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#0A0E18</color>
+    <color name="status_bar">#0A0E18</color>
+    <color name="nav_bar">#10111A</color>
+    <color name="panel">#141B2A</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="muted">#97A1B5</color>
+    <color name="text_tertiary">#677388</color>
+    <color name="link">#BEB8FF</color>
+    <color name="amber">#DEB870</color>
+    <color name="button_surface">#1C2637</color>
+    <color name="button_text">#D3DBEB</color>
+    <color name="accent">#8FF0D0</color>
+    <color name="accent_ink">#0A0E18</color>
+    <color name="hero_grad_start">#29395B</color>
+    <color name="hero_grad_end">#232248</color>
+    <color name="subtitle">#C9D3E6</color>
+    <color name="orbit_indigo">#897DFF</color>
+    <color name="orbit_pale">#DCE3F0</color>
+    <color name="orbit_amber">#FFCD82</color>
+</resources>

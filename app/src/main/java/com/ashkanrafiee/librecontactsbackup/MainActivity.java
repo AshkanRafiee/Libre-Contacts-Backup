@@ -31,8 +31,7 @@ import java.util.*;
 
 public class MainActivity extends Activity {
     static final int FOLDER = 10, FILE = 11, MANUAL_CSV = 30, MANUAL_VCF = 31, MANUAL_XLS = 32;
-    final int mint = Color.rgb(143, 240, 208), background = Color.rgb(10, 14, 24);
-    final int card = Color.rgb(20, 27, 42), muted = Color.rgb(151, 161, 181);
+    int mint, background, card, muted;
     TextView status, folderValue, scheduleValue, keepValue, languageValue, restoreStatus;
     Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat; boolean pendingBackup; boolean pendingScheduleTime; String pendingNotificationActions; boolean compact;
     /** Spacing-only tightening: true on small screens (like {@link #compact}) OR any non-English language. Never used for font sizes or control heights — see {@link #build()}. */
@@ -43,6 +42,7 @@ public class MainActivity extends Activity {
     Uri pendingRestoreUri;
 
     int dp(float value) { return (int) (value * getResources().getDisplayMetrics().density + .5f); }
+    int resColor(int id) { return getResources().getColor(id); }
     int v(int normal, int small) { return compact ? small : normal; }
     int d(int normal, int small) { return dense ? small : normal; }
     int[] windowPixels() { if (Build.VERSION.SDK_INT >= 30) { Rect bounds = getWindowManager().getCurrentWindowMetrics().getBounds(); return new int[]{bounds.width(), bounds.height()}; } android.util.DisplayMetrics metrics = new android.util.DisplayMetrics(); getWindowManager().getDefaultDisplay().getMetrics(metrics); return new int[]{metrics.widthPixels, metrics.heightPixels}; }
@@ -67,13 +67,24 @@ public class MainActivity extends Activity {
     }
 
     @Override public void onCreate(Bundle state) {
-        super.onCreate(state); getWindow().setStatusBarColor(background);
+        super.onCreate(state);
+        mint = resColor(R.color.accent); background = resColor(R.color.bg);
+        card = resColor(R.color.panel); muted = resColor(R.color.muted);
+        getWindow().setStatusBarColor(background);
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 20);
         build();
         String action = getIntent() != null ? getIntent().getStringExtra("notification_action") : null;
         if (action != null) getIntent().removeExtra("notification_action");
         if (action != null && !action.isEmpty()) triggerNotificationAction(action);
+    }
+
+    @Override public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            View content = findViewById(android.R.id.content);
+            if (content != null) content.invalidate();
+        }
     }
     // MainActivity is exported (required for the launcher intent-filter), so
     // this "notification_action" extra can arrive from any locally-installed
@@ -114,57 +125,57 @@ public class MainActivity extends Activity {
         root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
 
         LinearLayout header = new LinearLayout(this); header.setGravity(Gravity.CENTER_VERTICAL);
-        TextView mark = label("L", compact ? 16 : 18, background); mark.setGravity(Gravity.CENTER); mark.setTypeface(null, android.graphics.Typeface.BOLD); mark.setBackground(rounded(mint, 12)); header.addView(mark, new LinearLayout.LayoutParams(dp(v(38, 34)), dp(v(38, 34))));
+        TextView mark = label("L", compact ? 16 : 18, resColor(R.color.accent_ink)); mark.setGravity(Gravity.CENTER); mark.setTypeface(null, android.graphics.Typeface.BOLD); mark.setBackground(rounded(mint, 12)); header.addView(mark, new LinearLayout.LayoutParams(dp(v(38, 34)), dp(v(38, 34))));
         LinearLayout name = new LinearLayout(this); name.setOrientation(LinearLayout.VERTICAL);
-        name.addView(label(getString(R.string.app_name), compact ? 20 : 22, Color.WHITE)); name.addView(label(getString(R.string.tagline_offline_encrypted), 12, muted));
+        name.addView(label(getString(R.string.app_name), compact ? 20 : 22, resColor(R.color.text_primary))); name.addView(label(getString(R.string.tagline_offline_encrypted), 12, muted));
         LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(-2, -2); nameParams.setMarginStart(dp(10)); header.addView(name, nameParams); body.addView(header, margins(0, 0, 0, v(16, 10)));
 
         LinearLayout hero = new LinearLayout(this); hero.setOrientation(LinearLayout.VERTICAL); hero.setPadding(dp(v(18, 14)), dp(d(17, 14)), dp(v(18, 14)), dp(d(16, 14)));
-        hero.setBackground(gradient(new int[]{Color.rgb(41, 57, 91), Color.rgb(35, 34, 72)}, 22));
+        hero.setBackground(gradient(new int[]{resColor(R.color.hero_grad_start), resColor(R.color.hero_grad_end)}, 22));
         FrameLayout heroTop = new FrameLayout(this);
         LinearLayout heroWords = new LinearLayout(this); heroWords.setOrientation(LinearLayout.VERTICAL);
         heroWords.addView(label(getString(R.string.hero_label), 10, mint));
-        status = label(getString(R.string.status_ready), 18, Color.WHITE); status.setMaxLines(1); status.setEllipsize(TextUtils.TruncateAt.END); status.setPadding(0, dp(5), 0, dp(2)); heroWords.addView(status);
+        status = label(getString(R.string.status_ready), 18, resColor(R.color.text_primary)); status.setMaxLines(1); status.setEllipsize(TextUtils.TruncateAt.END); status.setPadding(0, dp(5), 0, dp(2)); heroWords.addView(status);
         backupProgress = new ProgressBar(this);
         backupProgress.setIndeterminate(true);
         backupProgress.setVisibility(View.GONE);
         LinearLayout.LayoutParams progressParams = new LinearLayout.LayoutParams(dp(20), dp(20));
         progressParams.setMargins(0, dp(4), 0, 0);
         heroWords.addView(backupProgress, progressParams);
-        heroWords.addView(label(compact ? getString(R.string.hero_tagline_compact) : getString(R.string.hero_tagline_full), 12, Color.rgb(201, 211, 230)));
+        heroWords.addView(label(compact ? getString(R.string.hero_tagline_compact) : getString(R.string.hero_tagline_full), 12, resColor(R.color.subtitle)));
         int widthDp = (int) (getResources().getDisplayMetrics().widthPixels / getResources().getDisplayMetrics().density);
         int orbitDp = compact ? Math.max(72, Math.min(82, (int) (widthDp * .23f))) : Math.max(88, Math.min(132, (int) (widthDp * .28f)));
         FrameLayout.LayoutParams wordsParams = new FrameLayout.LayoutParams(-1, -2); wordsParams.setMarginEnd(dp(orbitDp + 12)); heroTop.addView(heroWords, wordsParams);
         heroTop.addView(new ContactOrbit(this), new FrameLayout.LayoutParams(dp(orbitDp), dp(orbitDp), Gravity.END | Gravity.TOP)); hero.addView(heroTop);
-        Button backup = button(getString(R.string.backup_now), mint); backup.setTextColor(background); backup.setOnClickListener(v -> backup());
+        Button backup = button(getString(R.string.backup_now), mint); backup.setTextColor(resColor(R.color.accent_ink)); backup.setOnClickListener(v -> backup());
         backupButton = backup;
         LinearLayout.LayoutParams actionParams = new LinearLayout.LayoutParams(-1, dp(v(48, 44))); actionParams.setMargins(0, dp(v(15, 10)), 0, 0); hero.addView(backup, actionParams); body.addView(hero, margins(0, 0, 0, d(22, 18)));
 
         body.addView(label(getString(R.string.section_pocket), 10, muted), margins(0, 0, 0, v(8, 5)));
-        folderValue = label(BackupManager.folderLabel(this), 13, Color.rgb(190, 184, 255));
+        folderValue = label(BackupManager.folderLabel(this), 13, resColor(R.color.link));
         body.addView(setting(getString(R.string.setting_folder_title), getString(R.string.setting_folder_subtitle), folderValue, false, v -> chooseFolder()), margins(0, 0, 0, v(8, 5)));
-        scheduleValue = label(AlarmScheduler.displayLabel(this), 13, Color.rgb(190, 184, 255));
+        scheduleValue = label(AlarmScheduler.displayLabel(this), 13, resColor(R.color.link));
         body.addView(setting(getString(R.string.setting_schedule_title), getString(R.string.setting_schedule_subtitle), scheduleValue, false, v -> scheduleDialog()), margins(0, 0, 0, v(8, 5)));
-        keepValue = label(keepLabel(this, BackupManager.prefs(this).getInt("keep", 5)), 13, Color.rgb(190, 184, 255));
+        keepValue = label(keepLabel(this, BackupManager.prefs(this).getInt("keep", 5)), 13, resColor(R.color.link));
         body.addView(setting(getString(R.string.setting_keep_title), getString(R.string.setting_keep_subtitle), keepValue, false, v -> retentionDialog()), margins(0, 0, 0, v(8, 5)));
         body.addView(setting(getString(R.string.setting_encryption_title), getString(R.string.setting_encryption_subtitle), null, true, v -> {}), margins(0, 0, 0, d(20, 16)));
 
         body.addView(label(getString(R.string.section_export), 10, muted), margins(0, 0, 0, 3));
-        body.addView(label(compact ? getString(R.string.export_note_compact) : getString(R.string.export_note_full), 11, Color.rgb(222, 184, 112)), margins(0, 0, 0, v(8, 5)));
+        body.addView(label(compact ? getString(R.string.export_note_compact) : getString(R.string.export_note_full), 11, resColor(R.color.amber)), margins(0, 0, 0, v(8, 5)));
         LinearLayout exports = new LinearLayout(this); exports.setOrientation(LinearLayout.HORIZONTAL);
-        Button csv = button(getString(R.string.export_csv), Color.rgb(28, 38, 55)); Button vcf = button(getString(R.string.export_vcf), Color.rgb(28, 38, 55)); Button xls = button(getString(R.string.export_excel), Color.rgb(28, 38, 55));
+        Button csv = button(getString(R.string.export_csv), resColor(R.color.button_surface)); Button vcf = button(getString(R.string.export_vcf), resColor(R.color.button_surface)); Button xls = button(getString(R.string.export_excel), resColor(R.color.button_surface));
         csv.setOnClickListener(v -> manualExport("csv")); vcf.setOnClickListener(v -> manualExport("vcf")); xls.setOnClickListener(v -> manualExport("xls"));
         exports.addView(csv, new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1)); LinearLayout.LayoutParams exportGap = new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1); exportGap.setMargins(dp(v(8, 5)), 0, 0, 0); exports.addView(vcf, exportGap); LinearLayout.LayoutParams excelGap = new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1); excelGap.setMargins(dp(v(8, 5)), 0, 0, 0); exports.addView(xls, excelGap); body.addView(exports, margins(0, 0, 0, d(20, 16)));
 
         body.addView(label(getString(R.string.section_restore), 10, muted), margins(0, 0, 0, v(8, 5)));
-        Button restore = button(getString(R.string.restore_button), Color.rgb(28, 38, 55)); restore.setTextColor(Color.rgb(211, 219, 235)); restore.setOnClickListener(v -> chooseFile());
+        Button restore = button(getString(R.string.restore_button), resColor(R.color.button_surface)); restore.setTextColor(resColor(R.color.button_text)); restore.setOnClickListener(v -> chooseFile());
         LinearLayout.LayoutParams restoreParams = new LinearLayout.LayoutParams(-1, dp(v(48, 42))); restoreParams.setMargins(0, 0, 0, dp(v(12, 7))); body.addView(restore, restoreParams);
-        restoreStatus = label(getString(R.string.restore_status_none), 11, Color.rgb(103, 115, 136)); restoreStatus.setGravity(Gravity.CENTER); if (compact) restoreStatus.setVisibility(View.GONE); body.addView(restoreStatus, margins(0, 0, 0, 0));
+        restoreStatus = label(getString(R.string.restore_status_none), 11, resColor(R.color.text_tertiary)); restoreStatus.setGravity(Gravity.CENTER); if (compact) restoreStatus.setVisibility(View.GONE); body.addView(restoreStatus, margins(0, 0, 0, 0));
         LinearLayout footer = new LinearLayout(this); footer.setGravity(Gravity.CENTER);
-        TextView footerText = label(compact ? getString(R.string.footer_compact) : getString(R.string.footer_full), 11, Color.rgb(103, 115, 136));
-        TextView about = label(getString(R.string.footer_about), 11, Color.rgb(190, 184, 255)); about.setPaintFlags(about.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG); about.setOnClickListener(v -> startActivity(new Intent(this, AboutActivity.class)));
-        TextView footerSeparator = label("  ·  ", 11, Color.rgb(103, 115, 136));
-        languageValue = label(getString(R.string.footer_language), 11, Color.rgb(190, 184, 255));
+        TextView footerText = label(compact ? getString(R.string.footer_compact) : getString(R.string.footer_full), 11, resColor(R.color.text_tertiary));
+        TextView about = label(getString(R.string.footer_about), 11, resColor(R.color.link)); about.setPaintFlags(about.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG); about.setOnClickListener(v -> startActivity(new Intent(this, AboutActivity.class)));
+        TextView footerSeparator = label("  ·  ", 11, resColor(R.color.text_tertiary));
+        languageValue = label(getString(R.string.footer_language), 11, resColor(R.color.link));
         languageValue.setPaintFlags(languageValue.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
         languageValue.setOnClickListener(v -> languageDialog());
         footer.addView(footerText); footer.addView(about); footer.addView(footerSeparator); footer.addView(languageValue);
@@ -176,7 +187,7 @@ public class MainActivity extends Activity {
         LinearLayout box = new LinearLayout(this); box.setGravity(Gravity.CENTER_VERTICAL); box.setPadding(dp(14), dp(d(12, 10)), dp(10), dp(d(12, 10)));
         box.setBackground(rounded(card, 15));
         LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
-        words.addView(label(title, compact ? 14 : 15, Color.WHITE)); words.addView(label(subtitle, compact ? 10 : 11, muted));
+        words.addView(label(title, compact ? 14 : 15, resColor(R.color.text_primary))); words.addView(label(subtitle, compact ? 10 : 11, muted));
         LinearLayout.LayoutParams wordParams = new LinearLayout.LayoutParams(0, -2, 1); wordParams.setMarginEnd(dp(8)); box.addView(words, wordParams);
         if (toggle) {
             Switch sw = new Switch(this); encryptionSwitch = sw; sw.setChecked(BackupManager.prefs(this).getBoolean("encrypted", false));
@@ -192,7 +203,7 @@ public class MainActivity extends Activity {
         return box;
     }
 
-    Button button(String value, int color) { Button b = new Button(this); b.setText(value); b.setTextColor(Color.WHITE); b.setTextSize(14); b.setAllCaps(false); b.setMinHeight(0); b.setMinimumHeight(0); b.setPadding(0, 0, 0, 0); b.setBackground(rounded(color, 14)); return b; }
+    Button button(String value, int color) { Button b = new Button(this); b.setText(value); b.setTextColor(resColor(R.color.text_primary)); b.setTextSize(14); b.setAllCaps(false); b.setMinHeight(0); b.setMinimumHeight(0); b.setPadding(0, 0, 0, 0); b.setBackground(rounded(color, 14)); return b; }
 
     void load() {
         folderValue.setText(BackupManager.folderLabel(this));
@@ -364,7 +375,7 @@ public class MainActivity extends Activity {
         panel.setPadding(dp(22), dp(20), dp(22), dp(16));
         panel.setBackground(rounded(card, 22));
 
-        panel.addView(label(getString(R.string.restore_dialog_title), 18, Color.WHITE), margins(0, 0, 0, 4));
+        panel.addView(label(getString(R.string.restore_dialog_title), 18, resColor(R.color.text_primary)), margins(0, 0, 0, 4));
 
         String contactsPart = getResources().getQuantityString(R.plurals.contacts_count, analysis.contactCount, analysis.contactCount);
         String fieldsPart = getResources().getQuantityString(R.plurals.data_fields_count, analysis.dataRowCount, analysis.dataRowCount);
@@ -394,10 +405,10 @@ public class MainActivity extends Activity {
 
             LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
             String count = categoryCountLabel(this, category, analysis.countFor(category));
-            words.addView(label(getString(category.titleRes) + "  ·  " + count, 14, Color.WHITE));
+            words.addView(label(getString(category.titleRes) + "  ·  " + count, 14, resColor(R.color.text_primary)));
             words.addView(label(getString(category.descriptionRes) + " " + getString(category.exampleRes), 11, muted));
             if (!category.recommended) {
-                words.addView(label(getString(R.string.restore_not_recommended, getString(category.notRecommendedReasonRes)), 11, Color.rgb(222, 184, 112)));
+                words.addView(label(getString(R.string.restore_not_recommended, getString(category.notRecommendedReasonRes)), 11, resColor(R.color.amber)));
             }
             LinearLayout.LayoutParams wordParams = new LinearLayout.LayoutParams(0, -2, 1);
             wordParams.setMarginStart(dp(10));
@@ -409,8 +420,8 @@ public class MainActivity extends Activity {
         panel.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
 
         LinearLayout buttons = new LinearLayout(this); buttons.setOrientation(LinearLayout.HORIZONTAL);
-        Button cancel = button(getString(R.string.action_cancel), Color.rgb(28, 38, 55)); cancel.setTextColor(Color.rgb(211, 219, 235));
-        Button restore = button(getString(R.string.action_restore), mint); restore.setTextColor(background);
+        Button cancel = button(getString(R.string.action_cancel), resColor(R.color.button_surface)); cancel.setTextColor(resColor(R.color.button_text));
+        Button restore = button(getString(R.string.action_restore), mint); restore.setTextColor(resColor(R.color.accent_ink));
         buttons.addView(cancel, new LinearLayout.LayoutParams(0, dp(46), 1));
         LinearLayout.LayoutParams restoreParams = new LinearLayout.LayoutParams(0, dp(46), 1); restoreParams.setMarginStart(dp(10));
         buttons.addView(restore, restoreParams);
@@ -456,9 +467,9 @@ public class MainActivity extends Activity {
         if (restoreProgress != null && restoreProgress.isShowing()) { restoreProgressText.setText(message); return; }
         LinearLayout panel = new LinearLayout(this); panel.setOrientation(LinearLayout.VERTICAL); panel.setGravity(Gravity.CENTER_HORIZONTAL); panel.setPadding(dp(28), dp(26), dp(28), dp(26)); panel.setBackground(rounded(card, 22));
         ProgressBar spinner = new ProgressBar(this); panel.addView(spinner, new LinearLayout.LayoutParams(dp(46), dp(46)));
-        TextView title = label(getString(R.string.restore_progress_restoring_contacts), 18, Color.WHITE); title.setPadding(0, dp(16), 0, dp(5)); panel.addView(title);
+        TextView title = label(getString(R.string.restore_progress_restoring_contacts), 18, resColor(R.color.text_primary)); title.setPadding(0, dp(16), 0, dp(5)); panel.addView(title);
         restoreProgressText = label(message, 13, muted); restoreProgressText.setGravity(Gravity.CENTER); panel.addView(restoreProgressText);
-        TextView note = label(getString(R.string.restore_progress_note), 11, Color.rgb(103, 115, 136)); note.setPadding(0, dp(14), 0, 0); panel.addView(note);
+        TextView note = label(getString(R.string.restore_progress_note), 11, resColor(R.color.text_tertiary)); note.setPadding(0, dp(14), 0, 0); panel.addView(note);
         restoreProgress = new Dialog(this); restoreProgress.setContentView(panel); restoreProgress.setCancelable(false); Window window = restoreProgress.getWindow(); if (window != null) { window.setBackgroundDrawableResource(android.R.color.transparent); window.setLayout(dp(300), -2); } restoreProgress.show(); if (restoreProgress.getWindow() != null) restoreProgress.getWindow().setLayout(dp(300), -2);
     }
     void hideRestoreProgress() { runOnUiThread(() -> { if (restoreProgress != null && restoreProgress.isShowing()) restoreProgress.dismiss(); restoreProgress = null; restoreProgressText = null; }); }
@@ -485,12 +496,16 @@ public class MainActivity extends Activity {
         ContactOrbit(Context context) { super(context); paint.setStrokeCap(Paint.Cap.ROUND); setContentDescription(context.getString(R.string.contact_orbit_content_description)); }
         @Override protected void onDraw(Canvas canvas) {
             super.onDraw(canvas); float cx = getWidth() * .54f, cy = getHeight() * .50f;
+            int orbitAccent = getContext().getResources().getColor(R.color.accent);
+            int orbitIndigo = getContext().getResources().getColor(R.color.orbit_indigo);
+            int orbitPale = getContext().getResources().getColor(R.color.orbit_pale);
+            int orbitAmber = getContext().getResources().getColor(R.color.orbit_amber);
             paint.setStyle(Paint.Style.STROKE); paint.setStrokeWidth(2); paint.setColor(Color.argb(90, 143, 240, 208));
             canvas.drawCircle(cx, cy, getWidth() * .30f, paint); canvas.drawCircle(cx, cy, getWidth() * .46f, paint);
-            paint.setStyle(Paint.Style.FILL); paint.setColor(Color.rgb(143, 240, 208)); canvas.drawCircle(cx, cy, getWidth() * .12f, paint);
-            paint.setColor(Color.rgb(137, 125, 255)); canvas.drawCircle(cx - getWidth() * .39f, cy - getHeight() * .18f, getWidth() * .07f, paint);
-            paint.setColor(Color.rgb(220, 227, 240)); canvas.drawCircle(cx + getWidth() * .35f, cy + getHeight() * .14f, getWidth() * .055f, paint);
-            paint.setColor(Color.rgb(255, 205, 130)); canvas.drawCircle(cx + getWidth() * .04f, cy - getHeight() * .43f, getWidth() * .045f, paint);
+            paint.setStyle(Paint.Style.FILL); paint.setColor(orbitAccent); canvas.drawCircle(cx, cy, getWidth() * .12f, paint);
+            paint.setColor(orbitIndigo); canvas.drawCircle(cx - getWidth() * .39f, cy - getHeight() * .18f, getWidth() * .07f, paint);
+            paint.setColor(orbitPale); canvas.drawCircle(cx + getWidth() * .35f, cy + getHeight() * .14f, getWidth() * .055f, paint);
+            paint.setColor(orbitAmber); canvas.drawCircle(cx + getWidth() * .04f, cy - getHeight() * .43f, getWidth() * .045f, paint);
         }
     }
 }

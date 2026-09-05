@@ -1,9 +1,14 @@
-<resources>
-    <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">
-        <item name="android:fontFamily">sans</item><item name="android:colorAccent">#7266F5</item>
-        <item name="android:navigationBarColor">#10111A</item><item name="android:statusBarColor">#10111A</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowBackground">#0A0E18</item>
-        <item name="android:windowSplashScreenBackground">#0A0E18</item>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="AppTheme" parent="android:style/Theme.DeviceDefault.DayNight">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">@color/accent</item>
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:windowLightStatusBar">@bool/is_light_status_bar</item>
+        <item name="android:statusBarColor">@color/status_bar</item>
+        <item name="android:navigationBarColor">@color/nav_bar</item>
+        <item name="android:windowLightNavigationBar" tools:ignore="NewApi">@bool/is_light_nav_bar</item>
+        <item name="android:windowSplashScreenBackground">@color/bg</item>
     </style>
 </resources>
