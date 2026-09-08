@@ -50,4 +50,4 @@ GPL-3.0. Source: https://github.com/AshkanRafiee/Libre-Contacts-Backup
 
 ## Screenshot
 
-![Libre Contacts Backup main screen](screenshots/main-screen.png)
+![Libre Contacts Backup main screen](fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg)
