@@ -39,8 +39,6 @@
     <string name="restore_status_none">Aún no se ha realizado ninguna restauración</string>
     <string name="restore_status_done">Restaurado: %1$s  ·  %2$s</string>
 
-    <string name="footer_full">Local por diseño  ·  Libre Contacts Backup  ·  </string>
-    <string name="footer_compact">Libre Contacts Backup  ·  </string>
     <string name="footer_about">Acerca de</string>
 
     <string name="dialog_schedule_title">Programación de copias de seguridad</string>

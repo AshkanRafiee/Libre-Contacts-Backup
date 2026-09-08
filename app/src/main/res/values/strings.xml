@@ -45,8 +45,6 @@
     <string name="restore_status_done">Restored: %1$s  ·  %2$s</string>
 
     <!-- Footer -->
-    <string name="footer_full">Local by design  ·  Libre Contacts Backup  ·  </string>
-    <string name="footer_compact">Libre Contacts Backup  ·  </string>
     <string name="footer_about">About</string>
 
     <!-- Schedule dialog -->

@@ -39,8 +39,6 @@
     <string name="restore_status_none">尚未执行过恢复操作</string>
     <string name="restore_status_done">已恢复：%1$s  ·  %2$s</string>
 
-    <string name="footer_full">从设计上即为本地运行  ·  Libre Contacts Backup  ·  </string>
-    <string name="footer_compact">Libre Contacts Backup  ·  </string>
     <string name="footer_about">关于</string>
 
     <string name="dialog_schedule_title">备份计划</string>

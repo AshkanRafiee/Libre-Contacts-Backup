@@ -39,8 +39,6 @@
     <string name="restore_status_none">Noch keine Wiederherstellung durchgeführt</string>
     <string name="restore_status_done">Wiederhergestellt: %1$s  ·  %2$s</string>
 
-    <string name="footer_full">Lokal von Grund auf  ·  Libre Contacts Backup  ·  </string>
-    <string name="footer_compact">Libre Contacts Backup  ·  </string>
     <string name="footer_about">Info</string>
 
     <string name="dialog_schedule_title">Sicherungszeitplan</string>

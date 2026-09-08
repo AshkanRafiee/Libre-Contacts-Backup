@@ -172,13 +172,11 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams restoreParams = new LinearLayout.LayoutParams(-1, dp(v(48, 42))); restoreParams.setMargins(0, 0, 0, dp(v(12, 7))); body.addView(restore, restoreParams);
         restoreStatus = label(getString(R.string.restore_status_none), 11, resColor(R.color.text_tertiary)); restoreStatus.setGravity(Gravity.CENTER); if (compact) restoreStatus.setVisibility(View.GONE); body.addView(restoreStatus, margins(0, 0, 0, 0));
         LinearLayout footer = new LinearLayout(this); footer.setGravity(Gravity.CENTER);
-        TextView footerText = label(compact ? getString(R.string.footer_compact) : getString(R.string.footer_full), 11, resColor(R.color.text_tertiary));
-        TextView about = label(getString(R.string.footer_about), 11, resColor(R.color.link)); about.setPaintFlags(about.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG); about.setOnClickListener(v -> startActivity(new Intent(this, AboutActivity.class)));
+        TextView about = label(getString(R.string.footer_about), 11, resColor(R.color.link)); about.setOnClickListener(v -> startActivity(new Intent(this, AboutActivity.class)));
         TextView footerSeparator = label("  ·  ", 11, resColor(R.color.text_tertiary));
         languageValue = label(getString(R.string.footer_language), 11, resColor(R.color.link));
-        languageValue.setPaintFlags(languageValue.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
         languageValue.setOnClickListener(v -> languageDialog());
-        footer.addView(footerText); footer.addView(about); footer.addView(footerSeparator); footer.addView(languageValue);
+        footer.addView(about); footer.addView(footerSeparator); footer.addView(languageValue);
         body.addView(footer, margins(0, d(18, 14), 0, 0));
         Space breathingRoom = new Space(this); body.addView(breathingRoom, new LinearLayout.LayoutParams(1, 0, 1)); load();
     }

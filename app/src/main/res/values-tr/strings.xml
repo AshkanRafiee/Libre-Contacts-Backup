@@ -39,8 +39,6 @@
     <string name="restore_status_none">Henüz geri yükleme yapılmadı</string>
     <string name="restore_status_done">Geri yüklendi: %1$s  ·  %2$s</string>
 
-    <string name="footer_full">Tasarımı gereği yerel  ·  Libre Contacts Backup  ·  </string>
-    <string name="footer_compact">Libre Contacts Backup  ·  </string>
     <string name="footer_about">Hakkında</string>
 
     <string name="dialog_schedule_title">Yedekleme zamanlaması</string>

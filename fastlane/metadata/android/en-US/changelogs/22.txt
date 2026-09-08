@@ -1,0 +1,2 @@
+Changed:
+- Cleaned up the footer on the main screen: removed the descriptive text line and made the About and Language links appear without underlines for a tidier look

@@ -39,8 +39,6 @@
     <string name="restore_status_none">هنوز بازگردانی انجام نشده است</string>
     <string name="restore_status_done">بازگردانی‌شده: %1$s  ·  %2$s</string>
 
-    <string name="footer_full">محلی از پایه  ·  Libre Contacts Backup  ·  </string>
-    <string name="footer_compact">Libre Contacts Backup  ·  </string>
     <string name="footer_about">درباره</string>
 
     <string name="dialog_schedule_title">زمان‌بندی پشتیبان‌گیری</string>

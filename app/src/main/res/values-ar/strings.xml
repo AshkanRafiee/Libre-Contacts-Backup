@@ -39,8 +39,6 @@
     <string name="restore_status_none">لم تُجرَ أي عملية استعادة بعد</string>
     <string name="restore_status_done">تمت الاستعادة: %1$s  ·  %2$s</string>
 
-    <string name="footer_full">محلي بالتصميم  ·  Libre Contacts Backup  ·  </string>
-    <string name="footer_compact">Libre Contacts Backup  ·  </string>
     <string name="footer_about">حول التطبيق</string>
 
     <string name="dialog_schedule_title">جدولة النسخ الاحتياطي</string>
