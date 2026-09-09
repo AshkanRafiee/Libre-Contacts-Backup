@@ -1,0 +1,2 @@
+Changed:
+- Raised the target API level to Android 16 (API 36) to comply with Google Play's target API policy; no user-visible changes

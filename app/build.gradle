@@ -1,7 +1,7 @@
 plugins { id 'com.android.application' }
 
-android { namespace = 'com.ashkanrafiee.librecontactsbackup'; compileSdk 35
-    defaultConfig { applicationId 'com.ashkanrafiee.librecontactsbackup'; minSdk 26; targetSdk 35; versionCode 22; versionName '2.3.3'
+android { namespace = 'com.ashkanrafiee.librecontactsbackup'; compileSdk 36; buildToolsVersion = '36.0.0'
+    defaultConfig { applicationId 'com.ashkanrafiee.librecontactsbackup'; minSdk 26; targetSdk 36; versionCode 23; versionName '2.3.4'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     dependenciesInfo { includeInApk = false; includeInBundle = false }
@@ -30,7 +30,7 @@ android { namespace = 'com.ashkanrafiee.librecontactsbackup'; compileSdk 35
         // JavaCompile toolchain pin below — but this is still worth keeping).
         vcsInfo { include = false }
     } }
-    testOptions { managedDevices { localDevices { "pixel_6" { apiLevel = 34 } } } }
+    testOptions { managedDevices { localDevices { "pixel_6" { apiLevel = 36 } } } }
 }
 
 // Different javac versions can emit subtly different bytecode for the same
