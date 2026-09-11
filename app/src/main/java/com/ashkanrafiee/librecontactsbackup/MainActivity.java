@@ -26,6 +26,7 @@ import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreCategory;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreOptions;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreResult;
 
+import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -33,7 +34,7 @@ public class MainActivity extends Activity {
     static final int FOLDER = 10, FILE = 11, MANUAL_CSV = 30, MANUAL_VCF = 31, MANUAL_XLS = 32;
     int mint, background, card, muted;
     TextView status, folderValue, scheduleValue, keepValue, languageValue, restoreStatus;
-    Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat; boolean pendingBackup; boolean pendingScheduleTime; String pendingNotificationActions; boolean compact;
+    Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat; boolean pendingBackup; int pendingScheduleMode; String pendingNotificationActions; boolean compact;
     /** Spacing-only tightening: true on small screens (like {@link #compact}) OR any non-English language. Never used for font sizes or control heights — see {@link #build()}. */
     boolean dense;
     Button backupButton;
@@ -231,15 +232,39 @@ public class MainActivity extends Activity {
         new Thread(() -> { BackupManager.BackupOutcome result = BackupManager.runBackup(this, true); runOnUiThread(() -> { status.setText(result.message); backupButton.setEnabled(true); backupProgress.setVisibility(View.GONE); backupRunning = false; }); }).start();
     }
     void scheduleDialog() {
-        new AlertDialog.Builder(this).setTitle(getString(R.string.dialog_schedule_title)).setItems(new String[]{getString(R.string.schedule_option_off), getString(R.string.schedule_option_daily)}, (dialog, which) -> {
-            if (which == 0) { AlarmScheduler.setEnabled(this, false); scheduleValue.setText(getString(R.string.schedule_off)); AlarmScheduler.scheduleNext(this); return; }
-            if (BackupManager.folder(this).isEmpty()) { pendingScheduleTime = true; chooseFolder(); return; }
-            if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingScheduleTime = true; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 24); return; }
-            pickScheduleTime();
+        new AlertDialog.Builder(this).setTitle(getString(R.string.dialog_schedule_title)).setItems(new String[]{getString(R.string.schedule_option_off), getString(R.string.schedule_option_daily), getString(R.string.schedule_option_weekly), getString(R.string.schedule_option_monthly)}, (dialog, which) -> {
+            if (which == 0) { AlarmScheduler.setEnabled(this, false); scheduleValue.setText(AlarmScheduler.displayLabel(this)); AlarmScheduler.scheduleNext(this); return; }
+            if (BackupManager.folder(this).isEmpty()) { pendingScheduleMode = which; chooseFolder(); return; }
+            if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingScheduleMode = which; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 24); return; }
+            beginSchedule(which);
         }).show();
     }
-    void pickScheduleTime() {
-        new TimePickerDialog(this, (view, hour, minute) -> { String s = AlarmScheduler.dailyLabel(this, hour, minute); AlarmScheduler.setAtTime(this, hour, minute); scheduleValue.setText(s); }, 9, 0, true).show();
+    void beginSchedule(int which) {
+        if (which == 2) pickWeekday(); else if (which == 3) pickDayOfMonth(); else pickDailyTime();
+    }
+    void pickWeekday() {
+        String[] names = new DateFormatSymbols(Locale.getDefault()).getWeekdays();
+        final int[] values = {Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY, Calendar.THURSDAY, Calendar.FRIDAY, Calendar.SATURDAY, Calendar.SUNDAY};
+        String[] options = new String[7];
+        for (int i = 0; i < 7; i++) options[i] = names[values[i]];
+        new AlertDialog.Builder(this).setTitle(getString(R.string.dialog_schedule_weekday_title)).setItems(options, (dialog, which) -> pickWeeklyTime(values[which])).show();
+    }
+    void pickDayOfMonth() {
+        LinearLayout titleBox = new LinearLayout(this); titleBox.setOrientation(LinearLayout.VERTICAL); titleBox.setPadding(dp(24), dp(20), dp(24), 0);
+        titleBox.addView(label(getString(R.string.dialog_schedule_dayofmonth_title), 18, resColor(R.color.text_primary)));
+        TextView hint = label(getString(R.string.dialog_schedule_dayofmonth_hint), 12, muted); hint.setPadding(0, dp(6), 0, 0); titleBox.addView(hint);
+        String[] days = new String[31];
+        for (int i = 0; i < 31; i++) days[i] = String.valueOf(i + 1);
+        new AlertDialog.Builder(this).setCustomTitle(titleBox).setItems(days, (dialog, which) -> pickMonthlyTime(which + 1)).show();
+    }
+    void pickDailyTime() {
+        new TimePickerDialog(this, (view, hour, minute) -> { AlarmScheduler.setDaily(this, hour, minute); scheduleValue.setText(AlarmScheduler.displayLabel(this)); }, 9, 0, true).show();
+    }
+    void pickWeeklyTime(int weekday) {
+        new TimePickerDialog(this, (view, hour, minute) -> { AlarmScheduler.setWeekly(this, weekday, hour, minute); scheduleValue.setText(AlarmScheduler.displayLabel(this)); }, 9, 0, true).show();
+    }
+    void pickMonthlyTime(int dayOfMonth) {
+        new TimePickerDialog(this, (view, hour, minute) -> { AlarmScheduler.setMonthly(this, dayOfMonth, hour, minute); scheduleValue.setText(AlarmScheduler.displayLabel(this)); }, 9, 0, true).show();
     }
     void retentionDialog() {
         final int[] values = {1, 3, 5, 10, 9999};
@@ -264,9 +289,9 @@ public class MainActivity extends Activity {
     }
     @SuppressLint("WrongConstant") // data.getFlags() is masked to exactly the two accepted persistable flags below
     @Override protected void onActivityResult(int request, int result, Intent data) {
-        super.onActivityResult(request, result, data); if (result != RESULT_OK || data == null) { if (request == FOLDER) { pendingBackup = false; pendingScheduleTime = false; pendingNotificationActions = null; } return; } Uri uri = data.getData();
+        super.onActivityResult(request, result, data); if (result != RESULT_OK || data == null) { if (request == FOLDER) { pendingBackup = false; pendingScheduleMode = 0; pendingNotificationActions = null; } return; } Uri uri = data.getData();
         try { if (request == MANUAL_CSV || request == MANUAL_VCF || request == MANUAL_XLS) { String format = request == MANUAL_CSV ? "csv" : request == MANUAL_VCF ? "vcf" : "xls"; new Thread(() -> { try { BackupManager.writeManualExport(this, uri, format); } catch (Exception e) { notice(this, getString(R.string.notice_export_failed_title), e.getMessage()); } }).start(); }
-            else if (request == FOLDER) { getContentResolver().takePersistableUriPermission(uri, data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION)); BackupManager.prefs(this).edit().putString("folder", uri.toString()).apply(); load(); if (pendingBackup) { pendingBackup = false; backup(); } else if (pendingScheduleTime) { pendingScheduleTime = false; if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingScheduleTime = true; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 24); } else pickScheduleTime(); } else if (pendingNotificationActions != null) { String remaining = pendingNotificationActions; pendingNotificationActions = null; triggerNotificationAction(remaining); } }
+            else if (request == FOLDER) { getContentResolver().takePersistableUriPermission(uri, data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION)); BackupManager.prefs(this).edit().putString("folder", uri.toString()).apply(); load(); if (pendingBackup) { pendingBackup = false; backup(); } else if (pendingScheduleMode > 0) { int mode = pendingScheduleMode; pendingScheduleMode = 0; if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingScheduleMode = mode; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 24); } else beginSchedule(mode); } else if (pendingNotificationActions != null) { String remaining = pendingNotificationActions; pendingNotificationActions = null; triggerNotificationAction(remaining); } }
             else {
                 // Restore needs READ_CONTACTS too, not just WRITE_CONTACTS: it queries
                 // existing RawContacts (to detect and split platform-auto-merged
@@ -285,7 +310,7 @@ public class MainActivity extends Activity {
             }
         } catch (Exception e) { notice(this, getString(R.string.notice_open_failed_title), e.getMessage()); }
     }
-    @Override public void onRequestPermissionsResult(int request, String[] permissions, int[] results) { super.onRequestPermissionsResult(request, permissions, results); if (request == 21) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; boolean resume = pendingBackup; pendingBackup = false; if (granted && resume) backup(); } else if (request == 22) { boolean granted = results.length > 0; for (int r : results) if (r != PackageManager.PERMISSION_GRANTED) granted = false; Uri uri = pendingRestoreUri; pendingRestoreUri = null; if (granted && uri != null) restoreSelected(uri); } else if (request == 23 && results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED && pendingManualFormat != null) { String format = pendingManualFormat; pendingManualFormat = null; launchManualExport(format); } else if (request == 24) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; boolean resume = pendingScheduleTime; pendingScheduleTime = false; if (granted && resume) pickScheduleTime(); } else if (request == 25) { if (pendingNotificationActions != null) { String remaining = pendingNotificationActions; pendingNotificationActions = null; triggerNotificationAction(remaining); } } }
+    @Override public void onRequestPermissionsResult(int request, String[] permissions, int[] results) { super.onRequestPermissionsResult(request, permissions, results); if (request == 21) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; boolean resume = pendingBackup; pendingBackup = false; if (granted && resume) backup(); } else if (request == 22) { boolean granted = results.length > 0; for (int r : results) if (r != PackageManager.PERMISSION_GRANTED) granted = false; Uri uri = pendingRestoreUri; pendingRestoreUri = null; if (granted && uri != null) restoreSelected(uri); } else if (request == 23 && results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED && pendingManualFormat != null) { String format = pendingManualFormat; pendingManualFormat = null; launchManualExport(format); } else if (request == 24) { int mode = pendingScheduleMode; pendingScheduleMode = 0; boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; if (granted && mode > 0) beginSchedule(mode); } else if (request == 25) { if (pendingNotificationActions != null) { String remaining = pendingNotificationActions; pendingNotificationActions = null; triggerNotificationAction(remaining); } } }
     void configureEncryption(boolean enabled) {
         if (!enabled) { BackupManager.prefs(this).edit().putBoolean("encrypted", false).apply(); return; }
         // "encrypted" is only persisted once a password is actually saved (inside the
