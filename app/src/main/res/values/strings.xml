@@ -51,8 +51,15 @@
     <string name="dialog_schedule_title">Backup schedule</string>
     <string name="schedule_option_off">Off</string>
     <string name="schedule_option_daily">Daily at a specific time…</string>
+    <string name="schedule_option_weekly">Weekly on a specific day…</string>
+    <string name="schedule_option_monthly">Monthly on a specific day…</string>
+    <string name="dialog_schedule_weekday_title">Day of the week</string>
+    <string name="dialog_schedule_dayofmonth_title">Day of the month</string>
+    <string name="dialog_schedule_dayofmonth_hint">In months that are shorter, the backup runs on the last day of that month.</string>
     <string name="schedule_off">Off</string>
     <string name="schedule_daily_at">Daily at %1$s</string>
+    <string name="schedule_weekly_at">Weekly on %1$s at %2$s</string>
+    <string name="schedule_monthly_at">Monthly on day %1$d at %2$s</string>
 
     <!-- Keep backups dialog -->
     <string name="dialog_keep_title">Keep backup sets</string>

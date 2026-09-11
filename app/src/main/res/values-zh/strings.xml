@@ -44,8 +44,15 @@
     <string name="dialog_schedule_title">备份计划</string>
     <string name="schedule_option_off">关闭</string>
     <string name="schedule_option_daily">每天在指定时间…</string>
+    <string name="schedule_option_weekly">每周在指定日期…</string>
+    <string name="schedule_option_monthly">每月在指定日期…</string>
+    <string name="dialog_schedule_weekday_title">星期几</string>
+    <string name="dialog_schedule_dayofmonth_title">每月几号</string>
+    <string name="dialog_schedule_dayofmonth_hint">如果当月天数较少，备份将在该月的最后一天执行。</string>
     <string name="schedule_off">关闭</string>
     <string name="schedule_daily_at">每天 %1$s</string>
+    <string name="schedule_weekly_at">每周 %1$s %2$s</string>
+    <string name="schedule_monthly_at">每月 %1$d 日 %2$s</string>
 
     <string name="dialog_keep_title">要保留的备份集数量</string>
     <string name="keep_option_all">全部保留</string>

@@ -44,8 +44,15 @@
     <string name="dialog_schedule_title">Sicherungszeitplan</string>
     <string name="schedule_option_off">Aus</string>
     <string name="schedule_option_daily">Täglich zu einer bestimmten Uhrzeit…</string>
+    <string name="schedule_option_weekly">Wöchentlich an einem bestimmten Tag…</string>
+    <string name="schedule_option_monthly">Monatlich an einem bestimmten Tag…</string>
+    <string name="dialog_schedule_weekday_title">Tag der Woche</string>
+    <string name="dialog_schedule_dayofmonth_title">Tag des Monats</string>
+    <string name="dialog_schedule_dayofmonth_hint">In kürzeren Monaten läuft die Sicherung am letzten Tag dieses Monats.</string>
     <string name="schedule_off">Aus</string>
     <string name="schedule_daily_at">Täglich um %1$s</string>
+    <string name="schedule_weekly_at">Wöchentlich am %1$s um %2$s</string>
+    <string name="schedule_monthly_at">Monatlich am Tag %1$d um %2$s</string>
 
     <string name="dialog_keep_title">Sicherungssätze aufbewahren</string>
     <string name="keep_option_all">Alle behalten</string>

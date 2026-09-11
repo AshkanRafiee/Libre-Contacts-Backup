@@ -44,8 +44,15 @@
     <string name="dialog_schedule_title">جدولة النسخ الاحتياطي</string>
     <string name="schedule_option_off">إيقاف</string>
     <string name="schedule_option_daily">يوميًا في وقت محدد…</string>
+    <string name="schedule_option_weekly">أسبوعيًا في يوم محدد…</string>
+    <string name="schedule_option_monthly">شهريًا في يوم محدد…</string>
+    <string name="dialog_schedule_weekday_title">يوم من الأسبوع</string>
+    <string name="dialog_schedule_dayofmonth_title">يوم من الشهر</string>
+    <string name="dialog_schedule_dayofmonth_hint">في الأشهر الأقصر، يتم تشغيل النسخة الاحتياطية في آخر يوم من ذلك الشهر.</string>
     <string name="schedule_off">إيقاف</string>
     <string name="schedule_daily_at">يوميًا في %1$s</string>
+    <string name="schedule_weekly_at">أسبوعيًا يوم %1$s في %2$s</string>
+    <string name="schedule_monthly_at">شهريًا في اليوم %1$d في %2$s</string>
 
     <string name="dialog_keep_title">مجموعات النسخ الاحتياطي المُحتفَظ بها</string>
     <string name="keep_option_all">الاحتفاظ بالكل</string>

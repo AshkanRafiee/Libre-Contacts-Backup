@@ -44,8 +44,15 @@
     <string name="dialog_schedule_title">زمان‌بندی پشتیبان‌گیری</string>
     <string name="schedule_option_off">خاموش</string>
     <string name="schedule_option_daily">هر روز در ساعتی مشخص…</string>
+    <string name="schedule_option_weekly">هر هفته در روزی مشخص…</string>
+    <string name="schedule_option_monthly">هر ماه در روزی مشخص…</string>
+    <string name="dialog_schedule_weekday_title">روز هفته</string>
+    <string name="dialog_schedule_dayofmonth_title">روز ماه</string>
+    <string name="dialog_schedule_dayofmonth_hint">در ماه‌های کوتاه‌تر، پشتیبان‌گیری در آخرین روز آن ماه انجام می‌شود.</string>
     <string name="schedule_off">خاموش</string>
     <string name="schedule_daily_at">هر روز ساعت %1$s</string>
+    <string name="schedule_weekly_at">هر هفته، روز %1$s ساعت %2$s</string>
+    <string name="schedule_monthly_at">هر ماه، روز %1$d ساعت %2$s</string>
 
     <string name="dialog_keep_title">مجموعه‌های پشتیبان برای نگه‌داری</string>
     <string name="keep_option_all">نگه‌داری همه</string>
