@@ -1,0 +1,3 @@
+Added:
+- Weekly and monthly scheduled backups, alongside the existing daily option: pick a day of the week or a day of the month and a time, and the backup runs automatically in the background
+- When a month is shorter than the scheduled day-of-month, the monthly backup runs on that month's last day instead
