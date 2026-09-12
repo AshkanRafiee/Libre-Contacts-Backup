@@ -42,6 +42,7 @@
     <string name="footer_about">حول التطبيق</string>
 
     <string name="dialog_schedule_title">جدولة النسخ الاحتياطي</string>
+    <string name="dialog_schedule_current">حاليًا: %1$s</string>
     <string name="schedule_option_off">إيقاف</string>
     <string name="schedule_option_daily">يوميًا في وقت محدد…</string>
     <string name="schedule_option_weekly">أسبوعيًا في يوم محدد…</string>

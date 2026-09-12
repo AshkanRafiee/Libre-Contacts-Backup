@@ -42,6 +42,7 @@
     <string name="footer_about">关于</string>
 
     <string name="dialog_schedule_title">备份计划</string>
+    <string name="dialog_schedule_current">当前：%1$s</string>
     <string name="schedule_option_off">关闭</string>
     <string name="schedule_option_daily">每天在指定时间…</string>
     <string name="schedule_option_weekly">每周在指定日期…</string>

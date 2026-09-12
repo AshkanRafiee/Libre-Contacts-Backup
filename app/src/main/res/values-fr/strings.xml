@@ -42,6 +42,7 @@
     <string name="footer_about">À propos</string>
 
     <string name="dialog_schedule_title">Planification des sauvegardes</string>
+    <string name="dialog_schedule_current">Actuellement : %1$s</string>
     <string name="schedule_option_off">Désactivée</string>
     <string name="schedule_option_daily">Chaque jour à une heure précise…</string>
     <string name="schedule_option_weekly">Chaque semaine un jour précis…</string>

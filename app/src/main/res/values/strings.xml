@@ -49,6 +49,7 @@
 
     <!-- Schedule dialog -->
     <string name="dialog_schedule_title">Backup schedule</string>
+    <string name="dialog_schedule_current">Currently: %1$s</string>
     <string name="schedule_option_off">Off</string>
     <string name="schedule_option_daily">Daily at a specific time…</string>
     <string name="schedule_option_weekly">Weekly on a specific day…</string>

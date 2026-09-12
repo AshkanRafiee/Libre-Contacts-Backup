@@ -42,6 +42,7 @@
     <string name="footer_about">Info</string>
 
     <string name="dialog_schedule_title">Sicherungszeitplan</string>
+    <string name="dialog_schedule_current">Aktuell: %1$s</string>
     <string name="schedule_option_off">Aus</string>
     <string name="schedule_option_daily">Täglich zu einer bestimmten Uhrzeit…</string>
     <string name="schedule_option_weekly">Wöchentlich an einem bestimmten Tag…</string>

@@ -42,6 +42,7 @@
     <string name="footer_about">Hakkında</string>
 
     <string name="dialog_schedule_title">Yedekleme zamanlaması</string>
+    <string name="dialog_schedule_current">Şu anda: %1$s</string>
     <string name="schedule_option_off">Kapalı</string>
     <string name="schedule_option_daily">Her gün belirli bir saatte…</string>
     <string name="schedule_option_weekly">Her hafta belirli bir günde…</string>

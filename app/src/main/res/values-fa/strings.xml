@@ -42,6 +42,7 @@
     <string name="footer_about">درباره</string>
 
     <string name="dialog_schedule_title">زمان‌بندی پشتیبان‌گیری</string>
+    <string name="dialog_schedule_current">در حال حاضر: %1$s</string>
     <string name="schedule_option_off">خاموش</string>
     <string name="schedule_option_daily">هر روز در ساعتی مشخص…</string>
     <string name="schedule_option_weekly">هر هفته در روزی مشخص…</string>

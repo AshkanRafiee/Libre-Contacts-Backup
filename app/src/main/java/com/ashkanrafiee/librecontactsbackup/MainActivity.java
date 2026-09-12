@@ -232,7 +232,10 @@ public class MainActivity extends Activity {
         new Thread(() -> { BackupManager.BackupOutcome result = BackupManager.runBackup(this, true); runOnUiThread(() -> { status.setText(result.message); backupButton.setEnabled(true); backupProgress.setVisibility(View.GONE); backupRunning = false; }); }).start();
     }
     void scheduleDialog() {
-        new AlertDialog.Builder(this).setTitle(getString(R.string.dialog_schedule_title)).setItems(new String[]{getString(R.string.schedule_option_off), getString(R.string.schedule_option_daily), getString(R.string.schedule_option_weekly), getString(R.string.schedule_option_monthly)}, (dialog, which) -> {
+        LinearLayout titleBox = new LinearLayout(this); titleBox.setOrientation(LinearLayout.VERTICAL); titleBox.setPadding(dp(24), dp(20), dp(24), 0);
+        titleBox.addView(label(getString(R.string.dialog_schedule_title), 18, resColor(R.color.text_primary)));
+        TextView current = label(getString(R.string.dialog_schedule_current, AlarmScheduler.displayLabel(this)), 12, muted); current.setPadding(0, dp(6), 0, 0); titleBox.addView(current);
+        new AlertDialog.Builder(this).setCustomTitle(titleBox).setItems(new String[]{getString(R.string.schedule_option_off), getString(R.string.schedule_option_daily), getString(R.string.schedule_option_weekly), getString(R.string.schedule_option_monthly)}, (dialog, which) -> {
             if (which == 0) { AlarmScheduler.setEnabled(this, false); scheduleValue.setText(AlarmScheduler.displayLabel(this)); AlarmScheduler.scheduleNext(this); return; }
             if (BackupManager.folder(this).isEmpty()) { pendingScheduleMode = which; chooseFolder(); return; }
             if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingScheduleMode = which; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 24); return; }

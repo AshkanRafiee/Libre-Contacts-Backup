@@ -42,6 +42,7 @@
     <string name="footer_about">Acerca de</string>
 
     <string name="dialog_schedule_title">Programación de copias de seguridad</string>
+    <string name="dialog_schedule_current">Actualmente: %1$s</string>
     <string name="schedule_option_off">Desactivada</string>
     <string name="schedule_option_daily">Diariamente a una hora concreta…</string>
     <string name="schedule_option_weekly">Semanalmente un día concreto…</string>
