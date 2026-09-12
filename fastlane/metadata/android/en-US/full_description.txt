@@ -2,7 +2,7 @@ Libre Contacts Backup is a FLOSS native Android app for private, local-first con
 
 Features:
 * Lossless backup preserving the full Contact → RawContact → Data hierarchy, including contact groups
-* Scheduled daily local backups at a time you choose, with no internet connection required
+* Scheduled local backups at a time you choose — daily, weekly on a selected weekday, or monthly on a selected day (if a month is shorter than that day, it runs on the month's last day) — with no internet connection required
 * Single-file LCB archives containing canonical JSON, VCF, CSV, and normalized exports
 * Optional AES-256-GCM password-protected encryption (Android Keystore backed)
 * Restore consolidates each source contact correctly, without merging different people who share a name
