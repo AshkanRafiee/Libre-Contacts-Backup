@@ -279,7 +279,9 @@ public class MainActivity extends Activity {
 
         LinearLayout form = new LinearLayout(this); form.setOrientation(LinearLayout.VERTICAL); form.setPadding(dp(8), dp(4), dp(8), 0);
         form.addView(optionRow(getString(R.string.retention_mode_simple), getString(R.string.dialog_retention_simple), getString(R.string.retention_explain_simple), current.mode == RetentionPolicy.Mode.SIMPLE, v -> { if (dialog[0] != null) dialog[0].dismiss(); keepCountDialog(); }));
-        View divider = new View(this); divider.setBackgroundColor(resColor(R.color.button_surface)); form.addView(divider, margins(0, dp(4), 0, dp(4)));
+        View divider = new View(this); divider.setBackgroundColor(resColor(R.color.button_surface));
+        LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(-1, dp(1)); dividerParams.setMargins(dp(4), dp(6), dp(4), dp(6));
+        form.addView(divider, dividerParams);
         form.addView(optionRow(getString(R.string.retention_mode_periodic), getString(R.string.dialog_retention_advanced), getString(R.string.retention_explain_periodic), current.mode == RetentionPolicy.Mode.PERIODIC, v -> { if (dialog[0] != null) dialog[0].dismiss(); smartRetentionDialog(); }));
 
         ScrollView scroll = new ScrollView(this);
