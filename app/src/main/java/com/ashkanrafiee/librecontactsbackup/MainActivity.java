@@ -362,7 +362,7 @@ public class MainActivity extends Activity {
         advancedToggle.setOnClickListener(v -> advanced.setVisibility(advanced.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE));
 
         AlertDialog dialog = new AlertDialog.Builder(this).setView(form)
-                .setNegativeButton(getString(R.string.action_cancel), null)
+                .setNegativeButton(getString(R.string.action_back), (d, w) -> { d.dismiss(); retentionDialog(); })
                 .setPositiveButton(getString(R.string.action_save), null).create();
         dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             if (daily[0] + weekly[0] + monthly[0] == 0) { Toast.makeText(this, getString(R.string.retention_need_one), Toast.LENGTH_LONG).show(); return; }

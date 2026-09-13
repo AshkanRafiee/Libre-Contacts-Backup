@@ -95,6 +95,7 @@
     <string name="password_error_length">En az 8 karakter kullan</string>
     <string name="password_error_mismatch">Parolalar eşleşmiyor</string>
     <string name="action_cancel">İptal</string>
+    <string name="action_back">Geri</string>
     <string name="action_enable">Etkinleştir</string>
     <string name="action_restore">Geri yükle</string>
 

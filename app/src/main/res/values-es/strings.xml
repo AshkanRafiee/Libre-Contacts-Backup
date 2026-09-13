@@ -95,6 +95,7 @@
     <string name="password_error_length">Usa al menos 8 caracteres</string>
     <string name="password_error_mismatch">Las contraseñas no coinciden</string>
     <string name="action_cancel">Cancelar</string>
+    <string name="action_back">Volver</string>
     <string name="action_enable">Activar</string>
     <string name="action_restore">Restaurar</string>
 

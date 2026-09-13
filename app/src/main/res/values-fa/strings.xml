@@ -95,6 +95,7 @@
     <string name="password_error_length">حداقل از ۸ نویسه استفاده کنید</string>
     <string name="password_error_mismatch">رمزهای عبور مطابقت ندارند</string>
     <string name="action_cancel">لغو</string>
+    <string name="action_back">بازگشت</string>
     <string name="action_enable">فعال‌سازی</string>
     <string name="action_restore">بازگردانی</string>
 

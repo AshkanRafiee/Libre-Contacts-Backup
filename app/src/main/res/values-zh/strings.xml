@@ -95,6 +95,7 @@
     <string name="password_error_length">请至少使用 8 个字符</string>
     <string name="password_error_mismatch">两次输入的密码不一致</string>
     <string name="action_cancel">取消</string>
+    <string name="action_back">返回</string>
     <string name="action_enable">启用</string>
     <string name="action_restore">恢复</string>
 

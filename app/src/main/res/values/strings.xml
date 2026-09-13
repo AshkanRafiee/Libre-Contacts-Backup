@@ -106,6 +106,7 @@
     <string name="password_error_length">Use at least 8 characters</string>
     <string name="password_error_mismatch">Passwords do not match</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_back">Back</string>
     <string name="action_enable">Enable</string>
     <string name="action_restore">Restore</string>
 

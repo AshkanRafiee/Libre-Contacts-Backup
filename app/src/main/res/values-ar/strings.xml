@@ -95,6 +95,7 @@
     <string name="password_error_length">استخدم 8 أحرف على الأقل</string>
     <string name="password_error_mismatch">كلمتا المرور غير متطابقتين</string>
     <string name="action_cancel">إلغاء</string>
+    <string name="action_back">رجوع</string>
     <string name="action_enable">تفعيل</string>
     <string name="action_restore">استعادة</string>
 
