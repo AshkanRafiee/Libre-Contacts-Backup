@@ -277,12 +277,10 @@ public class MainActivity extends Activity {
         titleBox.addView(label(getString(R.string.dialog_retention_mode_title), 18, resColor(R.color.text_primary)));
         TextView currentValue = label(getString(R.string.dialog_retention_current, retentionLabel(this)), 12, muted); currentValue.setPadding(0, dp(6), 0, 0); titleBox.addView(currentValue);
 
-        LinearLayout form = new LinearLayout(this); form.setOrientation(LinearLayout.VERTICAL); form.setPadding(dp(24), dp(8), dp(24), 0);
-        form.addView(label(getString(R.string.dialog_retention_simple), 11, muted), margins(0, 0, 0, dp(4)));
-        form.addView(optionCard(getString(R.string.retention_mode_simple), getString(R.string.retention_explain_simple), current.mode == RetentionPolicy.Mode.SIMPLE, v -> { if (dialog[0] != null) dialog[0].dismiss(); keepCountDialog(); }));
-        View divider = new View(this); divider.setBackgroundColor(resColor(R.color.button_surface)); form.addView(divider, margins(0, dp(14), 0, dp(14)));
-        form.addView(label(getString(R.string.dialog_retention_advanced), 11, muted), margins(0, 0, 0, dp(4)));
-        form.addView(optionCard(getString(R.string.retention_mode_periodic), getString(R.string.retention_explain_periodic), current.mode == RetentionPolicy.Mode.PERIODIC, v -> { if (dialog[0] != null) dialog[0].dismiss(); smartRetentionDialog(); }));
+        LinearLayout form = new LinearLayout(this); form.setOrientation(LinearLayout.VERTICAL); form.setPadding(dp(8), dp(4), dp(8), 0);
+        form.addView(optionRow(getString(R.string.retention_mode_simple), getString(R.string.dialog_retention_simple), getString(R.string.retention_explain_simple), current.mode == RetentionPolicy.Mode.SIMPLE, v -> { if (dialog[0] != null) dialog[0].dismiss(); keepCountDialog(); }));
+        View divider = new View(this); divider.setBackgroundColor(resColor(R.color.button_surface)); form.addView(divider, margins(0, dp(4), 0, dp(4)));
+        form.addView(optionRow(getString(R.string.retention_mode_periodic), getString(R.string.dialog_retention_advanced), getString(R.string.retention_explain_periodic), current.mode == RetentionPolicy.Mode.PERIODIC, v -> { if (dialog[0] != null) dialog[0].dismiss(); smartRetentionDialog(); }));
 
         ScrollView scroll = new ScrollView(this);
         scroll.addView(form);
@@ -292,17 +290,20 @@ public class MainActivity extends Activity {
                 .create();
         dialog[0].show();
     }
-    View optionCard(String title, String subtitle, boolean selected, View.OnClickListener onClick) {
-        LinearLayout box = new LinearLayout(this); box.setOrientation(LinearLayout.HORIZONTAL); box.setGravity(Gravity.CENTER_VERTICAL);
-        box.setPadding(dp(14), dp(12), dp(14), dp(12)); box.setBackground(rounded(card, 13));
+    View optionRow(String title, String tag, String subtitle, boolean selected, View.OnClickListener onClick) {
+        LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(2), dp(6), dp(2), dp(6));
         RadioButton radio = new RadioButton(this); radio.setChecked(selected); radio.setClickable(false); radio.setFocusable(false);
         LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
-        words.addView(label(title, 14, resColor(R.color.text_primary)));
+        LinearLayout titleLine = new LinearLayout(this); titleLine.setOrientation(LinearLayout.HORIZONTAL); titleLine.setGravity(Gravity.CENTER_VERTICAL);
+        titleLine.addView(label(title, 14, resColor(R.color.text_primary)), new LinearLayout.LayoutParams(0, -2, 1));
+        titleLine.addView(label(tag, 11, muted));
+        words.addView(titleLine);
         words.addView(label(subtitle, 11, muted));
-        LinearLayout.LayoutParams wordParams = new LinearLayout.LayoutParams(0, -2, 1); wordParams.setMarginStart(dp(10)); box.addView(words, wordParams);
-        box.addView(radio, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        box.setOnClickListener(onClick);
-        return box;
+        LinearLayout.LayoutParams wordParams = new LinearLayout.LayoutParams(0, -2, 1); wordParams.setMarginStart(dp(12)); row.addView(words, wordParams);
+        row.addView(radio, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        row.setOnClickListener(onClick);
+        return row;
     }
     void keepCountDialog() {
         RetentionPolicy current = BackupManager.retentionPolicy(this);
