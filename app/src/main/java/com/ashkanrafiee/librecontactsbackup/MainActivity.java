@@ -313,10 +313,35 @@ public class MainActivity extends Activity {
         final String[] options = new String[values.length];
         for (int i = 0; i < values.length - 1; i++) options[i] = keepLabel(this, values[i]);
         options[values.length - 1] = getString(R.string.keep_option_all);
-        new AlertDialog.Builder(this).setTitle(getString(R.string.dialog_keep_title)).setItems(options, (dialog, which) -> {
-            BackupManager.saveRetentionPolicy(this, new RetentionPolicy(RetentionPolicy.Mode.SIMPLE, values[which], current.dailyKeep, current.weeklyKeep, current.monthlyKeep));
+
+        LinearLayout form = new LinearLayout(this); form.setOrientation(LinearLayout.VERTICAL); form.setPadding(dp(24), dp(8), dp(24), 0);
+        form.addView(label(getString(R.string.dialog_keep_title), 18, resColor(R.color.text_primary)));
+        TextView hint = label(getString(R.string.dialog_retention_current, retentionLabel(this)), 12, muted); hint.setPadding(0, dp(6), 0, 0); form.addView(hint);
+
+        RadioGroup group = new RadioGroup(this);
+        final int[] selected = {-1};
+        for (int i = 0; i < values.length; i++) {
+            final int option = i;
+            RadioButton button = new RadioButton(this);
+            button.setText(options[i]); button.setTextColor(resColor(R.color.text_primary)); button.setTextSize(14);
+            button.setId(2000 + i); button.setPadding(0, dp(4), 0, dp(4));
+            button.setOnClickListener(v -> selected[0] = option);
+            group.addView(button);
+            if (values[i] == (current.simpleKeep > 100 ? RetentionPolicy.KEEP_ALL : current.simpleKeep)) { group.check(button.getId()); selected[0] = option; }
+        }
+        group.setPadding(0, dp(10), 0, 0);
+        form.addView(group);
+
+        AlertDialog dialog = new AlertDialog.Builder(this).setView(form)
+                .setNegativeButton(getString(R.string.action_back), (d, w) -> { d.dismiss(); retentionDialog(); })
+                .setPositiveButton(getString(R.string.action_save), null).create();
+        dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            if (selected[0] < 0) return;
+            BackupManager.saveRetentionPolicy(this, new RetentionPolicy(RetentionPolicy.Mode.SIMPLE, values[selected[0]], current.dailyKeep, current.weeklyKeep, current.monthlyKeep));
             keepValue.setText(retentionLabel(this));
-        }).setNegativeButton(getString(R.string.action_back), (dialog, which) -> { dialog.dismiss(); retentionDialog(); }).show();
+            dialog.dismiss();
+        }));
+        dialog.show();
     }
     void smartRetentionDialog() {
         RetentionPolicy current = BackupManager.retentionPolicy(this);
