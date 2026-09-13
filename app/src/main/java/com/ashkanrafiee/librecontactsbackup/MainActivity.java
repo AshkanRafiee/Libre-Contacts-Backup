@@ -307,7 +307,7 @@ public class MainActivity extends Activity {
     }
     void keepCountDialog() {
         RetentionPolicy current = BackupManager.retentionPolicy(this);
-        final int[] values = {1, 3, 5, 10, 9999};
+        final int[] values = {1, 3, 5, 10, RetentionPolicy.KEEP_ALL};
         final String[] options = new String[values.length];
         for (int i = 0; i < values.length - 1; i++) options[i] = keepLabel(this, values[i]);
         options[values.length - 1] = getString(R.string.keep_option_all);
@@ -321,8 +321,10 @@ public class MainActivity extends Activity {
         int[] daily = {current.dailyKeep};
         int[] weekly = {current.weeklyKeep};
         int[] monthly = {current.monthlyKeep};
-        final int[][] presets = {{7, 0, 0}, {7, 4, 0}, {7, 4, 3}, {7, 4, 12}, {RetentionPolicy.KEEP_ALL, 0, 0}};
-        final String[] presetNames = {getString(R.string.retention_preset_week), getString(R.string.retention_preset_month), getString(R.string.retention_preset_months), getString(R.string.retention_preset_year), getString(R.string.retention_preset_all)};
+        boolean legacyKeepAll = current.mode == RetentionPolicy.Mode.PERIODIC && current.keepAll();
+        if (legacyKeepAll) { daily[0] = 0; weekly[0] = 0; monthly[0] = 0; }
+        final int[][] presets = {{7, 0, 0}, {7, 4, 0}, {7, 4, 3}, {7, 4, 12}};
+        final String[] presetNames = {getString(R.string.retention_preset_week), getString(R.string.retention_preset_month), getString(R.string.retention_preset_months), getString(R.string.retention_preset_year)};
         final int checkedPreset = presetIndex(presets, daily[0], weekly[0], monthly[0]);
 
         LinearLayout form = new LinearLayout(this); form.setOrientation(LinearLayout.VERTICAL); form.setPadding(dp(24), dp(8), dp(24), 0);

@@ -73,7 +73,6 @@
     <string name="retention_preset_month">الشهر الماضي</string>
     <string name="retention_preset_months">آخر 3 أشهر</string>
     <string name="retention_preset_year">العام الماضي</string>
-    <string name="retention_preset_all">كل شيء</string>
     <string name="dialog_retention_advanced">متقدم</string>
     <string name="retention_daily">يومي</string>
     <string name="retention_daily_hint">أحدث نسخة احتياطية يوميًا</string>

@@ -73,7 +73,6 @@
     <string name="retention_preset_month">Geçen ay</string>
     <string name="retention_preset_months">Son 3 ay</string>
     <string name="retention_preset_year">Geçen yıl</string>
-    <string name="retention_preset_all">Her şey</string>
     <string name="dialog_retention_advanced">Gelişmiş</string>
     <string name="retention_daily">Günlük</string>
     <string name="retention_daily_hint">günde en yeni yedek</string>

@@ -82,7 +82,6 @@
     <string name="retention_preset_month">Last month</string>
     <string name="retention_preset_months">Last 3 months</string>
     <string name="retention_preset_year">Last year</string>
-    <string name="retention_preset_all">Everything</string>
     <string name="dialog_retention_advanced">Advanced</string>
     <string name="retention_daily">Daily</string>
     <string name="retention_daily_hint">newest backup per day</string>

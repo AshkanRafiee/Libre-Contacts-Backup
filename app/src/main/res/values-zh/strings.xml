@@ -73,7 +73,6 @@
     <string name="retention_preset_month">最近一月</string>
     <string name="retention_preset_months">最近三个月</string>
     <string name="retention_preset_year">最近一年</string>
-    <string name="retention_preset_all">全部</string>
     <string name="dialog_retention_advanced">高级</string>
     <string name="retention_daily">每日</string>
     <string name="retention_daily_hint">每天最新的备份</string>

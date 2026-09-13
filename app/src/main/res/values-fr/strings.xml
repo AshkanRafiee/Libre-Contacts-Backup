@@ -73,7 +73,6 @@
     <string name="retention_preset_month">Dernier mois</string>
     <string name="retention_preset_months">3 derniers mois</string>
     <string name="retention_preset_year">Dernière année</string>
-    <string name="retention_preset_all">Tout</string>
     <string name="dialog_retention_advanced">Avancé</string>
     <string name="retention_daily">Quotidien</string>
     <string name="retention_daily_hint">sauvegarde la plus récente par jour</string>

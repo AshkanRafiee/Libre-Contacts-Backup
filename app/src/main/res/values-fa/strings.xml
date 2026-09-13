@@ -73,7 +73,6 @@
     <string name="retention_preset_month">ماه گذشته</string>
     <string name="retention_preset_months">۳ ماه گذشته</string>
     <string name="retention_preset_year">سال گذشته</string>
-    <string name="retention_preset_all">همه</string>
     <string name="dialog_retention_advanced">پیشرفته</string>
     <string name="retention_daily">روزانه</string>
     <string name="retention_daily_hint">جدیدترین پشتیبان هر روز</string>
