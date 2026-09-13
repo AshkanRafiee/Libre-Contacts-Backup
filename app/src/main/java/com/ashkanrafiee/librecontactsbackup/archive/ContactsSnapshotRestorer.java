@@ -509,6 +509,13 @@ public final class ContactsSnapshotRestorer {
         }
 
         // Apply batch
+        if (ops.size() == 1) {
+            // Every data row failed or was unmappable: creating the bare
+            // RawContact would leave an empty contact behind.
+            result.emptyContactsSkipped++;
+            Log.d(TAG, "  Skipping empty contact: no data rows could be restored");
+            return null;
+        }
         try {
             android.content.ContentProviderResult[] applied = resolver.applyBatch(ContactsContract.AUTHORITY, ops);
             Long newRawContactId = applied[0].uri != null ? Long.parseLong(applied[0].uri.getLastPathSegment()) : null;
