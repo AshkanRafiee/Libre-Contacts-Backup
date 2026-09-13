@@ -92,6 +92,7 @@
     <string name="retention_monthly_hint">newest backup per month</string>
     <string name="retention_periodic_label">%1$d daily · %2$d weekly · %3$d monthly</string>
     <string name="retention_need_one">Choose at least one of daily, weekly, or monthly</string>
+    <string name="retention_warning_advanced">Not familiar with retention by age? The simple option — keep the last few backups — is the right choice for most people.</string>
     <string name="action_save">Save</string>
 
     <!-- Language dialog -->

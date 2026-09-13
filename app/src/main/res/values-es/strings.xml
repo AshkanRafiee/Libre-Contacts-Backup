@@ -83,6 +83,7 @@
     <string name="retention_monthly_hint">copia más reciente del mes</string>
     <string name="retention_periodic_label">%1$d diario · %2$d semanal · %3$d mensual</string>
     <string name="retention_need_one">Selecciona al menos una de las opciones diario, semanal o mensual</string>
+    <string name="retention_warning_advanced">¿No conoces la retención por antigüedad? Para la mayoría de las personas, la opción simple — conservar las últimas copias — es la elección correcta.</string>
     <string name="action_save">Guardar</string>
 
     <string name="dialog_language_title">Idioma de la aplicación</string>

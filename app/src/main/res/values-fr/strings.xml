@@ -83,6 +83,7 @@
     <string name="retention_monthly_hint">sauvegarde la plus récente par mois</string>
     <string name="retention_periodic_label">%1$d quotidien · %2$d hebdomadaire · %3$d mensuel</string>
     <string name="retention_need_one">Choisissez au moins une plage : quotidienne, hebdomadaire ou mensuelle</string>
+    <string name="retention_warning_advanced">Vous n’êtes pas familier avec la conservation par âge ? Pour la plupart des gens, l’option simple — garder les dernières sauvegardes — est le bon choix.</string>
     <string name="action_save">Enregistrer</string>
 
     <string name="dialog_language_title">Langue de l\'application</string>

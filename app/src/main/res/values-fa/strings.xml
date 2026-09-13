@@ -83,6 +83,7 @@
     <string name="retention_monthly_hint">جدیدترین پشتیبان هر ماه</string>
     <string name="retention_periodic_label">%1$d روزانه · %2$d هفتگی · %3$d ماهانه</string>
     <string name="retention_need_one">دست‌کم یکی از گزینه‌های روزانه، هفتگی یا ماهانه را انتخاب کنید</string>
+    <string name="retention_warning_advanced">با نگه‌داشتن بر اساس سن آشنایی ندارید؟ برای بیشتر افراد، گزینهٔ ساده — نگه‌داشتن چند نسخهٔ پشتیبان آخر — انتخاب درستی است.</string>
     <string name="action_save">ذخیره</string>
 
     <string name="dialog_language_title">زبان برنامه</string>

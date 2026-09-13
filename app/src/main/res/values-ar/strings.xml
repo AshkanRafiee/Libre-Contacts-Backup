@@ -83,6 +83,7 @@
     <string name="retention_monthly_hint">أحدث نسخة احتياطية شهريًا</string>
     <string name="retention_periodic_label">%1$d يومي · %2$d أسبوعي · %3$d شهري</string>
     <string name="retention_need_one">اختر واحدًا على الأقل من يومي أو أسبوعي أو شهري</string>
+    <string name="retention_warning_advanced">لست معتاداً على الاحتفاظ بحسب العمر؟ بالنسبة لمعظم الناس، الخيار البسيط — الاحتفاظ بآخر النسخ الاحتياطية — هو الاختيار الصحيح.</string>
     <string name="action_save">حفظ</string>
 
     <string name="dialog_language_title">لغة التطبيق</string>

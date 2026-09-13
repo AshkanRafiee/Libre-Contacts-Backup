@@ -375,6 +375,16 @@ public class MainActivity extends Activity {
 
         LinearLayout form = new LinearLayout(this); form.setOrientation(LinearLayout.VERTICAL); form.setPadding(dp(24), dp(8), dp(24), 0);
         form.addView(label(getString(R.string.dialog_retention_periodic_title), 18, resColor(R.color.text_primary)));
+
+        LinearLayout warning = new LinearLayout(this); warning.setOrientation(LinearLayout.HORIZONTAL); warning.setGravity(Gravity.CENTER_VERTICAL);
+        warning.setPadding(dp(12), dp(10), dp(12), dp(10)); warning.setBackground(rounded(resColor(R.color.warning_bg), 12));
+        TextView warningMark = label("⚠", 16, resColor(R.color.warning_ink)); warningMark.setPadding(0, 0, dp(10), 0);
+        TextView warningText = label(getString(R.string.retention_warning_advanced), 12, resColor(R.color.warning_ink));
+        warningText.setLineSpacing(dp(2), 1f);
+        warning.addView(warningMark);
+        warning.addView(warningText, new LinearLayout.LayoutParams(0, -2, 1));
+        form.addView(warning, margins(0, dp(10), 0, 0));
+
         TextView hint = label(getString(R.string.dialog_retention_periodic_hint), 12, muted); hint.setPadding(0, dp(6), 0, 0); form.addView(hint);
 
         TextView dailyValue = label(String.valueOf(daily[0]), 18, resColor(R.color.text_primary)); dailyValue.setGravity(Gravity.CENTER);

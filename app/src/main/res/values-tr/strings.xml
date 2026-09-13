@@ -83,6 +83,7 @@
     <string name="retention_monthly_hint">ayda en yeni yedek</string>
     <string name="retention_periodic_label">%1$d günlük · %2$d haftalık · %3$d aylık</string>
     <string name="retention_need_one">Günlük, haftalık veya aylıktan en az birini seçin</string>
+    <string name="retention_warning_advanced">Yaşa göre saklama size tanıdık gelmiyor mu? Çoğu kişi için basit seçenek — son birkaç yedeği saklamak — doğru tercihtir.</string>
     <string name="action_save">Kaydet</string>
 
     <string name="dialog_language_title">Uygulama dili</string>

@@ -83,6 +83,7 @@
     <string name="retention_monthly_hint">neuestes Backup pro Monat</string>
     <string name="retention_periodic_label">%1$d täglich · %2$d wöchentlich · %3$d monatlich</string>
     <string name="retention_need_one">Wähle mindestens eine der Stufen täglich, wöchentlich oder monatlich</string>
+    <string name="retention_warning_advanced">Nicht mit der Aufbewahrung nach Alter vertraut? Für die meisten Menschen ist die einfache Option — die letzten paar Backups behalten — die richtige Wahl.</string>
     <string name="action_save">Speichern</string>
 
     <string name="dialog_language_title">App-Sprache</string>
