@@ -14,6 +14,9 @@ import com.ashkanrafiee.librecontactsbackup.archive.ContactsSnapshotRestorer;
 import com.ashkanrafiee.librecontactsbackup.export.NormalizedCsvExporter;
 import com.ashkanrafiee.librecontactsbackup.export.VCardExporter;
 import com.ashkanrafiee.librecontactsbackup.export.VCardImporter;
+import com.ashkanrafiee.librecontactsbackup.retention.RetentionDecider;
+import com.ashkanrafiee.librecontactsbackup.retention.RetentionPolicy;
+import com.ashkanrafiee.librecontactsbackup.retention.StoredBackup;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactsSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.ContactsSnapshotReader;
@@ -25,6 +28,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.zip.*;
 import javax.crypto.*;
@@ -67,6 +72,26 @@ public final class BackupManager {
 
     public static SharedPreferences prefs(Context c) { return c.getSharedPreferences(PREFS, Context.MODE_PRIVATE); }
     public static String folder(Context c) { return prefs(c).getString(KEY_URI, ""); }
+
+    public static RetentionPolicy retentionPolicy(Context c) {
+        SharedPreferences p = prefs(c);
+        boolean periodic = "periodic".equals(p.getString("retentionMode", "simple"));
+        return new RetentionPolicy(periodic ? RetentionPolicy.Mode.PERIODIC : RetentionPolicy.Mode.SIMPLE,
+                p.getInt("keep", RetentionPolicy.DEFAULT_KEEP),
+                p.getInt("keepDaily", RetentionPolicy.DEFAULT_DAILY),
+                p.getInt("keepWeekly", RetentionPolicy.DEFAULT_WEEKLY),
+                p.getInt("keepMonthly", RetentionPolicy.DEFAULT_MONTHLY));
+    }
+
+    public static void saveRetentionPolicy(Context c, RetentionPolicy policy) {
+        prefs(c).edit()
+                .putString("retentionMode", policy.mode == RetentionPolicy.Mode.PERIODIC ? "periodic" : "simple")
+                .putInt("keep", policy.simpleKeep)
+                .putInt("keepDaily", policy.dailyKeep)
+                .putInt("keepWeekly", policy.weeklyKeep)
+                .putInt("keepMonthly", policy.monthlyKeep)
+                .apply();
+    }
 
     public static String folderLabel(Context c) {
         String value = folder(c); if (value.isEmpty()) return c.getString(R.string.folder_not_selected);
@@ -357,7 +382,6 @@ public final class BackupManager {
     // ============================================================
 
     private static void trim(Context c, Uri tree) throws Exception {
-        int keep = prefs(c).getInt("keep", 5);
         Uri children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree));
         LinkedHashMap<String, ArrayList<Uri>> sets = new LinkedHashMap<>();
         // Files with our naming prefix that don't end in .lcb/.lcb.enc aren't
@@ -388,12 +412,37 @@ public final class BackupManager {
         }
 
         for (Uri file : notABackup) DocumentsContract.deleteDocument(c.getContentResolver(), file);
+        if (sets.isEmpty()) return;
 
+        // Decide which sets survive under the user's retention policy. A set
+        // whose base name carries no parseable timestamp is treated as not a
+        // real backup: it is never part of the keep set, so it is removed.
         ArrayList<String> names = new ArrayList<>(sets.keySet());
-        names.sort(Collections.reverseOrder());
-        for (int i = keep; i < names.size(); i++) {
-            for (Uri file : sets.get(names.get(i))) DocumentsContract.deleteDocument(c.getContentResolver(), file);
+        Map<String, LocalDateTime> parsed = parseTimestamps(names);
+        ArrayList<StoredBackup> stored = new ArrayList<>();
+        for (String name : names) {
+            LocalDateTime at = parsed.get(name);
+            if (at != null) stored.add(new StoredBackup(name, at));
         }
+        Set<String> keep = RetentionDecider.decide(stored, retentionPolicy(c), LocalDateTime.now());
+        for (String name : names) {
+            if (keep.contains(name)) continue;
+            for (Uri file : sets.get(name)) DocumentsContract.deleteDocument(c.getContentResolver(), file);
+        }
+    }
+
+    private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+
+    private static Map<String, LocalDateTime> parseTimestamps(List<String> names) {
+        Map<String, LocalDateTime> parsed = new HashMap<>();
+        for (String name : names) {
+            try {
+                parsed.put(name, LocalDateTime.parse(name.substring("librecontacts_".length()), TIMESTAMP_FORMAT));
+            } catch (Exception ignored) {
+                // Unparseable base name — treated as not a backup by the caller.
+            }
+        }
+        return parsed;
     }
 
     // ============================================================
