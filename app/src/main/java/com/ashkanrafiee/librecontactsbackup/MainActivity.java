@@ -88,6 +88,26 @@ public class MainActivity extends Activity {
             if (content != null) content.invalidate();
         }
     }
+    @Override public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        // Multi-step flows (folder picker → permission → execute) resume from
+        // these flags after an ActivityResult or permission grant. A rotation in
+        // between destroys the activity and would silently abort the flow, so
+        // park them across the recreation.
+        if (pendingManualFormat != null) outState.putString("pendingManualFormat", pendingManualFormat);
+        outState.putBoolean("pendingBackup", pendingBackup);
+        if (pendingScheduleMode != 0) outState.putInt("pendingScheduleMode", pendingScheduleMode);
+        if (pendingNotificationActions != null) outState.putString("pendingNotificationActions", pendingNotificationActions);
+        if (pendingRestoreUri != null) outState.putParcelable("pendingRestoreUri", pendingRestoreUri);
+    }
+    @Override public void onRestoreInstanceState(Bundle state) {
+        super.onRestoreInstanceState(state);
+        if (state.containsKey("pendingManualFormat")) pendingManualFormat = state.getString("pendingManualFormat");
+        pendingBackup = state.getBoolean("pendingBackup");
+        if (state.containsKey("pendingScheduleMode")) pendingScheduleMode = state.getInt("pendingScheduleMode");
+        if (state.containsKey("pendingNotificationActions")) pendingNotificationActions = state.getString("pendingNotificationActions");
+        if (state.containsKey("pendingRestoreUri")) pendingRestoreUri = state.getParcelable("pendingRestoreUri");
+    }
     // MainActivity is exported (required for the launcher intent-filter), so
     // this "notification_action" extra can arrive from any locally-installed
     // app via an explicit Intent, not just this app's own notifications —
