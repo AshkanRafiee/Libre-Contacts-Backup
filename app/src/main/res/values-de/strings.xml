@@ -62,8 +62,12 @@
     <string name="dialog_retention_mode_title">Aufbewahrungsregel</string>
     <string name="dialog_retention_current">Derzeit: %1$s</string>
     <string name="retention_mode_simple">Die letzten N Sicherungssätze behalten</string>
-    <string name="retention_mode_periodic">Sicherungen mit zunehmendem Alter · täglich + wöchentlich + monatlich</string>
+    <string name="retention_mode_periodic">Sicherungen mit zunehmendem Alter (täglich + wöchentlich + monatlich)</string>
     <string name="dialog_retention_periodic_title">Sicherungen mit zunehmendem Alter</string>
+    <string name="dialog_retention_simple">Einfach</string>
+    <string name="retention_explain_simple">Behält nur die letzten N Sicherungssätze. Das ist das, was die meisten Menschen brauchen.</string>
+    <string name="retention_explain_periodic">Behält zusätzlich die neueste Sicherung jedes aktuellen Tages, jeder Woche und jedes Monats, sodass ältere Sicherungen länger verfügbar bleiben.</string>
+    <string name="retention_periodic_summary">%1$s (%2$s)</string>
     <string name="dialog_retention_periodic_hint">Behält das neueste Backup jedes letzten Tages, jeder letzten Woche und jedes letzten Monats, sodass die jüngere Vergangenheit dicht und die ältere lückenhafter bleibt. Setze einen Wert auf 0, um nichts aus dieser Stufe zu behalten.</string>
     <string name="retention_preset_week">Letzte Woche</string>
     <string name="retention_preset_month">Letzten Monat</string>

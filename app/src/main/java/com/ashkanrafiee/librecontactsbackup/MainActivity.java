@@ -272,15 +272,37 @@ public class MainActivity extends Activity {
     }
     void retentionDialog() {
         RetentionPolicy current = BackupManager.retentionPolicy(this);
-        int checked = current.mode == RetentionPolicy.Mode.PERIODIC ? 1 : 0;
+        final AlertDialog[] dialog = new AlertDialog[1];
         LinearLayout titleBox = new LinearLayout(this); titleBox.setOrientation(LinearLayout.VERTICAL); titleBox.setPadding(dp(24), dp(20), dp(24), 0);
         titleBox.addView(label(getString(R.string.dialog_retention_mode_title), 18, resColor(R.color.text_primary)));
         TextView currentValue = label(getString(R.string.dialog_retention_current, retentionLabel(this)), 12, muted); currentValue.setPadding(0, dp(6), 0, 0); titleBox.addView(currentValue);
-        new AlertDialog.Builder(this).setCustomTitle(titleBox)
-                .setSingleChoiceItems(new String[]{getString(R.string.retention_mode_simple), getString(R.string.retention_mode_periodic)}, checked,
-                        (dialog, which) -> { dialog.dismiss(); if (which == 0) keepCountDialog(); else smartRetentionDialog(); })
+
+        LinearLayout form = new LinearLayout(this); form.setOrientation(LinearLayout.VERTICAL); form.setPadding(dp(24), dp(8), dp(24), 0);
+        form.addView(label(getString(R.string.dialog_retention_simple), 11, muted), margins(0, 0, 0, dp(4)));
+        form.addView(optionCard(getString(R.string.retention_mode_simple), getString(R.string.retention_explain_simple), current.mode == RetentionPolicy.Mode.SIMPLE, v -> { if (dialog[0] != null) dialog[0].dismiss(); keepCountDialog(); }));
+        View divider = new View(this); divider.setBackgroundColor(resColor(R.color.button_surface)); form.addView(divider, margins(0, dp(14), 0, dp(14)));
+        form.addView(label(getString(R.string.dialog_retention_advanced), 11, muted), margins(0, 0, 0, dp(4)));
+        form.addView(optionCard(getString(R.string.retention_mode_periodic), getString(R.string.retention_explain_periodic), current.mode == RetentionPolicy.Mode.PERIODIC, v -> { if (dialog[0] != null) dialog[0].dismiss(); smartRetentionDialog(); }));
+
+        ScrollView scroll = new ScrollView(this);
+        scroll.addView(form);
+
+        dialog[0] = new AlertDialog.Builder(this).setCustomTitle(titleBox).setView(scroll)
                 .setNegativeButton(getString(R.string.action_cancel), null)
-                .show();
+                .create();
+        dialog[0].show();
+    }
+    View optionCard(String title, String subtitle, boolean selected, View.OnClickListener onClick) {
+        LinearLayout box = new LinearLayout(this); box.setOrientation(LinearLayout.HORIZONTAL); box.setGravity(Gravity.CENTER_VERTICAL);
+        box.setPadding(dp(14), dp(12), dp(14), dp(12)); box.setBackground(rounded(card, 13));
+        RadioButton radio = new RadioButton(this); radio.setChecked(selected); radio.setClickable(false); radio.setFocusable(false);
+        LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
+        words.addView(label(title, 14, resColor(R.color.text_primary)));
+        words.addView(label(subtitle, 11, muted));
+        LinearLayout.LayoutParams wordParams = new LinearLayout.LayoutParams(0, -2, 1); wordParams.setMarginStart(dp(10)); box.addView(words, wordParams);
+        box.addView(radio, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        box.setOnClickListener(onClick);
+        return box;
     }
     void keepCountDialog() {
         RetentionPolicy current = BackupManager.retentionPolicy(this);
@@ -472,8 +494,10 @@ public class MainActivity extends Activity {
     static String retentionLabel(Context c) {
         RetentionPolicy policy = BackupManager.retentionPolicy(c);
         if (policy.keepAll()) return c.getString(R.string.keep_all_label);
-        if (policy.mode == RetentionPolicy.Mode.PERIODIC)
-            return c.getString(R.string.retention_periodic_label, policy.dailyKeep, policy.weeklyKeep, policy.monthlyKeep);
+        if (policy.mode == RetentionPolicy.Mode.PERIODIC) {
+            String counts = c.getString(R.string.retention_periodic_label, policy.dailyKeep, policy.weeklyKeep, policy.monthlyKeep);
+            return c.getString(R.string.retention_periodic_summary, c.getString(R.string.dialog_retention_periodic_title), counts);
+        }
         return keepLabel(c, policy.simpleKeep);
     }
 

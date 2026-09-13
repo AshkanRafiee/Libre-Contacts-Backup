@@ -71,7 +71,11 @@
     <string name="dialog_retention_mode_title">Retention policy</string>
     <string name="dialog_retention_current">Currently: %1$s</string>
     <string name="retention_mode_simple">Keep last N backup sets</string>
-    <string name="retention_mode_periodic">Backups of increasing age · daily + weekly + monthly</string>
+    <string name="retention_mode_periodic">Backups of increasing age (daily + weekly + monthly)</string>
+    <string name="dialog_retention_simple">Simple</string>
+    <string name="retention_explain_simple">Keeps only the most recent N backup sets. This is what most people need.</string>
+    <string name="retention_explain_periodic">Also keeps the newest backup of each recent day, week, and month, so older backups stay available longer.</string>
+    <string name="retention_periodic_summary">%1$s (%2$s)</string>
     <string name="dialog_retention_periodic_title">Backups of increasing age</string>
     <string name="dialog_retention_periodic_hint">Keeps the newest backup of each recent day, week, and month, so the history stays dense for the recent past and thins out further back. Set a count to 0 to keep nothing from that tier.</string>
     <string name="retention_preset_week">Last week</string>

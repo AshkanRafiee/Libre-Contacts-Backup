@@ -62,8 +62,12 @@
     <string name="dialog_retention_mode_title">Política de retención</string>
     <string name="dialog_retention_current">Actualmente: %1$s</string>
     <string name="retention_mode_simple">Conservar los últimos N conjuntos de copias</string>
-    <string name="retention_mode_periodic">Copias de antigüedad creciente · diario + semanal + mensual</string>
+    <string name="retention_mode_periodic">Copias de antigüedad creciente (diario + semanal + mensual)</string>
     <string name="dialog_retention_periodic_title">Copias de antigüedad creciente</string>
+    <string name="dialog_retention_simple">Sencillo</string>
+    <string name="retention_explain_simple">Conserva solo los N conjuntos de copias más recientes. Es lo que la mayoría de la gente necesita.</string>
+    <string name="retention_explain_periodic">Conserva además la copia más reciente de cada día, semana y mes recientes, para que las copias más antiguas sigan disponibles durante más tiempo.</string>
+    <string name="retention_periodic_summary">%1$s (%2$s)</string>
     <string name="dialog_retention_periodic_hint">Conserva la copia más reciente de cada día, semana y mes recientes, de modo que el pasado más cercano se mantenga denso y se espacie más atrás. Pon un valor en 0 para no conservar nada de ese nivel.</string>
     <string name="retention_preset_week">Última semana</string>
     <string name="retention_preset_month">Último mes</string>

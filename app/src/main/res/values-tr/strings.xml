@@ -62,8 +62,12 @@
     <string name="dialog_retention_mode_title">Saklama ilkesi</string>
     <string name="dialog_retention_current">Şu anda: %1$s</string>
     <string name="retention_mode_simple">Son N yedekleme setini sakla</string>
-    <string name="retention_mode_periodic">Yaşı artan yedekler · günlük + haftalık + aylık</string>
+    <string name="retention_mode_periodic">Yaşı artan yedekler (günlük + haftalık + aylık)</string>
     <string name="dialog_retention_periodic_title">Yaşı artan yedekler</string>
+    <string name="dialog_retention_simple">Basit</string>
+    <string name="retention_explain_simple">Yalnızca son N yedekleme setini saklar. Çoğu kişinin ihtiyacı olan budur.</string>
+    <string name="retention_explain_periodic">Ayrıca son gün, hafta ve ayların her birinden en yeni yedeği saklar; böylece daha eski yedekler de daha uzun süre kullanılabilir kalır.</string>
+    <string name="retention_periodic_summary">%1$s (%2$s)</string>
     <string name="dialog_retention_periodic_hint">Son günlerin, haftaların ve ayların her birinden en yeni yedeği saklar; böylece yakın geçmiş yoğun kalır, daha eski geçmiş seyrekleşir. Bir sayacı 0 yaparsanız o seviyeden hiçbir şey saklanmaz.</string>
     <string name="retention_preset_week">Geçen hafta</string>
     <string name="retention_preset_month">Geçen ay</string>
