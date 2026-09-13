@@ -310,6 +310,7 @@ public final class BackupManager {
             int headerEnd = MAGIC_V2.length + 4 + 28;
             byte[] headerBytes = Arrays.copyOf(input, headerEnd);
             int iterations = bytesToInt(input, MAGIC_V2.length);
+            if (iterations < MIN_KEY_DERIVATION_ITERATIONS || iterations > MAX_KEY_DERIVATION_ITERATIONS) throw new SecurityException("Unreasonable key derivation cost");
             byte[] salt = Arrays.copyOfRange(input, MAGIC_V2.length + 4, MAGIC_V2.length + 20);
             byte[] iv = Arrays.copyOfRange(input, MAGIC_V2.length + 20, headerEnd);
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
@@ -346,6 +347,12 @@ public final class BackupManager {
     // KEY_DERIVATION_ITERATIONS fails to authenticate a v1 archive; v2 archives store
     // their own count and never need this at all.
     private static final int LEGACY_KEY_DERIVATION_ITERATIONS = 120_000;
+    // Bound on iterations read from an untrusted archive header: a sane floor and
+    // ceiling keep a crafted file from pinning a core for hours before GCM never
+    // even gets a chance to reject the input. 600k is our own value; 10M is long
+    // enough to be useless to attackers but too big to be DoS-relevant.
+    private static final int MIN_KEY_DERIVATION_ITERATIONS = 1_000;
+    private static final int MAX_KEY_DERIVATION_ITERATIONS = 10_000_000;
 
     private static SecretKey deriveKey(String password, byte[] salt, int iterations) throws Exception {
         PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, iterations, 256);
