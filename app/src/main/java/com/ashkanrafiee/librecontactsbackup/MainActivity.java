@@ -19,6 +19,7 @@ import android.view.*;
 import android.widget.*;
 
 import com.ashkanrafiee.librecontactsbackup.archive.BackupArchiveReader;
+import com.ashkanrafiee.librecontactsbackup.retention.RetentionPolicy;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactsSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.BackupAnalysis;
 import com.ashkanrafiee.librecontactsbackup.snapshot.BackupAnalyzer;
@@ -157,8 +158,8 @@ public class MainActivity extends Activity {
         body.addView(setting(getString(R.string.setting_folder_title), getString(R.string.setting_folder_subtitle), folderValue, false, v -> chooseFolder()), margins(0, 0, 0, v(8, 5)));
         scheduleValue = label(AlarmScheduler.displayLabel(this), 13, resColor(R.color.link));
         body.addView(setting(getString(R.string.setting_schedule_title), getString(R.string.setting_schedule_subtitle), scheduleValue, false, v -> scheduleDialog()), margins(0, 0, 0, v(8, 5)));
-        keepValue = label(keepLabel(this, BackupManager.prefs(this).getInt("keep", 5)), 13, resColor(R.color.link));
-        body.addView(setting(getString(R.string.setting_keep_title), getString(R.string.setting_keep_subtitle), keepValue, false, v -> retentionDialog()), margins(0, 0, 0, v(8, 5)));
+        keepValue = label(retentionLabel(this), 13, resColor(R.color.link));
+        body.addView(setting(getString(R.string.setting_retention_title), getString(R.string.setting_retention_subtitle), keepValue, false, v -> retentionDialog()), margins(0, 0, 0, v(8, 5)));
         body.addView(setting(getString(R.string.setting_encryption_title), getString(R.string.setting_encryption_subtitle), null, true, v -> {}), margins(0, 0, 0, d(20, 16)));
 
         body.addView(label(getString(R.string.section_export), 10, muted), margins(0, 0, 0, 3));
@@ -209,7 +210,7 @@ public class MainActivity extends Activity {
         long last = BackupManager.prefs(this).getLong("last", 0);
         if (last > 0) status.setText(getString(R.string.status_last_backup, new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(last))));
         scheduleValue.setText(AlarmScheduler.displayLabel(this));
-        int keep = BackupManager.prefs(this).getInt("keep", 5); keepValue.setText(keepLabel(this, keep));
+        keepValue.setText(retentionLabel(this));
         long restored = BackupManager.prefs(this).getLong("lastRestore", 0); int restoredCount = BackupManager.prefs(this).getInt("lastRestoreCount", 0);
         if (restored > 0) {
             restoreStatus.setVisibility(View.VISIBLE);
@@ -270,11 +271,70 @@ public class MainActivity extends Activity {
         new TimePickerDialog(this, (view, hour, minute) -> { AlarmScheduler.setMonthly(this, dayOfMonth, hour, minute); scheduleValue.setText(AlarmScheduler.displayLabel(this)); }, 9, 0, true).show();
     }
     void retentionDialog() {
+        RetentionPolicy current = BackupManager.retentionPolicy(this);
+        int checked = current.mode == RetentionPolicy.Mode.PERIODIC ? 1 : 0;
+        LinearLayout titleBox = new LinearLayout(this); titleBox.setOrientation(LinearLayout.VERTICAL); titleBox.setPadding(dp(24), dp(20), dp(24), 0);
+        titleBox.addView(label(getString(R.string.dialog_retention_mode_title), 18, resColor(R.color.text_primary)));
+        TextView currentValue = label(getString(R.string.dialog_retention_current, retentionLabel(this)), 12, muted); currentValue.setPadding(0, dp(6), 0, 0); titleBox.addView(currentValue);
+        new AlertDialog.Builder(this).setCustomTitle(titleBox)
+                .setSingleChoiceItems(new String[]{getString(R.string.retention_mode_simple), getString(R.string.retention_mode_periodic)}, checked,
+                        (dialog, which) -> { dialog.dismiss(); if (which == 0) keepCountDialog(); else smartRetentionDialog(); })
+                .setNegativeButton(getString(R.string.action_cancel), null)
+                .show();
+    }
+    void keepCountDialog() {
+        RetentionPolicy current = BackupManager.retentionPolicy(this);
         final int[] values = {1, 3, 5, 10, 9999};
         final String[] options = new String[values.length];
         for (int i = 0; i < values.length - 1; i++) options[i] = keepLabel(this, values[i]);
         options[values.length - 1] = getString(R.string.keep_option_all);
-        new AlertDialog.Builder(this).setTitle(getString(R.string.dialog_keep_title)).setItems(options, (dialog, which) -> { int keep = values[which]; BackupManager.prefs(this).edit().putInt("keep", keep).apply(); keepValue.setText(keepLabel(this, keep)); }).show();
+        new AlertDialog.Builder(this).setTitle(getString(R.string.dialog_keep_title)).setItems(options, (dialog, which) -> {
+            BackupManager.saveRetentionPolicy(this, new RetentionPolicy(RetentionPolicy.Mode.SIMPLE, values[which], current.dailyKeep, current.weeklyKeep, current.monthlyKeep));
+            keepValue.setText(retentionLabel(this));
+        }).show();
+    }
+    void smartRetentionDialog() {
+        RetentionPolicy current = BackupManager.retentionPolicy(this);
+        int[] daily = {current.dailyKeep};
+        int[] weekly = {current.weeklyKeep};
+        int[] monthly = {current.monthlyKeep};
+        LinearLayout form = new LinearLayout(this); form.setOrientation(LinearLayout.VERTICAL); form.setPadding(dp(24), dp(8), dp(24), 0);
+        form.addView(label(getString(R.string.dialog_retention_periodic_title), 18, resColor(R.color.text_primary)));
+        TextView hint = label(getString(R.string.dialog_retention_periodic_hint), 12, muted); hint.setPadding(0, dp(6), 0, 0); form.addView(hint);
+        form.addView(stepperRow(getString(R.string.retention_daily), getString(R.string.retention_daily_hint), daily), margins(0, dp(14), 0, 0));
+        form.addView(stepperRow(getString(R.string.retention_weekly), getString(R.string.retention_weekly_hint), weekly), margins(0, dp(8), 0, 0));
+        form.addView(stepperRow(getString(R.string.retention_monthly), getString(R.string.retention_monthly_hint), monthly), margins(0, dp(8), 0, 0));
+        AlertDialog dialog = new AlertDialog.Builder(this).setView(form)
+                .setNegativeButton(getString(R.string.action_cancel), null)
+                .setPositiveButton(getString(R.string.action_save), null).create();
+        dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            if (daily[0] + weekly[0] + monthly[0] == 0) { Toast.makeText(this, getString(R.string.retention_need_one), Toast.LENGTH_LONG).show(); return; }
+            BackupManager.saveRetentionPolicy(this, new RetentionPolicy(RetentionPolicy.Mode.PERIODIC, current.simpleKeep, daily[0], weekly[0], monthly[0]));
+            keepValue.setText(retentionLabel(this));
+            dialog.dismiss();
+        }));
+        dialog.show();
+    }
+    LinearLayout stepperRow(String title, String hint, int[] holder) {
+        LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(14), dp(10), dp(14), dp(10)); row.setBackground(rounded(card, 13));
+        LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
+        words.addView(label(title, 14, resColor(R.color.text_primary)));
+        words.addView(label(hint, 11, muted));
+        LinearLayout.LayoutParams wordParams = new LinearLayout.LayoutParams(0, -2, 1); wordParams.setMarginEnd(dp(10)); row.addView(words, wordParams);
+        TextView minus = stepButton("−");
+        TextView value = label(String.valueOf(holder[0]), 18, resColor(R.color.text_primary)); value.setGravity(Gravity.CENTER);
+        TextView plus = stepButton("+");
+        minus.setOnClickListener(v -> { if (holder[0] > 0) { holder[0]--; value.setText(String.valueOf(holder[0])); } });
+        plus.setOnClickListener(v -> { if (holder[0] < 99) { holder[0]++; value.setText(String.valueOf(holder[0])); } });
+        row.addView(minus, new LinearLayout.LayoutParams(dp(46), dp(42)));
+        row.addView(value, new LinearLayout.LayoutParams(dp(48), dp(42)));
+        row.addView(plus, new LinearLayout.LayoutParams(dp(46), dp(42)));
+        return row;
+    }
+    TextView stepButton(String glyph) {
+        TextView button = label(glyph, 22, resColor(R.color.accent_ink)); button.setGravity(Gravity.CENTER); button.setBackground(rounded(mint, 12));
+        return button;
     }
     void languageDialog() {
         String[] tags = LocaleHelper.SUPPORTED;
@@ -372,6 +432,13 @@ public class MainActivity extends Activity {
 
     static String keepLabel(Context c, int keep) {
         return keep > 100 ? c.getString(R.string.keep_all_label) : c.getResources().getQuantityString(R.plurals.backup_sets_count, keep, keep);
+    }
+
+    static String retentionLabel(Context c) {
+        RetentionPolicy policy = BackupManager.retentionPolicy(c);
+        if (policy.mode == RetentionPolicy.Mode.PERIODIC)
+            return c.getString(R.string.retention_periodic_label, policy.dailyKeep, policy.weeklyKeep, policy.monthlyKeep);
+        return keepLabel(c, policy.simpleKeep);
     }
 
     /** Plain-language "N things" label for a category's item count, e.g. "12 data fields". */

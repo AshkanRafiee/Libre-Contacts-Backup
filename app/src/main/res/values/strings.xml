@@ -25,8 +25,8 @@
     <string name="folder_selected_generic">Selected</string>
     <string name="setting_schedule_title">Schedule</string>
     <string name="setting_schedule_subtitle">When automatic backups run</string>
-    <string name="setting_keep_title">Keep last backups</string>
-    <string name="setting_keep_subtitle">Older backup sets are removed together</string>
+    <string name="setting_retention_title">Backup retention</string>
+    <string name="setting_retention_subtitle">How long backup sets are kept</string>
     <string name="setting_encryption_title">Encryption</string>
     <string name="setting_encryption_subtitle">Protect exported files with AES</string>
     <string name="language_system_default">System default</string>
@@ -66,6 +66,23 @@
     <string name="dialog_keep_title">Keep backup sets</string>
     <string name="keep_option_all">Keep all</string>
     <string name="keep_all_label">All sets</string>
+
+    <!-- Retention policy dialogs -->
+    <string name="dialog_retention_mode_title">Retention policy</string>
+    <string name="dialog_retention_current">Currently: %1$s</string>
+    <string name="retention_mode_simple">Keep last N backup sets</string>
+    <string name="retention_mode_periodic">Smart retention · daily + weekly + monthly</string>
+    <string name="dialog_retention_periodic_title">Smart retention</string>
+    <string name="dialog_retention_periodic_hint">Keeps the newest backup of each recent day, week, and month, so the history stays dense for the recent past and thins out further back. Set a count to 0 to keep nothing from that tier.</string>
+    <string name="retention_daily">Daily</string>
+    <string name="retention_daily_hint">newest backup per day</string>
+    <string name="retention_weekly">Weekly</string>
+    <string name="retention_weekly_hint">newest backup per week</string>
+    <string name="retention_monthly">Monthly</string>
+    <string name="retention_monthly_hint">newest backup per month</string>
+    <string name="retention_periodic_label">%1$d daily · %2$d weekly · %3$d monthly</string>
+    <string name="retention_need_one">Choose at least one of daily, weekly, or monthly</string>
+    <string name="action_save">Save</string>
 
     <!-- Language dialog -->
     <string name="dialog_language_title">App language</string>
