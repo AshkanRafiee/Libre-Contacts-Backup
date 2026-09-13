@@ -1,0 +1,4 @@
+Added:
+- Smart retention: keep only the newest backups from the most recent days, weeks, and months — for example 7 daily, 4 weekly, and 3 monthly — so your history stays dense for the recent past and thins out further back. Pick your own counts for each tier, or set a tier to 0 to keep nothing from it.
+- The backup retention setting now offers two policies: keep the last N backup sets (the previous behavior) or the new smart retention, chosen with one tap.
+- The retention screen explains each tier while you choose the counts.
