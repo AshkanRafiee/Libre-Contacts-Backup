@@ -62,8 +62,8 @@
     <string name="dialog_retention_mode_title">سياسة الاحتفاظ</string>
     <string name="dialog_retention_current">حاليًا: %1$s</string>
     <string name="retention_mode_simple">الاحتفاظ بآخر N من مجموعات النسخ الاحتياطي</string>
-    <string name="retention_mode_periodic">احتفاظ ذكي · يومي + أسبوعي + شهري</string>
-    <string name="dialog_retention_periodic_title">احتفاظ ذكي</string>
+    <string name="retention_mode_periodic">نسخ احتياطية بأعمار متزايدة · يومي + أسبوعي + شهري</string>
+    <string name="dialog_retention_periodic_title">نسخ احتياطية بأعمار متزايدة</string>
     <string name="dialog_retention_periodic_hint">يحتفظ بأحدث نسخة احتياطية من كل يوم وأسبوع وشهر من الفترة الحديثة، بحيث تبقى الفترة القريبة كثيفة وتتفرق أكثر في الماضي. اضبط أي قيمة على 0 لعدم الاحتفاظ بأي شيء من هذا المستوى.</string>
     <string name="retention_preset_week">الأسبوع الماضي</string>
     <string name="retention_preset_month">الشهر الماضي</string>

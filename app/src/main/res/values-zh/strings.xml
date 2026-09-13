@@ -62,8 +62,8 @@
     <string name="dialog_retention_mode_title">保留策略</string>
     <string name="dialog_retention_current">当前：%1$s</string>
     <string name="retention_mode_simple">保留最近的 N 个备份集</string>
-    <string name="retention_mode_periodic">智能保留 · 每日 + 每周 + 每月</string>
-    <string name="dialog_retention_periodic_title">智能保留</string>
+    <string name="retention_mode_periodic">按时间递增的备份 · 每日 + 每周 + 每月</string>
+    <string name="dialog_retention_periodic_title">按时间递增的备份</string>
     <string name="dialog_retention_periodic_hint">保留最近每天、每周和每月最新的备份，使近期的历史更密集，更早的历史逐渐稀疏。将某一项设为 0 则不从该档保留任何备份。</string>
     <string name="retention_preset_week">最近一周</string>
     <string name="retention_preset_month">最近一月</string>

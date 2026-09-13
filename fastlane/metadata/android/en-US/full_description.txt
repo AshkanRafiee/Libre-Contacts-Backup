@@ -7,4 +7,4 @@ Features:
 * Optional AES-256-GCM password-protected encryption (Android Keystore backed)
 * Restore consolidates each source contact correctly, without merging different people who share a name
 * Manual CSV, VCF, and Excel-compatible exports
-* Smart backup retention — keep the newest backups per day, week, and month with counts you choose (for example 7 daily, 4 weekly, 3 monthly), so the recent past stays densely backed up while older history thins out — or simply keep the last N sets
+* Retention by age — keep the newest backups per day, week, and month with counts you choose (for example 7 daily, 4 weekly, 3 monthly), so the recent past stays densely backed up while older history thins out — or simply keep the last N sets

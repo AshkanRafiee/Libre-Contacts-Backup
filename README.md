@@ -6,7 +6,7 @@ A free, open-source, native Android app that backs up your contacts — fully of
 - **Private by design** — no account, no cloud, no analytics, no network permission at all. Contacts are only read when a backup runs.
 - **Local by design** — backups are written to a folder you choose on your own device (or SD card); nothing is ever uploaded anywhere.
 - **Scheduled backups** — daily, weekly, or monthly at a time you choose, running automatically in the background, entirely on-device.
-- **Smart retention** — keep only the newest backups per day, week, and month with counts you choose (e.g. 7 daily + 4 weekly + 3 monthly), so recent history stays dense while older history thins out; or keep it simple and just keep the last N sets.
+- **Retention by age** — keep the newest backups per day, week, and month with counts you choose (e.g. 7 daily + 4 weekly + 3 monthly), so backups of increasing age stay available while old ones thin out; or keep it simple and just keep the last N sets.
 - **As close to lossless as the Contacts Provider allows** — preserves the full Contact → RawContact → Data hierarchy (every readable field, every account, every custom type), not a lossy flattened copy.
 - **Optional encryption** — AES-256-GCM with a key derived from your password (PBKDF2, 600,000 iterations); the password itself is stored on-device behind an Android Keystore key so scheduled backups can run unattended.
 

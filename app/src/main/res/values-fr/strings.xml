@@ -62,8 +62,8 @@
     <string name="dialog_retention_mode_title">Politique de conservation</string>
     <string name="dialog_retention_current">Actuellement : %1$s</string>
     <string name="retention_mode_simple">Conserver les N derniers jeux de sauvegarde</string>
-    <string name="retention_mode_periodic">Conservation intelligente · quotidien + hebdomadaire + mensuel</string>
-    <string name="dialog_retention_periodic_title">Conservation intelligente</string>
+    <string name="retention_mode_periodic">Sauvegardes d\'âge croissant · quotidien + hebdomadaire + mensuel</string>
+    <string name="dialog_retention_periodic_title">Sauvegardes d\'âge croissant</string>
     <string name="dialog_retention_periodic_hint">Conserve la sauvegarde la plus récente de chaque jour, semaine et mois récents, de sorte que l\'historique reste dense pour le passé récent et s\'éclaircit plus on recule. Mettez une valeur à 0 pour ne rien conserver de cette plage.</string>
     <string name="retention_preset_week">Dernière semaine</string>
     <string name="retention_preset_month">Dernier mois</string>
