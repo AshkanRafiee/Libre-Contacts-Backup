@@ -314,7 +314,7 @@ public class MainActivity extends Activity {
         new AlertDialog.Builder(this).setTitle(getString(R.string.dialog_keep_title)).setItems(options, (dialog, which) -> {
             BackupManager.saveRetentionPolicy(this, new RetentionPolicy(RetentionPolicy.Mode.SIMPLE, values[which], current.dailyKeep, current.weeklyKeep, current.monthlyKeep));
             keepValue.setText(retentionLabel(this));
-        }).show();
+        }).setNegativeButton(getString(R.string.action_back), (dialog, which) -> { dialog.dismiss(); retentionDialog(); }).show();
     }
     void smartRetentionDialog() {
         RetentionPolicy current = BackupManager.retentionPolicy(this);
