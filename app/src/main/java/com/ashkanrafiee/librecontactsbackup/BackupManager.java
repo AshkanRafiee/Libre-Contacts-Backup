@@ -269,6 +269,15 @@ public final class BackupManager {
         }
     }
 
+    public static void clearEncryptionPassword(Context c) {
+        prefs(c).edit().remove("password").apply();
+        try {
+            KeyStore store = KeyStore.getInstance("AndroidKeyStore"); store.load(null);
+            if (store.containsAlias(KEY_ALIAS)) store.deleteEntry(KEY_ALIAS);
+        } catch (Exception ignored) {
+        }
+    }
+
     private static String loadEncryptionPassword(Context c) throws Exception {
         String encoded = prefs(c).getString("password", ""); if (encoded.isEmpty()) return null; byte[] data = Base64.decode(encoded, Base64.DEFAULT);
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding"); cipher.init(Cipher.DECRYPT_MODE, key(), new GCMParameterSpec(128, data, 0, 12)); return new String(cipher.doFinal(data, 12, data.length - 12), StandardCharsets.UTF_8);
