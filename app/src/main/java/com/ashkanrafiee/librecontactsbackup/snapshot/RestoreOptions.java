@@ -26,15 +26,6 @@ public final class RestoreOptions {
         return new RestoreOptions(EnumSet.allOf(RestoreCategory.class));
     }
 
-    /** Only the categories flagged {@link RestoreCategory#recommended} — the restore-dialog default. */
-    public static RestoreOptions recommended() {
-        EnumSet<RestoreCategory> set = EnumSet.noneOf(RestoreCategory.class);
-        for (RestoreCategory category : RestoreCategory.values()) {
-            if (category.recommended) set.add(category);
-        }
-        return new RestoreOptions(set);
-    }
-
     public static RestoreOptions of(RestoreCategory... categories) {
         EnumSet<RestoreCategory> set = EnumSet.noneOf(RestoreCategory.class);
         Collections.addAll(set, categories);

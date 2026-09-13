@@ -1,7 +1,6 @@
 package com.ashkanrafiee.librecontactsbackup.snapshot;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,12 +36,6 @@ public final class AndroidContactSnapshot {
         int count = 0;
         for (RawContactSnapshot rc : rawContacts) count += rc.dataRows.size();
         return count;
-    }
-
-    public List<DataRowSnapshot> getAllDataRows() {
-        ArrayList<DataRowSnapshot> all = new ArrayList<>();
-        for (RawContactSnapshot rc : rawContacts) all.addAll(rc.dataRows);
-        return Collections.unmodifiableList(all);
     }
 
     public JSONObject toJson() throws JSONException {
