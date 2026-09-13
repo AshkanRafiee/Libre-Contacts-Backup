@@ -58,6 +58,7 @@
     <string name="dialog_keep_title">Saklanacak yedekleme setleri</string>
     <string name="keep_option_all">Tümünü sakla</string>
     <string name="keep_all_label">Tüm setler</string>
+    <string name="retention_choose_keep">Saklanacak yedek set sayısını seçin</string>
 
     <string name="dialog_retention_mode_title">Saklama ilkesi</string>
     <string name="dialog_retention_current">Şu anda: %1$s</string>

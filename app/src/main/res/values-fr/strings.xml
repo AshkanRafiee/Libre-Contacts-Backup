@@ -58,6 +58,7 @@
     <string name="dialog_keep_title">Jeux de sauvegarde à conserver</string>
     <string name="keep_option_all">Tout conserver</string>
     <string name="keep_all_label">Tous les jeux</string>
+    <string name="retention_choose_keep">Choisir combien de jeux de sauvegardes conserver</string>
 
     <string name="dialog_retention_mode_title">Politique de conservation</string>
     <string name="dialog_retention_current">Actuellement : %1$s</string>

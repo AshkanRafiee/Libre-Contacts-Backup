@@ -58,6 +58,7 @@
     <string name="dialog_keep_title">要保留的备份集数量</string>
     <string name="keep_option_all">全部保留</string>
     <string name="keep_all_label">全部备份集</string>
+    <string name="retention_choose_keep">选择保留多少组备份</string>
 
     <string name="dialog_retention_mode_title">保留策略</string>
     <string name="dialog_retention_current">当前：%1$s</string>

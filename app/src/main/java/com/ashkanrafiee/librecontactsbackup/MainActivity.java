@@ -335,7 +335,7 @@ public class MainActivity extends Activity {
                 .setNegativeButton(getString(R.string.action_back), (d, w) -> { d.dismiss(); retentionDialog(); })
                 .setPositiveButton(getString(R.string.action_save), null).create();
         dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            if (selected[0] < 0) return;
+            if (selected[0] < 0) { Toast.makeText(this, getString(R.string.retention_choose_keep), Toast.LENGTH_LONG).show(); return; }
             BackupManager.saveRetentionPolicy(this, new RetentionPolicy(RetentionPolicy.Mode.SIMPLE, values[selected[0]], current.dailyKeep, current.weeklyKeep, current.monthlyKeep));
             keepValue.setText(retentionLabel(this));
             dialog.dismiss();

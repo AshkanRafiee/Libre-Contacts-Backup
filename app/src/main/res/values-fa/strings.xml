@@ -58,6 +58,7 @@
     <string name="dialog_keep_title">مجموعه‌های پشتیبان برای نگه‌داری</string>
     <string name="keep_option_all">نگه‌داری همه</string>
     <string name="keep_all_label">همهٔ مجموعه‌ها</string>
+    <string name="retention_choose_keep">تعداد مجموعه‌های پشتیبانی که نگه داشته شوند را انتخاب کنید</string>
 
     <string name="dialog_retention_mode_title">سیاست نگه‌داری</string>
     <string name="dialog_retention_current">هم‌اکنون: %1$s</string>

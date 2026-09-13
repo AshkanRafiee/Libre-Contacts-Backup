@@ -58,6 +58,7 @@
     <string name="dialog_keep_title">Conjuntos de copias a conservar</string>
     <string name="keep_option_all">Conservar todas</string>
     <string name="keep_all_label">Todos los conjuntos</string>
+    <string name="retention_choose_keep">Elija cuántos conjuntos de copias de seguridad conservar</string>
 
     <string name="dialog_retention_mode_title">Política de retención</string>
     <string name="dialog_retention_current">Actualmente: %1$s</string>

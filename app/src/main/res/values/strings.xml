@@ -66,6 +66,7 @@
     <string name="dialog_keep_title">Keep backup sets</string>
     <string name="keep_option_all">Keep all</string>
     <string name="keep_all_label">All sets</string>
+    <string name="retention_choose_keep">Choose how many backup sets to keep</string>
 
     <!-- Retention policy dialogs -->
     <string name="dialog_retention_mode_title">Retention policy</string>

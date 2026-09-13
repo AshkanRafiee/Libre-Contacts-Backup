@@ -58,6 +58,7 @@
     <string name="dialog_keep_title">Sicherungssätze aufbewahren</string>
     <string name="keep_option_all">Alle behalten</string>
     <string name="keep_all_label">Alle Sätze</string>
+    <string name="retention_choose_keep">Wählen Sie, wie viele Backup-Sets behalten werden</string>
 
     <string name="dialog_retention_mode_title">Aufbewahrungsregel</string>
     <string name="dialog_retention_current">Derzeit: %1$s</string>

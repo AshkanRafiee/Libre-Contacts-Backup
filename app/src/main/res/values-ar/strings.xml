@@ -58,6 +58,7 @@
     <string name="dialog_keep_title">مجموعات النسخ الاحتياطي المُحتفَظ بها</string>
     <string name="keep_option_all">الاحتفاظ بالكل</string>
     <string name="keep_all_label">جميع المجموعات</string>
+    <string name="retention_choose_keep">اختر عدد مجموعات النسخ الاحتياطي المحفوظة</string>
 
     <string name="dialog_retention_mode_title">سياسة الاحتفاظ</string>
     <string name="dialog_retention_current">حاليًا: %1$s</string>
