@@ -404,15 +404,20 @@ public final class BackupManager {
 
     private static final String[] BACKUP_SUFFIXES = {".enc", ".lcb"};
 
+    // Only a name that parses as one of our timestamps is undoubtedly a backup
+    // this app created. A file that merely happens to use the same prefix and
+    // suffix (e.g. a user's own "librecontacts_notes.lcb") is never touched —
+    // and a leftover of an interrupted write still carries a valid timestamp
+    // because the name is chosen before content is written. So non-timestamped
+    // names are always skipped.
+    static boolean isRetentionCandidate(String name) {
+        if (!isOwnArchiveName(name)) return false;
+        return isTimestamped(stripArchiveSuffixes(name));
+    }
+
     private static void trim(Context c, Uri tree) throws Exception {
         Uri children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree));
         LinkedHashMap<String, ArrayList<Uri>> sets = new LinkedHashMap<>();
-        // App-owned leftovers whose base name carries no parseable timestamp
-        // (e.g. a file cut short by an interrupted write) are removed rather
-        // than accumulating forever. Anything that does not match our exact
-        // archive naming — user files or folders merely sharing the prefix —
-        // is never touched.
-        ArrayList<Uri> notABackup = new ArrayList<>();
 
         try (Cursor q = c.getContentResolver().query(children,
                 new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE},
@@ -420,22 +425,20 @@ public final class BackupManager {
             if (q != null) {
                 while (q.moveToNext()) {
                     String name = q.getString(1);
-                    if (name == null || !isOwnArchiveName(name)) continue;
+                    if (name == null || !isRetentionCandidate(name)) continue;
                     if (DocumentsContract.Document.MIME_TYPE_DIR.equals(q.getString(2))) continue;
                     Uri file = DocumentsContract.buildDocumentUriUsingTree(tree, q.getString(0));
                     String base = stripArchiveSuffixes(name);
-                    if (isTimestamped(base)) sets.computeIfAbsent(base, k -> new ArrayList<>()).add(file);
-                    else notABackup.add(file);
+                    sets.computeIfAbsent(base, k -> new ArrayList<>()).add(file);
                 }
             }
         }
 
-        for (Uri file : notABackup) DocumentsContract.deleteDocument(c.getContentResolver(), file);
         if (sets.isEmpty()) return;
 
         // Decide which sets survive under the user's retention policy. A set
-        // whose base name carries no parseable timestamp is treated as not a
-        // real backup: it is never part of the keep set, so it is removed.
+        // whose base name carries no parseable timestamp was already skipped
+        // above, so everything here is a real, timestamped backup.
         ArrayList<String> names = new ArrayList<>(sets.keySet());
         Map<String, LocalDateTime> parsed = parseTimestamps(names);
         ArrayList<StoredBackup> stored = new ArrayList<>();

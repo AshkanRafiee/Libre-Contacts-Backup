@@ -49,4 +49,13 @@ public class BackupTrimSafetyTest {
         assertFalse(BackupManager.isTimestamped("librecontacts_"));
         assertFalse(BackupManager.isTimestamped(null));
     }
+
+    @Test public void retentionCandidateRequiresTimestampEvenWithExactSuffix() {
+        assertTrue(BackupManager.isRetentionCandidate("librecontacts_2026-09-13_10-00-00.lcb"));
+        assertTrue(BackupManager.isRetentionCandidate("librecontacts_2026-09-13_10-00-00.lcb.enc"));
+        assertFalse(BackupManager.isRetentionCandidate("librecontacts_notes.lcb"));
+        assertFalse(BackupManager.isRetentionCandidate("librecontacts_notes.lcb.enc"));
+        assertFalse(BackupManager.isRetentionCandidate("librecontacts_2026-09-13_lcb"));
+        assertFalse(BackupManager.isRetentionCandidate(null));
+    }
 }
