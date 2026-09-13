@@ -98,6 +98,9 @@
     <string name="password_message_unlock">رمز عبوری را که هنگام ساخت این پشتیبان استفاده شده وارد کنید.</string>
     <string name="password_error_length">حداقل از ۸ نویسه استفاده کنید</string>
     <string name="password_error_mismatch">رمزهای عبور مطابقت ندارند</string>
+    <string name="encryption_disable_title">رمزگذاری غیرفعال شود؟</string>
+    <string name="encryption_disable_message">رمز عبور ذخیره‌شده فراموش خواهد شد. نسخه‌های پشتیبان که قبلاً رمزگذاری شده‌اند هنوز با وارد کردن دستی رمز عبور قابل بازیابی هستند.</string>
+    <string name="encryption_disable_action">غیرفعال کردن</string>
     <string name="action_cancel">لغو</string>
     <string name="action_back">بازگشت</string>
     <string name="action_enable">فعال‌سازی</string>

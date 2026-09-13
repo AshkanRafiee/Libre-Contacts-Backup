@@ -98,6 +98,9 @@
     <string name="password_message_unlock">请输入创建此备份时使用的密码。</string>
     <string name="password_error_length">请至少使用 8 个字符</string>
     <string name="password_error_mismatch">两次输入的密码不一致</string>
+    <string name="encryption_disable_title">关闭加密？</string>
+    <string name="encryption_disable_message">已保存的密码将被遗忘。之前加密的备份在手动输入密码后仍可恢复。</string>
+    <string name="encryption_disable_action">关闭</string>
     <string name="action_cancel">取消</string>
     <string name="action_back">返回</string>
     <string name="action_enable">启用</string>

@@ -98,6 +98,9 @@
     <string name="password_message_unlock">Saisissez le mot de passe utilisé lors de la création de cette sauvegarde.</string>
     <string name="password_error_length">Utilisez au moins 8 caractères</string>
     <string name="password_error_mismatch">Les mots de passe ne correspondent pas</string>
+    <string name="encryption_disable_title">Désactiver le chiffrement ?</string>
+    <string name="encryption_disable_message">Votre mot de passe enregistré sera oublié. Les sauvegardes chiffrées précédemment restent toujours restaurables en saisissant le mot de passe manuellement.</string>
+    <string name="encryption_disable_action">Désactiver</string>
     <string name="action_cancel">Annuler</string>
     <string name="action_back">Retour</string>
     <string name="action_enable">Activer</string>

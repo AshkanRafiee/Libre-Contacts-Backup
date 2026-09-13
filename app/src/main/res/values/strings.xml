@@ -109,6 +109,9 @@
     <string name="password_message_unlock">Enter the password used when this backup was created.</string>
     <string name="password_error_length">Use at least 8 characters</string>
     <string name="password_error_mismatch">Passwords do not match</string>
+    <string name="encryption_disable_title">Turn off encryption?</string>
+    <string name="encryption_disable_message">Your saved password will be forgotten. Backups that were encrypted earlier can still be restored whenever the password is entered manually.</string>
+    <string name="encryption_disable_action">Turn off</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_back">Back</string>
     <string name="action_enable">Enable</string>

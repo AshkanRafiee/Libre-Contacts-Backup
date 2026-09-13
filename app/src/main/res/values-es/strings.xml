@@ -98,6 +98,9 @@
     <string name="password_message_unlock">Introduce la contraseña usada al crear esta copia de seguridad.</string>
     <string name="password_error_length">Usa al menos 8 caracteres</string>
     <string name="password_error_mismatch">Las contraseñas no coinciden</string>
+    <string name="encryption_disable_title">¿Desactivar el cifrado?</string>
+    <string name="encryption_disable_message">Se olvidará su contraseña guardada. Las copias de seguridad cifradas anteriormente se pueden seguir restaurando introduciendo la contraseña manualmente.</string>
+    <string name="encryption_disable_action">Desactivar</string>
     <string name="action_cancel">Cancelar</string>
     <string name="action_back">Volver</string>
     <string name="action_enable">Activar</string>

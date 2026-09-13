@@ -27,6 +27,7 @@ import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreCategory;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreOptions;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreResult;
 
+import java.lang.ref.WeakReference;
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -40,7 +41,10 @@ public class MainActivity extends Activity {
     boolean dense;
     Button backupButton;
     ProgressBar backupProgress;
-    boolean backupRunning;
+    // Process-wide (not per-instance) so a rotation in the middle of a backup
+    // can't reset the guard and allow a second concurrent backup to start.
+    static boolean backupRunning;
+    static WeakReference<MainActivity> resumed = new WeakReference<>(null);
     Uri pendingRestoreUri;
 
     int dp(float value) { return (int) (value * getResources().getDisplayMetrics().density + .5f); }
@@ -250,8 +254,31 @@ public class MainActivity extends Activity {
         backupButton.setEnabled(false);
         backupProgress.setVisibility(View.VISIBLE);
         status.setText(getString(R.string.status_backing_up));
-        new Thread(() -> { BackupManager.BackupOutcome result = BackupManager.runBackup(this, true); runOnUiThread(() -> { status.setText(result.message); backupButton.setEnabled(true); backupProgress.setVisibility(View.GONE); backupRunning = false; }); }).start();
+        new Thread(() -> {
+            BackupManager.BackupOutcome result = BackupManager.runBackup(this, true);
+            // A rotation may have destroyed this instance and recreated a fresh
+            // one; deliver the result to whichever activity is currently resumed
+            // so the UI keeps updating (and the button re-enables) correctly.
+            MainActivity live = resumed.get();
+            if (live != null && !live.isFinishing() && !live.isDestroyed()) {
+                live.runOnUiThread(() -> {
+                    live.status.setText(result.message);
+                    live.backupButton.setEnabled(true);
+                    live.backupProgress.setVisibility(View.GONE);
+                    backupRunning = false;
+                });
+            } else {
+                runOnUiThread(() -> {
+                    status.setText(result.message);
+                    backupButton.setEnabled(true);
+                    backupProgress.setVisibility(View.GONE);
+                    backupRunning = false;
+                });
+            }
+        }).start();
     }
+    @Override protected void onResume() { super.onResume(); resumed = new WeakReference<>(this); }
+    @Override protected void onPause() { super.onPause(); if (resumed.get() == this) resumed = new WeakReference<>(null); }
     void scheduleDialog() {
         LinearLayout titleBox = new LinearLayout(this); titleBox.setOrientation(LinearLayout.VERTICAL); titleBox.setPadding(dp(24), dp(20), dp(24), 0);
         titleBox.addView(label(getString(R.string.dialog_schedule_title), 18, resColor(R.color.text_primary)));
@@ -352,7 +379,10 @@ public class MainActivity extends Activity {
         group.setPadding(0, dp(10), 0, 0);
         form.addView(group);
 
-        AlertDialog dialog = new AlertDialog.Builder(this).setView(form)
+        ScrollView keepScroll = new ScrollView(this);
+        keepScroll.addView(form);
+
+        AlertDialog dialog = new AlertDialog.Builder(this).setView(keepScroll)
                 .setNegativeButton(getString(R.string.action_back), (d, w) -> { d.dismiss(); retentionDialog(); })
                 .setPositiveButton(getString(R.string.action_save), null).create();
         dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
@@ -422,7 +452,10 @@ public class MainActivity extends Activity {
         advanced.setVisibility(checkedPreset < 0 ? View.VISIBLE : View.GONE);
         advancedToggle.setOnClickListener(v -> advanced.setVisibility(advanced.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE));
 
-        AlertDialog dialog = new AlertDialog.Builder(this).setView(form)
+        ScrollView smartScroll = new ScrollView(this);
+        smartScroll.addView(form);
+
+        AlertDialog dialog = new AlertDialog.Builder(this).setView(smartScroll)
                 .setNegativeButton(getString(R.string.action_back), (d, w) -> { d.dismiss(); retentionDialog(); })
                 .setPositiveButton(getString(R.string.action_save), null).create();
         dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
@@ -496,13 +529,34 @@ public class MainActivity extends Activity {
     }
     @Override public void onRequestPermissionsResult(int request, String[] permissions, int[] results) { super.onRequestPermissionsResult(request, permissions, results); if (request == 21) { boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; boolean resume = pendingBackup; pendingBackup = false; if (granted && resume) backup(); } else if (request == 22) { boolean granted = results.length > 0; for (int r : results) if (r != PackageManager.PERMISSION_GRANTED) granted = false; Uri uri = pendingRestoreUri; pendingRestoreUri = null; if (granted && uri != null) restoreSelected(uri); } else if (request == 23 && results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED && pendingManualFormat != null) { String format = pendingManualFormat; pendingManualFormat = null; launchManualExport(format); } else if (request == 24) { int mode = pendingScheduleMode; pendingScheduleMode = 0; boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED; if (granted && mode > 0) beginSchedule(mode); } else if (request == 25) { if (pendingNotificationActions != null) { String remaining = pendingNotificationActions; pendingNotificationActions = null; triggerNotificationAction(remaining); } } }
     void configureEncryption(boolean enabled) {
-        if (!enabled) { BackupManager.clearEncryptionPassword(this); BackupManager.prefs(this).edit().putBoolean("encrypted", false).apply(); return; }
+        if (!enabled) {
+            boolean hadPassword = BackupManager.prefs(this).getBoolean("encrypted", false);
+            if (!hadPassword) return;
+            new AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.encryption_disable_title))
+                    .setMessage(getString(R.string.encryption_disable_message))
+                    .setPositiveButton(getString(R.string.encryption_disable_action), (d, w) -> {
+                        BackupManager.clearEncryptionPassword(this);
+                        BackupManager.prefs(this).edit().putBoolean("encrypted", false).apply();
+                    })
+                    .setNegativeButton(getString(R.string.action_cancel), (d, w) -> revertEncryptionSwitch(true))
+                    .setOnCancelListener(d -> revertEncryptionSwitch(true))
+                    .show();
+            return;
+        }
         // "encrypted" is only persisted once a password is actually saved (inside the
         // success callback below) — not eagerly here. Setting it up front meant that
         // canceling the password dialog left the app believing backups should be
         // encrypted with no password actually saved, so every backup would then fail
         // with "Set an encryption password first" until the switch was toggled again.
-        passwordDialog(getString(R.string.password_set_title), true, password -> { try { BackupManager.saveEncryptionPassword(this, password); BackupManager.prefs(this).edit().putBoolean("encrypted", true).apply(); } catch (Exception e) { encryptionSwitch.setChecked(false); notice(this, getString(R.string.notice_encryption_unavailable_title), e.getMessage()); } });
+        passwordDialog(getString(R.string.password_set_title), true, password -> { try { BackupManager.saveEncryptionPassword(this, password); BackupManager.prefs(this).edit().putBoolean("encrypted", true).apply(); } catch (Exception e) { revertEncryptionSwitch(false); notice(this, getString(R.string.notice_encryption_unavailable_title), e.getMessage()); } });
+    }
+    // Re-applies the switch so it reflects the stored "encrypted" pref without
+    // re-entering the change listener (which would re-open a dialog).
+    void revertEncryptionSwitch(boolean value) {
+        encryptionSwitch.setOnCheckedChangeListener(null);
+        encryptionSwitch.setChecked(value);
+        encryptionSwitch.setOnCheckedChangeListener((button, checked) -> configureEncryption(checked));
     }
     interface PasswordAction { void run(String password); }
     void passwordDialog(String title, boolean confirm, PasswordAction action) {
@@ -515,7 +569,7 @@ public class MainActivity extends Activity {
         // OnCancelListener alone never fires for it — only for back-press/outside-touch.
         // Relying on just one of the two left the switch visibly ON with no password
         // ever saved whenever the user tapped Cancel explicitly.
-        Runnable revertSwitchIfConfirm = () -> { if (confirm) encryptionSwitch.setChecked(false); };
+        Runnable revertSwitchIfConfirm = () -> { if (confirm) revertEncryptionSwitch(false); };
         AlertDialog dialog = new AlertDialog.Builder(this).setTitle(title).setMessage(confirm ? getString(R.string.password_message_set) : getString(R.string.password_message_unlock)).setView(form)
                 .setNegativeButton(getString(R.string.action_cancel), (dialogInterface, which) -> revertSwitchIfConfirm.run())
                 .setPositiveButton(confirm ? getString(R.string.action_enable) : getString(R.string.action_restore), null).create();

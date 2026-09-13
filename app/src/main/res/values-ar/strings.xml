@@ -98,6 +98,9 @@
     <string name="password_message_unlock">أدخل كلمة المرور المستخدمة عند إنشاء هذه النسخة الاحتياطية.</string>
     <string name="password_error_length">استخدم 8 أحرف على الأقل</string>
     <string name="password_error_mismatch">كلمتا المرور غير متطابقتين</string>
+    <string name="encryption_disable_title">إيقاف التشفير؟</string>
+    <string name="encryption_disable_message">سيتم نسيان كلمة المرور المحفوظة. لا تزال النسخ الاحتياطية المشفّرة سابقًا قابلة للاستعادة عند إدخال كلمة المرور يدويًا.</string>
+    <string name="encryption_disable_action">إيقاف التشفير</string>
     <string name="action_cancel">إلغاء</string>
     <string name="action_back">رجوع</string>
     <string name="action_enable">تفعيل</string>

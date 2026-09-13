@@ -98,6 +98,9 @@
     <string name="password_message_unlock">Gib das Passwort ein, das beim Erstellen dieser Sicherung verwendet wurde.</string>
     <string name="password_error_length">Verwende mindestens 8 Zeichen</string>
     <string name="password_error_mismatch">Die Passwörter stimmen nicht überein</string>
+    <string name="encryption_disable_title">Verschlüsselung deaktivieren?</string>
+    <string name="encryption_disable_message">Ihr gespeichertes Passwort wird vergessen. Früher verschlüsselte Backups lassen sich weiterhin wiederherstellen, wenn das Passwort manuell eingegeben wird.</string>
+    <string name="encryption_disable_action">Deaktivieren</string>
     <string name="action_cancel">Abbrechen</string>
     <string name="action_back">Zurück</string>
     <string name="action_enable">Aktivieren</string>

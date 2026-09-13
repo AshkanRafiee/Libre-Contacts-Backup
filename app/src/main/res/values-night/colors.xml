@@ -9,6 +9,9 @@
     <color name="text_tertiary">#677388</color>
     <color name="link">#BEB8FF</color>
     <color name="amber">#DEB870</color>
+    <color name="good">#4ADE80</color>
+    <color name="warning_bg">#3D2E14</color>
+    <color name="warning_ink">#F5D672</color>
     <color name="button_surface">#1C2637</color>
     <color name="button_surface_pressed">#27364F</color>
     <color name="button_text">#D3DBEB</color>
