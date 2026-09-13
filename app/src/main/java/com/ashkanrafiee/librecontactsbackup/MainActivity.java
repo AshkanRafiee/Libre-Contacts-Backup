@@ -317,8 +317,8 @@ public class MainActivity extends Activity {
         row.setPadding(dp(2), dp(6), dp(2), dp(6));
         RadioButton radio = new RadioButton(this); radio.setChecked(selected); radio.setClickable(false); radio.setFocusable(false);
         LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
+        if (note != null) words.addView(label(note, 11, resColor(noteColor)));
         LinearLayout titleLine = new LinearLayout(this); titleLine.setOrientation(LinearLayout.HORIZONTAL); titleLine.setGravity(Gravity.CENTER_VERTICAL);
-        if (note != null) titleLine.addView(label(note + " ", 14, resColor(noteColor)));
         titleLine.addView(label(title, 14, resColor(R.color.text_primary)), new LinearLayout.LayoutParams(0, -2, 1));
         titleLine.addView(label(tag, 11, muted));
         words.addView(titleLine);
