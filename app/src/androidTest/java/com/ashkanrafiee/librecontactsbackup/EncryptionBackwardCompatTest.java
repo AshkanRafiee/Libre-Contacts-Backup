@@ -153,20 +153,37 @@ public class EncryptionBackwardCompatTest {
     @Test
     public void tamperedV2Header_rejectedByAadAuthentication() throws Exception {
         byte[] archive = encryptV2Reference(realPlaintextArchive(), PASSWORD, 600_000);
-        // Flip the claimed iteration count down to 1 without re-encrypting -- if
-        // this were accepted, it would be a serious downgrade-attack surface.
+        // Flip a salt byte without re-encrypting -- if this were accepted, the
+        // derived key would silently differ and nothing would ever decrypt.
+        byte[] tampered = archive.clone();
+        int magicLen = "LIBRECB2".getBytes(java.nio.charset.StandardCharsets.US_ASCII).length;
+        tampered[magicLen + 4] ^= 0x01;
+        Uri uri = writeToTempFile(tampered, "v2_tampered_header.lcb.enc");
+        try {
+            BackupManager.openArchive(context(), uri, PASSWORD, (m, c, t) -> {});
+            fail("expected AAD authentication failure for a tampered header");
+        } catch (AEADBadTagException expected) {
+            // correct: header tampering is caught by the GCM tag, not silently honored
+        }
+    }
+
+    @Test
+    public void unreasonableIterationCount_rejectedWithoutDerivingKey() throws Exception {
+        byte[] archive = encryptV2Reference(realPlaintextArchive(), PASSWORD, 600_000);
+        // Claim an absurdly low iteration count (attempted downgrade / DoS bait):
+        // must be rejected up front, before any key derivation runs.
         byte[] tampered = archive.clone();
         int magicLen = "LIBRECB2".getBytes(java.nio.charset.StandardCharsets.US_ASCII).length;
         tampered[magicLen] = 0;
         tampered[magicLen + 1] = 0;
         tampered[magicLen + 2] = 0;
         tampered[magicLen + 3] = 1;
-        Uri uri = writeToTempFile(tampered, "v2_tampered.lcb.enc");
+        Uri uri = writeToTempFile(tampered, "v2_tampered_iterations.lcb.enc");
         try {
             BackupManager.openArchive(context(), uri, PASSWORD, (m, c, t) -> {});
-            fail("expected AAD authentication failure for a tampered header");
-        } catch (AEADBadTagException expected) {
-            // correct: header tampering is caught, not silently honored
+            fail("expected an out-of-range iteration count to be rejected");
+        } catch (SecurityException expected) {
+            // correct: caller-supplied key-derivation cost is bounded
         }
     }
 
