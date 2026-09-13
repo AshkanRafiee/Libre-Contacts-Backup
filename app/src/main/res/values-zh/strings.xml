@@ -63,6 +63,8 @@
     <string name="dialog_retention_mode_title">保留策略</string>
     <string name="dialog_retention_current">当前：%1$s</string>
     <string name="retention_mode_simple">保留最近的 N 个备份集</string>
+    <string name="retention_note_simple">(适合大多数人)</string>
+    <string name="retention_note_advanced">(仅限高级用户)</string>
     <string name="retention_mode_periodic">按时间递增的备份（每日 + 每周 + 每月）</string>
     <string name="dialog_retention_periodic_title">按时间递增的备份</string>
     <string name="dialog_retention_simple">简单</string>

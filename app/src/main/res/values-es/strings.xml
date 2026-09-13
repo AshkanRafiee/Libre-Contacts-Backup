@@ -63,6 +63,8 @@
     <string name="dialog_retention_mode_title">Política de retención</string>
     <string name="dialog_retention_current">Actualmente: %1$s</string>
     <string name="retention_mode_simple">Conservar los últimos N conjuntos de copias</string>
+    <string name="retention_note_simple">(Adecuado para la mayoría)</string>
+    <string name="retention_note_advanced">(Solo para usuarios avanzados)</string>
     <string name="retention_mode_periodic">Copias de antigüedad creciente (diario + semanal + mensual)</string>
     <string name="dialog_retention_periodic_title">Copias de antigüedad creciente</string>
     <string name="dialog_retention_simple">Sencillo</string>

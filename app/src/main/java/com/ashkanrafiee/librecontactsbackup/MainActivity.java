@@ -298,11 +298,11 @@ public class MainActivity extends Activity {
         TextView currentValue = label(getString(R.string.dialog_retention_current, retentionLabel(this)), 12, muted); currentValue.setPadding(0, dp(6), 0, 0); titleBox.addView(currentValue);
 
         LinearLayout form = new LinearLayout(this); form.setOrientation(LinearLayout.VERTICAL); form.setPadding(dp(8), dp(4), dp(8), 0);
-        form.addView(optionRow(getString(R.string.retention_mode_simple), getString(R.string.dialog_retention_simple), getString(R.string.retention_explain_simple), current.mode == RetentionPolicy.Mode.SIMPLE, v -> { if (dialog[0] != null) dialog[0].dismiss(); keepCountDialog(); }));
+        form.addView(optionRow(getString(R.string.retention_mode_simple), getString(R.string.dialog_retention_simple), getString(R.string.retention_note_simple), R.color.good, getString(R.string.retention_explain_simple), current.mode == RetentionPolicy.Mode.SIMPLE, v -> { if (dialog[0] != null) dialog[0].dismiss(); keepCountDialog(); }));
         View divider = new View(this); divider.setBackgroundColor(resColor(R.color.button_surface));
         LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(-1, dp(1)); dividerParams.setMargins(dp(4), dp(6), dp(4), dp(6));
         form.addView(divider, dividerParams);
-        form.addView(optionRow(getString(R.string.retention_mode_periodic), getString(R.string.dialog_retention_advanced), getString(R.string.retention_explain_periodic), current.mode == RetentionPolicy.Mode.PERIODIC, v -> { if (dialog[0] != null) dialog[0].dismiss(); smartRetentionDialog(); }));
+        form.addView(optionRow(getString(R.string.retention_mode_periodic), getString(R.string.dialog_retention_advanced), getString(R.string.retention_note_advanced), R.color.amber, getString(R.string.retention_explain_periodic), current.mode == RetentionPolicy.Mode.PERIODIC, v -> { if (dialog[0] != null) dialog[0].dismiss(); smartRetentionDialog(); }));
 
         ScrollView scroll = new ScrollView(this);
         scroll.addView(form);
@@ -312,12 +312,13 @@ public class MainActivity extends Activity {
                 .create();
         dialog[0].show();
     }
-    View optionRow(String title, String tag, String subtitle, boolean selected, View.OnClickListener onClick) {
+    View optionRow(String title, String tag, String note, int noteColor, String subtitle, boolean selected, View.OnClickListener onClick) {
         LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(dp(2), dp(6), dp(2), dp(6));
         RadioButton radio = new RadioButton(this); radio.setChecked(selected); radio.setClickable(false); radio.setFocusable(false);
         LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
         LinearLayout titleLine = new LinearLayout(this); titleLine.setOrientation(LinearLayout.HORIZONTAL); titleLine.setGravity(Gravity.CENTER_VERTICAL);
+        if (note != null) titleLine.addView(label(note + " ", 14, resColor(noteColor)));
         titleLine.addView(label(title, 14, resColor(R.color.text_primary)), new LinearLayout.LayoutParams(0, -2, 1));
         titleLine.addView(label(tag, 11, muted));
         words.addView(titleLine);

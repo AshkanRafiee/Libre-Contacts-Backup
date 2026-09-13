@@ -72,6 +72,8 @@
     <string name="dialog_retention_mode_title">Retention policy</string>
     <string name="dialog_retention_current">Currently: %1$s</string>
     <string name="retention_mode_simple">Keep last N backup sets</string>
+    <string name="retention_note_simple">(Good for most people)</string>
+    <string name="retention_note_advanced">(For advanced users)</string>
     <string name="retention_mode_periodic">Backups of increasing age (daily + weekly + monthly)</string>
     <string name="dialog_retention_simple">Simple</string>
     <string name="retention_explain_simple">Keeps only the most recent N backup sets. This is what most people need.</string>

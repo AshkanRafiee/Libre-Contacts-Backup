@@ -63,6 +63,8 @@
     <string name="dialog_retention_mode_title">Aufbewahrungsregel</string>
     <string name="dialog_retention_current">Derzeit: %1$s</string>
     <string name="retention_mode_simple">Die letzten N Sicherungssätze behalten</string>
+    <string name="retention_note_simple">(Für die meisten geeignet)</string>
+    <string name="retention_note_advanced">(Für fortgeschrittene Nutzer)</string>
     <string name="retention_mode_periodic">Sicherungen mit zunehmendem Alter (täglich + wöchentlich + monatlich)</string>
     <string name="dialog_retention_periodic_title">Sicherungen mit zunehmendem Alter</string>
     <string name="dialog_retention_simple">Einfach</string>

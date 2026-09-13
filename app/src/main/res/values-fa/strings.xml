@@ -63,6 +63,8 @@
     <string name="dialog_retention_mode_title">سیاست نگه‌داری</string>
     <string name="dialog_retention_current">هم‌اکنون: %1$s</string>
     <string name="retention_mode_simple">نگه‌داری N مجموعه پشتیبان آخر</string>
+    <string name="retention_note_simple">(برای بیشتر افراد مناسب است)</string>
+    <string name="retention_note_advanced">(فقط برای کاربران حرفهای)</string>
     <string name="retention_mode_periodic">پشتیبان‌هایی با سنِ افزایشی (روزانه + هفتگی + ماهانه)</string>
     <string name="dialog_retention_periodic_title">پشتیبان‌هایی با سنِ افزایشی</string>
     <string name="dialog_retention_simple">ساده</string>

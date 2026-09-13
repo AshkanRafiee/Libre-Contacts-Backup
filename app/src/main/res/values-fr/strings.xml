@@ -63,6 +63,8 @@
     <string name="dialog_retention_mode_title">Politique de conservation</string>
     <string name="dialog_retention_current">Actuellement : %1$s</string>
     <string name="retention_mode_simple">Conserver les N derniers jeux de sauvegarde</string>
+    <string name="retention_note_simple">(Convient à la plupart des gens)</string>
+    <string name="retention_note_advanced">(Pour utilisateurs avancés)</string>
     <string name="retention_mode_periodic">Sauvegardes d\'âge croissant (quotidien + hebdomadaire + mensuel)</string>
     <string name="dialog_retention_periodic_title">Sauvegardes d\'âge croissant</string>
     <string name="dialog_retention_simple">Simple</string>

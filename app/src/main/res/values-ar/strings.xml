@@ -63,6 +63,8 @@
     <string name="dialog_retention_mode_title">سياسة الاحتفاظ</string>
     <string name="dialog_retention_current">حاليًا: %1$s</string>
     <string name="retention_mode_simple">الاحتفاظ بآخر N من مجموعات النسخ الاحتياطي</string>
+    <string name="retention_note_simple">(مناسب لمعظم الناس)</string>
+    <string name="retention_note_advanced">(للمستخدمين المتقدمين فقط)</string>
     <string name="retention_mode_periodic">نسخ احتياطية بأعمار متزايدة (يومي + أسبوعي + شهري)</string>
     <string name="dialog_retention_periodic_title">نسخ احتياطية بأعمار متزايدة</string>
     <string name="dialog_retention_simple">بسيط</string>

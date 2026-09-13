@@ -63,6 +63,8 @@
     <string name="dialog_retention_mode_title">Saklama ilkesi</string>
     <string name="dialog_retention_current">Şu anda: %1$s</string>
     <string name="retention_mode_simple">Son N yedekleme setini sakla</string>
+    <string name="retention_note_simple">(Çoğu kişi için uygun)</string>
+    <string name="retention_note_advanced">(Sadece ileri düzey kullanıcılar için)</string>
     <string name="retention_mode_periodic">Yaşı artan yedekler (günlük + haftalık + aylık)</string>
     <string name="dialog_retention_periodic_title">Yaşı artan yedekler</string>
     <string name="dialog_retention_simple">Basit</string>
