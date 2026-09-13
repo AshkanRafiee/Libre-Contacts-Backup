@@ -667,7 +667,7 @@ public class MainActivity extends Activity {
             String title = success ? context.getString(R.string.notification_backup_complete_title) : context.getString(R.string.notification_backup_needs_attention_title);
             String message = success ? result : (result == null ? context.getString(R.string.notification_backup_not_completed) : result);
             Notification.Builder builder = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(context, channelId) : new Notification.Builder(context);
-            builder.setSmallIcon(R.drawable.ic_launcher).setContentTitle(title).setContentText(message).setAutoCancel(true).setContentIntent(pending).setCategory(Notification.CATEGORY_STATUS);
+            builder.setSmallIcon(android.R.drawable.stat_notify_sync).setContentTitle(title).setContentText(message).setAutoCancel(true).setContentIntent(pending).setCategory(Notification.CATEGORY_STATUS);
             manager.notify(91, builder.build());
         } catch (Exception error) { Log.e("LibreContactsBackup", "Unable to show scheduled backup notification", error); }
     }
