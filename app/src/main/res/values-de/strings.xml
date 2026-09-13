@@ -22,8 +22,8 @@
     <string name="folder_selected_generic">Ausgewählt</string>
     <string name="setting_schedule_title">Zeitplan</string>
     <string name="setting_schedule_subtitle">Wann automatische Sicherungen ausgeführt werden</string>
-    <string name="setting_keep_title">Letzte Sicherungen aufbewahren</string>
-    <string name="setting_keep_subtitle">Ältere Sicherungssätze werden gemeinsam entfernt</string>
+    <string name="setting_retention_title">Backup-Aufbewahrung</string>
+    <string name="setting_retention_subtitle">Wie lange Sicherungssätze aufbewahrt werden</string>
     <string name="setting_encryption_title">Verschlüsselung</string>
     <string name="setting_encryption_subtitle">Exportierte Dateien mit AES schützen</string>
     <string name="language_system_default">Systemsprache</string>
@@ -58,6 +58,22 @@
     <string name="dialog_keep_title">Sicherungssätze aufbewahren</string>
     <string name="keep_option_all">Alle behalten</string>
     <string name="keep_all_label">Alle Sätze</string>
+
+    <string name="dialog_retention_mode_title">Aufbewahrungsregel</string>
+    <string name="dialog_retention_current">Derzeit: %1$s</string>
+    <string name="retention_mode_simple">Die letzten N Sicherungssätze behalten</string>
+    <string name="retention_mode_periodic">Smart-Aufbewahrung · täglich + wöchentlich + monatlich</string>
+    <string name="dialog_retention_periodic_title">Smart-Aufbewahrung</string>
+    <string name="dialog_retention_periodic_hint">Behält das neueste Backup jedes letzten Tages, jeder letzten Woche und jedes letzten Monats, sodass die jüngere Vergangenheit dicht und die ältere lückenhafter bleibt. Setze einen Wert auf 0, um nichts aus dieser Stufe zu behalten.</string>
+    <string name="retention_daily">Täglich</string>
+    <string name="retention_daily_hint">neuestes Backup pro Tag</string>
+    <string name="retention_weekly">Wöchentlich</string>
+    <string name="retention_weekly_hint">neuestes Backup pro Woche</string>
+    <string name="retention_monthly">Monatlich</string>
+    <string name="retention_monthly_hint">neuestes Backup pro Monat</string>
+    <string name="retention_periodic_label">%1$d täglich · %2$d wöchentlich · %3$d monatlich</string>
+    <string name="retention_need_one">Wähle mindestens eine der Stufen täglich, wöchentlich oder monatlich</string>
+    <string name="action_save">Speichern</string>
 
     <string name="dialog_language_title">App-Sprache</string>
 

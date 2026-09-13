@@ -22,8 +22,8 @@
     <string name="folder_selected_generic">Seçildi</string>
     <string name="setting_schedule_title">Zamanlama</string>
     <string name="setting_schedule_subtitle">Otomatik yedeklemelerin ne zaman çalışacağı</string>
-    <string name="setting_keep_title">Son yedeklemeleri sakla</string>
-    <string name="setting_keep_subtitle">Eski yedekleme setleri birlikte silinir</string>
+    <string name="setting_retention_title">Yedek saklama</string>
+    <string name="setting_retention_subtitle">Yedekleme setlerinin ne kadar süreyle saklanacağı</string>
     <string name="setting_encryption_title">Şifreleme</string>
     <string name="setting_encryption_subtitle">Dışa aktarılan dosyaları AES ile koru</string>
     <string name="language_system_default">Sistem varsayılanı</string>
@@ -58,6 +58,22 @@
     <string name="dialog_keep_title">Saklanacak yedekleme setleri</string>
     <string name="keep_option_all">Tümünü sakla</string>
     <string name="keep_all_label">Tüm setler</string>
+
+    <string name="dialog_retention_mode_title">Saklama ilkesi</string>
+    <string name="dialog_retention_current">Şu anda: %1$s</string>
+    <string name="retention_mode_simple">Son N yedekleme setini sakla</string>
+    <string name="retention_mode_periodic">Akıllı saklama · günlük + haftalık + aylık</string>
+    <string name="dialog_retention_periodic_title">Akıllı saklama</string>
+    <string name="dialog_retention_periodic_hint">Son günlerin, haftaların ve ayların her birinden en yeni yedeği saklar; böylece yakın geçmiş yoğun kalır, daha eski geçmiş seyrekleşir. Bir sayacı 0 yaparsanız o seviyeden hiçbir şey saklanmaz.</string>
+    <string name="retention_daily">Günlük</string>
+    <string name="retention_daily_hint">günde en yeni yedek</string>
+    <string name="retention_weekly">Haftalık</string>
+    <string name="retention_weekly_hint">haftada en yeni yedek</string>
+    <string name="retention_monthly">Aylık</string>
+    <string name="retention_monthly_hint">ayda en yeni yedek</string>
+    <string name="retention_periodic_label">%1$d günlük · %2$d haftalık · %3$d aylık</string>
+    <string name="retention_need_one">Günlük, haftalık veya aylıktan en az birini seçin</string>
+    <string name="action_save">Kaydet</string>
 
     <string name="dialog_language_title">Uygulama dili</string>
 

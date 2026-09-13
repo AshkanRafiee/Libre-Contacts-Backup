@@ -22,8 +22,8 @@
     <string name="folder_selected_generic">已选择</string>
     <string name="setting_schedule_title">计划任务</string>
     <string name="setting_schedule_subtitle">自动备份的执行时间</string>
-    <string name="setting_keep_title">保留最近的备份</string>
-    <string name="setting_keep_subtitle">较旧的备份集会被一并删除</string>
+    <string name="setting_retention_title">备份保留</string>
+    <string name="setting_retention_subtitle">备份集的保留时长</string>
     <string name="setting_encryption_title">加密</string>
     <string name="setting_encryption_subtitle">使用 AES 保护导出的文件</string>
     <string name="language_system_default">跟随系统</string>
@@ -58,6 +58,22 @@
     <string name="dialog_keep_title">要保留的备份集数量</string>
     <string name="keep_option_all">全部保留</string>
     <string name="keep_all_label">全部备份集</string>
+
+    <string name="dialog_retention_mode_title">保留策略</string>
+    <string name="dialog_retention_current">当前：%1$s</string>
+    <string name="retention_mode_simple">保留最近的 N 个备份集</string>
+    <string name="retention_mode_periodic">智能保留 · 每日 + 每周 + 每月</string>
+    <string name="dialog_retention_periodic_title">智能保留</string>
+    <string name="dialog_retention_periodic_hint">保留最近每天、每周和每月最新的备份，使近期的历史更密集，更早的历史逐渐稀疏。将某一项设为 0 则不从该档保留任何备份。</string>
+    <string name="retention_daily">每日</string>
+    <string name="retention_daily_hint">每天最新的备份</string>
+    <string name="retention_weekly">每周</string>
+    <string name="retention_weekly_hint">每周最新的备份</string>
+    <string name="retention_monthly">每月</string>
+    <string name="retention_monthly_hint">每月最新的备份</string>
+    <string name="retention_periodic_label">%1$d 每日 · %2$d 每周 · %3$d 每月</string>
+    <string name="retention_need_one">请至少选择每日、每周、每月中的一项</string>
+    <string name="action_save">保存</string>
 
     <string name="dialog_language_title">应用语言</string>
 

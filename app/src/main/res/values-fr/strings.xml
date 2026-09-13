@@ -22,8 +22,8 @@
     <string name="folder_selected_generic">Sélectionné</string>
     <string name="setting_schedule_title">Planification</string>
     <string name="setting_schedule_subtitle">Quand les sauvegardes automatiques s\'exécutent</string>
-    <string name="setting_keep_title">Conserver les dernières sauvegardes</string>
-    <string name="setting_keep_subtitle">Les anciens jeux de sauvegarde sont supprimés ensemble</string>
+    <string name="setting_retention_title">Conservation des sauvegardes</string>
+    <string name="setting_retention_subtitle">Combien de temps les jeux de sauvegarde sont conservés</string>
     <string name="setting_encryption_title">Chiffrement</string>
     <string name="setting_encryption_subtitle">Protéger les fichiers exportés avec AES</string>
     <string name="language_system_default">Langue du système</string>
@@ -58,6 +58,22 @@
     <string name="dialog_keep_title">Jeux de sauvegarde à conserver</string>
     <string name="keep_option_all">Tout conserver</string>
     <string name="keep_all_label">Tous les jeux</string>
+
+    <string name="dialog_retention_mode_title">Politique de conservation</string>
+    <string name="dialog_retention_current">Actuellement : %1$s</string>
+    <string name="retention_mode_simple">Conserver les N derniers jeux de sauvegarde</string>
+    <string name="retention_mode_periodic">Conservation intelligente · quotidien + hebdomadaire + mensuel</string>
+    <string name="dialog_retention_periodic_title">Conservation intelligente</string>
+    <string name="dialog_retention_periodic_hint">Conserve la sauvegarde la plus récente de chaque jour, semaine et mois récents, de sorte que l\'historique reste dense pour le passé récent et s\'éclaircit plus on recule. Mettez une valeur à 0 pour ne rien conserver de cette plage.</string>
+    <string name="retention_daily">Quotidien</string>
+    <string name="retention_daily_hint">sauvegarde la plus récente par jour</string>
+    <string name="retention_weekly">Hebdomadaire</string>
+    <string name="retention_weekly_hint">sauvegarde la plus récente par semaine</string>
+    <string name="retention_monthly">Mensuel</string>
+    <string name="retention_monthly_hint">sauvegarde la plus récente par mois</string>
+    <string name="retention_periodic_label">%1$d quotidien · %2$d hebdomadaire · %3$d mensuel</string>
+    <string name="retention_need_one">Choisissez au moins une plage : quotidienne, hebdomadaire ou mensuelle</string>
+    <string name="action_save">Enregistrer</string>
 
     <string name="dialog_language_title">Langue de l\'application</string>
 
