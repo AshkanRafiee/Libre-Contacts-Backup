@@ -45,6 +45,11 @@ public final class BackupArchiveReader {
     private static final int MAX_ENTRY_COUNT = 50;
     private static final long MAX_ENTRY_SIZE = 200L * 1024 * 1024;
     private static final long MAX_TOTAL_SIZE = 500L * 1024 * 1024;
+    // A raw archive is the compressed form of the entries, so it can never
+    // legitimately reach the inflated bound plus more than bookkeeping slack.
+    // This keeps an adversarial or corrupted file from being slurped into
+    // memory before its per-entry caps are even evaluated.
+    public static final long MAX_RAW_SIZE = MAX_TOTAL_SIZE + 8L * 1024 * 1024;
 
     public static ArchiveData readArchive(InputStream inputStream) throws IOException {
         ArchiveData result = new ArchiveData();
@@ -149,7 +154,11 @@ public final class BackupArchiveReader {
             }
 
             String actualSha256 = BackupArchiveWriter.sha256(fileData);
-            if (!expectedSha256.equals(actualSha256)) {
+            // v2.0.0-v2.4.x stored manifest checksums rendered from the signed
+            // byte (e.g. "ffffffXX" for a byte >= 0x80); current releases use
+            // the canonical two-digit form. Integrity still holds because both
+            // renderings are derived from the exact digest of fileData.
+            if (!BackupArchiveWriter.acceptsSha256(fileData, expectedSha256)) {
                 Log.w(TAG, "Checksum mismatch for " + fileName +
                         ": expected " + expectedSha256 + ", got " + actualSha256);
                 allValid = false;
@@ -175,7 +184,14 @@ public final class BackupArchiveReader {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         byte[] buffer = new byte[8192];
         int n;
-        while ((n = input.read(buffer)) > 0) output.write(buffer, 0, n);
+        long total = 0;
+        while ((n = input.read(buffer)) > 0) {
+            total += n;
+            if (total > MAX_RAW_SIZE) {
+                throw new IOException("Invalid backup: archive too large");
+            }
+            output.write(buffer, 0, n);
+        }
         return output.toByteArray();
     }
 

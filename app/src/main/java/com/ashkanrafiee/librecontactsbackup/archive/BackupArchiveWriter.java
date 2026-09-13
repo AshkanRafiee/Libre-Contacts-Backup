@@ -114,4 +114,38 @@ public final class BackupArchiveWriter {
             return "";
         }
     }
+
+    /**
+     * Like {@link #sha256(byte[])}, but reproduces the hex string that releases
+     * v2.0.0 through v2.4.x could store: some runtimes promoted the byte before
+     * formatting, so a byte {@code >= 0x80} came out sign-extended (e.g.
+     * {@code ffffffXX} instead of {@code XX}). The explicit int cast pins that
+     * rendering regardless of how {@code String.format} treats a {@code Byte}
+     * on the current runtime, so a manifest written by those releases never
+     * fails validation.
+     */
+    static String sha256Legacy(byte[] data) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(data);
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) {
+                sb.append(String.format("%02x", (int) b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            return "";
+        }
+    }
+
+    /**
+     * True when {@code expected} is the SHA-256 of {@code data} rendered in
+     * either the current canonical form or the v2.0.0–v2.4.x legacy form.
+     * Both are deterministic renderings of the same digest bytes, so accepting
+     * either one does not weaken the integrity check.
+     */
+    static boolean acceptsSha256(byte[] data, String expected) {
+        return expected != null
+                && (expected.equalsIgnoreCase(sha256(data)) || expected.equalsIgnoreCase(sha256Legacy(data)));
+    }
 }
