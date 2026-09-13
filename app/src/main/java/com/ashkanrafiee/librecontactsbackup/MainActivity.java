@@ -360,9 +360,13 @@ public class MainActivity extends Activity {
         TextView dailyValue = label(String.valueOf(daily[0]), 18, resColor(R.color.text_primary)); dailyValue.setGravity(Gravity.CENTER);
         TextView weeklyValue = label(String.valueOf(weekly[0]), 18, resColor(R.color.text_primary)); weeklyValue.setGravity(Gravity.CENTER);
         TextView monthlyValue = label(String.valueOf(monthly[0]), 18, resColor(R.color.text_primary)); monthlyValue.setGravity(Gravity.CENTER);
-        Runnable refreshSteppers = () -> { dailyValue.setText(String.valueOf(daily[0])); weeklyValue.setText(String.valueOf(weekly[0])); monthlyValue.setText(String.valueOf(monthly[0])); };
 
         RadioGroup presetGroup = new RadioGroup(this);
+        Runnable refreshSteppers = () -> {
+            dailyValue.setText(String.valueOf(daily[0])); weeklyValue.setText(String.valueOf(weekly[0])); monthlyValue.setText(String.valueOf(monthly[0]));
+            int idx = presetIndex(presets, daily[0], weekly[0], monthly[0]);
+            if (idx >= 0) presetGroup.check(1000 + idx); else presetGroup.clearCheck();
+        };
         for (int i = 0; i < presets.length; i++) {
             final int preset = i;
             RadioButton button = new RadioButton(this);
@@ -377,9 +381,9 @@ public class MainActivity extends Activity {
 
         LinearLayout advanced = new LinearLayout(this); advanced.setOrientation(LinearLayout.VERTICAL);
         TextView advancedToggle = label(getString(R.string.dialog_retention_advanced), 12, resColor(R.color.link)); advancedToggle.setPadding(0, dp(8), 0, 0); form.addView(advancedToggle);
-        LinearLayout dailyRow = stepperRow(getString(R.string.retention_daily), getString(R.string.retention_daily_hint), daily, dailyValue);
-        LinearLayout weeklyRow = stepperRow(getString(R.string.retention_weekly), getString(R.string.retention_weekly_hint), weekly, weeklyValue);
-        LinearLayout monthlyRow = stepperRow(getString(R.string.retention_monthly), getString(R.string.retention_monthly_hint), monthly, monthlyValue);
+        LinearLayout dailyRow = stepperRow(getString(R.string.retention_daily), getString(R.string.retention_daily_hint), daily, dailyValue, refreshSteppers);
+        LinearLayout weeklyRow = stepperRow(getString(R.string.retention_weekly), getString(R.string.retention_weekly_hint), weekly, weeklyValue, refreshSteppers);
+        LinearLayout monthlyRow = stepperRow(getString(R.string.retention_monthly), getString(R.string.retention_monthly_hint), monthly, monthlyValue, refreshSteppers);
         advanced.addView(dailyRow, margins(0, dp(12), 0, 0));
         advanced.addView(weeklyRow, margins(0, dp(8), 0, 0));
         advanced.addView(monthlyRow, margins(0, dp(8), 0, 0));
@@ -402,7 +406,7 @@ public class MainActivity extends Activity {
         for (int i = 0; i < presets.length; i++) if (presets[i][0] == daily && presets[i][1] == weekly && presets[i][2] == monthly) return i;
         return -1;
     }
-    LinearLayout stepperRow(String title, String hint, int[] holder, TextView value) {
+    LinearLayout stepperRow(String title, String hint, int[] holder, TextView value, Runnable onChange) {
         LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(dp(14), dp(10), dp(14), dp(10)); row.setBackground(rounded(card, 13));
         LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
@@ -411,8 +415,8 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams wordParams = new LinearLayout.LayoutParams(0, -2, 1); wordParams.setMarginEnd(dp(10)); row.addView(words, wordParams);
         TextView minus = stepButton("−");
         TextView plus = stepButton("+");
-        minus.setOnClickListener(v -> { if (holder[0] > 0) { holder[0]--; value.setText(String.valueOf(holder[0])); } });
-        plus.setOnClickListener(v -> { if (holder[0] < 99) { holder[0]++; value.setText(String.valueOf(holder[0])); } });
+        minus.setOnClickListener(v -> { if (holder[0] > 0) { holder[0]--; value.setText(String.valueOf(holder[0])); onChange.run(); } });
+        plus.setOnClickListener(v -> { if (holder[0] < 99) { holder[0]++; value.setText(String.valueOf(holder[0])); onChange.run(); } });
         row.addView(minus, new LinearLayout.LayoutParams(dp(46), dp(42)));
         row.addView(value, new LinearLayout.LayoutParams(dp(48), dp(42)));
         row.addView(plus, new LinearLayout.LayoutParams(dp(46), dp(42)));
