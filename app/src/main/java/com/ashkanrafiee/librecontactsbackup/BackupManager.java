@@ -389,7 +389,13 @@ public final class BackupManager {
 
     private static byte[] readAll(InputStream input) throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream(); byte[] buffer = new byte[8192]; int n;
-        while ((n = input.read(buffer)) > 0) output.write(buffer, 0, n); return output.toByteArray();
+        long total = 0;
+        while ((n = input.read(buffer)) > 0) {
+            total += n;
+            if (total > BackupArchiveReader.MAX_RAW_SIZE) throw new IOException("Backup file too large");
+            output.write(buffer, 0, n);
+        }
+        return output.toByteArray();
     }
 
     // ============================================================
