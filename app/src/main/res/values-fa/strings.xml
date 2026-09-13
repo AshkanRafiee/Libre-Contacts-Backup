@@ -150,24 +150,31 @@
     <string name="issue_permission_not_granted">اجازهٔ دسترسی به مخاطبین داده نشده است</string>
 
     <plurals name="contacts_count">
+        <item quantity="one">%1$d مخاطب</item>
         <item quantity="other">%1$d مخاطب</item>
     </plurals>
     <plurals name="data_fields_count">
+        <item quantity="one">%1$d فیلد داده</item>
         <item quantity="other">%1$d فیلد داده</item>
     </plurals>
     <plurals name="photos_count">
+        <item quantity="one">%1$d عکس</item>
         <item quantity="other">%1$d عکس</item>
     </plurals>
     <plurals name="groups_count">
+        <item quantity="one">%1$d گروه</item>
         <item quantity="other">%1$d گروه</item>
     </plurals>
     <plurals name="fields_count">
+        <item quantity="one">%1$d فیلد</item>
         <item quantity="other">%1$d فیلد</item>
     </plurals>
     <plurals name="account_contacts_count">
+        <item quantity="one">%1$d مخاطب مرتبط با یک حساب</item>
         <item quantity="other">%1$d مخاطب مرتبط با یک حساب</item>
     </plurals>
     <plurals name="backup_sets_count">
+        <item quantity="one">%1$d مجموعه</item>
         <item quantity="other">%1$d مجموعه</item>
     </plurals>
 </resources>

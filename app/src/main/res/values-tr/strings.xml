@@ -150,24 +150,31 @@
     <string name="issue_permission_not_granted">kişiler izni verilmedi</string>
 
     <plurals name="contacts_count">
+        <item quantity="one">%1$d kişi</item>
         <item quantity="other">%1$d kişi</item>
     </plurals>
     <plurals name="data_fields_count">
+        <item quantity="one">%1$d veri alanı</item>
         <item quantity="other">%1$d veri alanı</item>
     </plurals>
     <plurals name="photos_count">
+        <item quantity="one">%1$d fotoğraf</item>
         <item quantity="other">%1$d fotoğraf</item>
     </plurals>
     <plurals name="groups_count">
+        <item quantity="one">%1$d grup</item>
         <item quantity="other">%1$d grup</item>
     </plurals>
     <plurals name="fields_count">
+        <item quantity="one">%1$d alan</item>
         <item quantity="other">%1$d alan</item>
     </plurals>
     <plurals name="account_contacts_count">
+        <item quantity="one">%1$d kişi bir hesaba bağlı</item>
         <item quantity="other">%1$d kişi bir hesaba bağlı</item>
     </plurals>
     <plurals name="backup_sets_count">
+        <item quantity="one">%1$d set</item>
         <item quantity="other">%1$d set</item>
     </plurals>
 </resources>
