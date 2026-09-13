@@ -65,6 +65,12 @@
     <string name="retention_mode_periodic">احتفاظ ذكي · يومي + أسبوعي + شهري</string>
     <string name="dialog_retention_periodic_title">احتفاظ ذكي</string>
     <string name="dialog_retention_periodic_hint">يحتفظ بأحدث نسخة احتياطية من كل يوم وأسبوع وشهر من الفترة الحديثة، بحيث تبقى الفترة القريبة كثيفة وتتفرق أكثر في الماضي. اضبط أي قيمة على 0 لعدم الاحتفاظ بأي شيء من هذا المستوى.</string>
+    <string name="retention_preset_week">الأسبوع الماضي</string>
+    <string name="retention_preset_month">الشهر الماضي</string>
+    <string name="retention_preset_months">آخر 3 أشهر</string>
+    <string name="retention_preset_year">العام الماضي</string>
+    <string name="retention_preset_all">كل شيء</string>
+    <string name="dialog_retention_advanced">متقدم</string>
     <string name="retention_daily">يومي</string>
     <string name="retention_daily_hint">أحدث نسخة احتياطية يوميًا</string>
     <string name="retention_weekly">أسبوعي</string>

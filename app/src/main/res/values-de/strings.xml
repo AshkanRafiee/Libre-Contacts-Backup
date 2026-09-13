@@ -65,6 +65,12 @@
     <string name="retention_mode_periodic">Smart-Aufbewahrung · täglich + wöchentlich + monatlich</string>
     <string name="dialog_retention_periodic_title">Smart-Aufbewahrung</string>
     <string name="dialog_retention_periodic_hint">Behält das neueste Backup jedes letzten Tages, jeder letzten Woche und jedes letzten Monats, sodass die jüngere Vergangenheit dicht und die ältere lückenhafter bleibt. Setze einen Wert auf 0, um nichts aus dieser Stufe zu behalten.</string>
+    <string name="retention_preset_week">Letzte Woche</string>
+    <string name="retention_preset_month">Letzten Monat</string>
+    <string name="retention_preset_months">Letzte 3 Monate</string>
+    <string name="retention_preset_year">Letztes Jahr</string>
+    <string name="retention_preset_all">Alles</string>
+    <string name="dialog_retention_advanced">Erweitert</string>
     <string name="retention_daily">Täglich</string>
     <string name="retention_daily_hint">neuestes Backup pro Tag</string>
     <string name="retention_weekly">Wöchentlich</string>

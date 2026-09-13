@@ -74,6 +74,12 @@
     <string name="retention_mode_periodic">Smart retention · daily + weekly + monthly</string>
     <string name="dialog_retention_periodic_title">Smart retention</string>
     <string name="dialog_retention_periodic_hint">Keeps the newest backup of each recent day, week, and month, so the history stays dense for the recent past and thins out further back. Set a count to 0 to keep nothing from that tier.</string>
+    <string name="retention_preset_week">Last week</string>
+    <string name="retention_preset_month">Last month</string>
+    <string name="retention_preset_months">Last 3 months</string>
+    <string name="retention_preset_year">Last year</string>
+    <string name="retention_preset_all">Everything</string>
+    <string name="dialog_retention_advanced">Advanced</string>
     <string name="retention_daily">Daily</string>
     <string name="retention_daily_hint">newest backup per day</string>
     <string name="retention_weekly">Weekly</string>

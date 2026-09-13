@@ -65,6 +65,12 @@
     <string name="retention_mode_periodic">Retención inteligente · diario + semanal + mensual</string>
     <string name="dialog_retention_periodic_title">Retención inteligente</string>
     <string name="dialog_retention_periodic_hint">Conserva la copia más reciente de cada día, semana y mes recientes, de modo que el pasado más cercano se mantenga denso y se espacie más atrás. Pon un valor en 0 para no conservar nada de ese nivel.</string>
+    <string name="retention_preset_week">Última semana</string>
+    <string name="retention_preset_month">Último mes</string>
+    <string name="retention_preset_months">Últimos 3 meses</string>
+    <string name="retention_preset_year">Último año</string>
+    <string name="retention_preset_all">Todo</string>
+    <string name="dialog_retention_advanced">Avanzado</string>
     <string name="retention_daily">Diario</string>
     <string name="retention_daily_hint">copia más reciente del día</string>
     <string name="retention_weekly">Semanal</string>

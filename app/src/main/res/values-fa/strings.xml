@@ -65,6 +65,12 @@
     <string name="retention_mode_periodic">نگه‌داری هوشمند · روزانه + هفتگی + ماهانه</string>
     <string name="dialog_retention_periodic_title">نگه‌داری هوشمند</string>
     <string name="dialog_retention_periodic_hint">جدیدترین پشتیبان هر روز، هفته و ماه اخیر را نگه می‌دارد؛ به این ترتیب تاریخچهٔ نزدیک انبوه می‌ماند و به سمت گذشته پراکنده می‌شود. هر مقدار را روی 0 بگذارید تا چیزی از آن سطح نگه‌داری نشود.</string>
+    <string name="retention_preset_week">هفتهٔ گذشته</string>
+    <string name="retention_preset_month">ماه گذشته</string>
+    <string name="retention_preset_months">۳ ماه گذشته</string>
+    <string name="retention_preset_year">سال گذشته</string>
+    <string name="retention_preset_all">همه</string>
+    <string name="dialog_retention_advanced">پیشرفته</string>
     <string name="retention_daily">روزانه</string>
     <string name="retention_daily_hint">جدیدترین پشتیبان هر روز</string>
     <string name="retention_weekly">هفتگی</string>

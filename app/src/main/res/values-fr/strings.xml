@@ -65,6 +65,12 @@
     <string name="retention_mode_periodic">Conservation intelligente · quotidien + hebdomadaire + mensuel</string>
     <string name="dialog_retention_periodic_title">Conservation intelligente</string>
     <string name="dialog_retention_periodic_hint">Conserve la sauvegarde la plus récente de chaque jour, semaine et mois récents, de sorte que l\'historique reste dense pour le passé récent et s\'éclaircit plus on recule. Mettez une valeur à 0 pour ne rien conserver de cette plage.</string>
+    <string name="retention_preset_week">Dernière semaine</string>
+    <string name="retention_preset_month">Dernier mois</string>
+    <string name="retention_preset_months">3 derniers mois</string>
+    <string name="retention_preset_year">Dernière année</string>
+    <string name="retention_preset_all">Tout</string>
+    <string name="dialog_retention_advanced">Avancé</string>
     <string name="retention_daily">Quotidien</string>
     <string name="retention_daily_hint">sauvegarde la plus récente par jour</string>
     <string name="retention_weekly">Hebdomadaire</string>

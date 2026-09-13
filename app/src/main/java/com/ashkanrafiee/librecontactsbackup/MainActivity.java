@@ -298,12 +298,44 @@ public class MainActivity extends Activity {
         int[] daily = {current.dailyKeep};
         int[] weekly = {current.weeklyKeep};
         int[] monthly = {current.monthlyKeep};
+        final int[][] presets = {{7, 0, 0}, {7, 4, 0}, {7, 4, 3}, {7, 4, 12}, {RetentionPolicy.KEEP_ALL, 0, 0}};
+        final String[] presetNames = {getString(R.string.retention_preset_week), getString(R.string.retention_preset_month), getString(R.string.retention_preset_months), getString(R.string.retention_preset_year), getString(R.string.retention_preset_all)};
+        final int checkedPreset = presetIndex(presets, daily[0], weekly[0], monthly[0]);
+
         LinearLayout form = new LinearLayout(this); form.setOrientation(LinearLayout.VERTICAL); form.setPadding(dp(24), dp(8), dp(24), 0);
         form.addView(label(getString(R.string.dialog_retention_periodic_title), 18, resColor(R.color.text_primary)));
         TextView hint = label(getString(R.string.dialog_retention_periodic_hint), 12, muted); hint.setPadding(0, dp(6), 0, 0); form.addView(hint);
-        form.addView(stepperRow(getString(R.string.retention_daily), getString(R.string.retention_daily_hint), daily), margins(0, dp(14), 0, 0));
-        form.addView(stepperRow(getString(R.string.retention_weekly), getString(R.string.retention_weekly_hint), weekly), margins(0, dp(8), 0, 0));
-        form.addView(stepperRow(getString(R.string.retention_monthly), getString(R.string.retention_monthly_hint), monthly), margins(0, dp(8), 0, 0));
+
+        TextView dailyValue = label(String.valueOf(daily[0]), 18, resColor(R.color.text_primary)); dailyValue.setGravity(Gravity.CENTER);
+        TextView weeklyValue = label(String.valueOf(weekly[0]), 18, resColor(R.color.text_primary)); weeklyValue.setGravity(Gravity.CENTER);
+        TextView monthlyValue = label(String.valueOf(monthly[0]), 18, resColor(R.color.text_primary)); monthlyValue.setGravity(Gravity.CENTER);
+        Runnable refreshSteppers = () -> { dailyValue.setText(String.valueOf(daily[0])); weeklyValue.setText(String.valueOf(weekly[0])); monthlyValue.setText(String.valueOf(monthly[0])); };
+
+        RadioGroup presetGroup = new RadioGroup(this);
+        for (int i = 0; i < presets.length; i++) {
+            final int preset = i;
+            RadioButton button = new RadioButton(this);
+            button.setText(presetNames[i]); button.setTextColor(resColor(R.color.text_primary)); button.setTextSize(14);
+            button.setId(1000 + i); button.setPadding(0, dp(4), 0, dp(4));
+            button.setOnClickListener(v -> { daily[0] = presets[preset][0]; weekly[0] = presets[preset][1]; monthly[0] = presets[preset][2]; refreshSteppers.run(); });
+            presetGroup.addView(button);
+        }
+        presetGroup.setPadding(0, dp(10), 0, 0);
+        if (checkedPreset >= 0) presetGroup.check(1000 + checkedPreset);
+        form.addView(presetGroup);
+
+        LinearLayout advanced = new LinearLayout(this); advanced.setOrientation(LinearLayout.VERTICAL);
+        TextView advancedToggle = label(getString(R.string.dialog_retention_advanced), 12, resColor(R.color.link)); advancedToggle.setPadding(0, dp(8), 0, 0); form.addView(advancedToggle);
+        LinearLayout dailyRow = stepperRow(getString(R.string.retention_daily), getString(R.string.retention_daily_hint), daily, dailyValue);
+        LinearLayout weeklyRow = stepperRow(getString(R.string.retention_weekly), getString(R.string.retention_weekly_hint), weekly, weeklyValue);
+        LinearLayout monthlyRow = stepperRow(getString(R.string.retention_monthly), getString(R.string.retention_monthly_hint), monthly, monthlyValue);
+        advanced.addView(dailyRow, margins(0, dp(12), 0, 0));
+        advanced.addView(weeklyRow, margins(0, dp(8), 0, 0));
+        advanced.addView(monthlyRow, margins(0, dp(8), 0, 0));
+        form.addView(advanced);
+        advanced.setVisibility(checkedPreset < 0 ? View.VISIBLE : View.GONE);
+        advancedToggle.setOnClickListener(v -> advanced.setVisibility(advanced.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE));
+
         AlertDialog dialog = new AlertDialog.Builder(this).setView(form)
                 .setNegativeButton(getString(R.string.action_cancel), null)
                 .setPositiveButton(getString(R.string.action_save), null).create();
@@ -315,7 +347,11 @@ public class MainActivity extends Activity {
         }));
         dialog.show();
     }
-    LinearLayout stepperRow(String title, String hint, int[] holder) {
+    static int presetIndex(int[][] presets, int daily, int weekly, int monthly) {
+        for (int i = 0; i < presets.length; i++) if (presets[i][0] == daily && presets[i][1] == weekly && presets[i][2] == monthly) return i;
+        return -1;
+    }
+    LinearLayout stepperRow(String title, String hint, int[] holder, TextView value) {
         LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(dp(14), dp(10), dp(14), dp(10)); row.setBackground(rounded(card, 13));
         LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
@@ -323,7 +359,6 @@ public class MainActivity extends Activity {
         words.addView(label(hint, 11, muted));
         LinearLayout.LayoutParams wordParams = new LinearLayout.LayoutParams(0, -2, 1); wordParams.setMarginEnd(dp(10)); row.addView(words, wordParams);
         TextView minus = stepButton("−");
-        TextView value = label(String.valueOf(holder[0]), 18, resColor(R.color.text_primary)); value.setGravity(Gravity.CENTER);
         TextView plus = stepButton("+");
         minus.setOnClickListener(v -> { if (holder[0] > 0) { holder[0]--; value.setText(String.valueOf(holder[0])); } });
         plus.setOnClickListener(v -> { if (holder[0] < 99) { holder[0]++; value.setText(String.valueOf(holder[0])); } });
@@ -436,6 +471,7 @@ public class MainActivity extends Activity {
 
     static String retentionLabel(Context c) {
         RetentionPolicy policy = BackupManager.retentionPolicy(c);
+        if (policy.keepAll()) return c.getString(R.string.keep_all_label);
         if (policy.mode == RetentionPolicy.Mode.PERIODIC)
             return c.getString(R.string.retention_periodic_label, policy.dailyKeep, policy.weeklyKeep, policy.monthlyKeep);
         return keepLabel(c, policy.simpleKeep);

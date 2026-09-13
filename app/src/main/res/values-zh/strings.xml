@@ -65,6 +65,12 @@
     <string name="retention_mode_periodic">智能保留 · 每日 + 每周 + 每月</string>
     <string name="dialog_retention_periodic_title">智能保留</string>
     <string name="dialog_retention_periodic_hint">保留最近每天、每周和每月最新的备份，使近期的历史更密集，更早的历史逐渐稀疏。将某一项设为 0 则不从该档保留任何备份。</string>
+    <string name="retention_preset_week">最近一周</string>
+    <string name="retention_preset_month">最近一月</string>
+    <string name="retention_preset_months">最近三个月</string>
+    <string name="retention_preset_year">最近一年</string>
+    <string name="retention_preset_all">全部</string>
+    <string name="dialog_retention_advanced">高级</string>
     <string name="retention_daily">每日</string>
     <string name="retention_daily_hint">每天最新的备份</string>
     <string name="retention_weekly">每周</string>

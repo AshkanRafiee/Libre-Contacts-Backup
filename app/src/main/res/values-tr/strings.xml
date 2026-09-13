@@ -65,6 +65,12 @@
     <string name="retention_mode_periodic">Akıllı saklama · günlük + haftalık + aylık</string>
     <string name="dialog_retention_periodic_title">Akıllı saklama</string>
     <string name="dialog_retention_periodic_hint">Son günlerin, haftaların ve ayların her birinden en yeni yedeği saklar; böylece yakın geçmiş yoğun kalır, daha eski geçmiş seyrekleşir. Bir sayacı 0 yaparsanız o seviyeden hiçbir şey saklanmaz.</string>
+    <string name="retention_preset_week">Geçen hafta</string>
+    <string name="retention_preset_month">Geçen ay</string>
+    <string name="retention_preset_months">Son 3 ay</string>
+    <string name="retention_preset_year">Geçen yıl</string>
+    <string name="retention_preset_all">Her şey</string>
+    <string name="dialog_retention_advanced">Gelişmiş</string>
     <string name="retention_daily">Günlük</string>
     <string name="retention_daily_hint">günde en yeni yedek</string>
     <string name="retention_weekly">Haftalık</string>
