@@ -30,16 +30,12 @@ import java.util.Set;
 public final class RetentionDecider {
 
     public static Set<String> decide(List<StoredBackup> backups, RetentionPolicy policy, LocalDateTime now) {
-        if (policy.mode == RetentionPolicy.Mode.PERIODIC) return periodic(backups, policy, now.toLocalDate());
-        return simple(backups, policy);
-    }
-
-    private static Set<String> simple(List<StoredBackup> backups, RetentionPolicy policy) {
         Set<String> keep = new HashSet<>();
         if (policy.keepAll()) {
             for (StoredBackup backup : backups) keep.add(backup.id);
             return keep;
         }
+        if (policy.mode == RetentionPolicy.Mode.PERIODIC) return periodic(backups, policy, now.toLocalDate());
         List<StoredBackup> sorted = newestFirst(backups);
         for (int i = 0; i < sorted.size() && i < policy.simpleKeep; i++) keep.add(sorted.get(i).id);
         return keep;

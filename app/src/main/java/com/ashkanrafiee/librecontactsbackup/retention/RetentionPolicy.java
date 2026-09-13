@@ -35,7 +35,10 @@ public final class RetentionPolicy {
         this.monthlyKeep = Math.max(0, monthlyKeep);
     }
 
-    public boolean keepAll() { return mode == Mode.SIMPLE && simpleKeep > 100; }
+    /** True when the policy should never delete anything. Reached through the
+     *  SIMPLE "keep all" option or the PERIODIC "everything" preset. Never
+     *  reachable from the count steppers, which are capped well below this. */
+    public boolean keepAll() { return simpleKeep > 100 || dailyKeep > 100; }
 
     public static RetentionPolicy defaults() {
         return new RetentionPolicy(Mode.SIMPLE, DEFAULT_KEEP, DEFAULT_DAILY, DEFAULT_WEEKLY, DEFAULT_MONTHLY);

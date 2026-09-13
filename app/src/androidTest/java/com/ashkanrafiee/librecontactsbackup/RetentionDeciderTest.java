@@ -134,6 +134,18 @@ public class RetentionDeciderTest {
         assertKeptExactly(backups, policy, ids(stored("today", 9, 13, 10), stored("tomorrow", 9, 14, 8)));
     }
 
+    @Test public void periodicKeepAllKeepsEverything() {
+        List<StoredBackup> backups = new java.util.ArrayList<>();
+        for (int month = 1; month <= 9; month++) {
+            for (int day = 5; day <= 13; day++) {
+                backups.add(stored("m" + month + "_d" + day, month, day, 10));
+            }
+        }
+        RetentionPolicy policy = new RetentionPolicy(RetentionPolicy.Mode.PERIODIC, 5, RetentionPolicy.KEEP_ALL, 0, 0);
+        // The "everything" preset must never delete even a single old set.
+        assertKeptExactly(backups, policy, new java.util.HashSet<>(backups.stream().map(b -> b.id).collect(java.util.stream.Collectors.toList())));
+    }
+
     @Test public void emptySetKeepsNothing() {
         RetentionPolicy policy = new RetentionPolicy(RetentionPolicy.Mode.PERIODIC, 5, 7, 4, 3);
         assertTrue(decide(java.util.Collections.emptyList(), policy).isEmpty());
