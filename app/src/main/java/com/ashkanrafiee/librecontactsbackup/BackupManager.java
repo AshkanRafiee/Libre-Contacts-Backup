@@ -31,7 +31,6 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.zip.*;
 import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
@@ -397,32 +396,30 @@ public final class BackupManager {
     // Retention management (preserved from original)
     // ============================================================
 
+    private static final String[] BACKUP_SUFFIXES = {".enc", ".lcb"};
+
     private static void trim(Context c, Uri tree) throws Exception {
         Uri children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree));
         LinkedHashMap<String, ArrayList<Uri>> sets = new LinkedHashMap<>();
-        // Files with our naming prefix that don't end in .lcb/.lcb.enc aren't
-        // part of any versioned backup set this retention logic tracks (e.g.
-        // a leftover from an interrupted write) — not real backups worth
-        // keeping, so removed outright rather than accumulating forever.
+        // App-owned leftovers whose base name carries no parseable timestamp
+        // (e.g. a file cut short by an interrupted write) are removed rather
+        // than accumulating forever. Anything that does not match our exact
+        // archive naming — user files or folders merely sharing the prefix —
+        // is never touched.
         ArrayList<Uri> notABackup = new ArrayList<>();
 
         try (Cursor q = c.getContentResolver().query(children,
-                new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME},
+                new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE},
                 null, null, null)) {
             if (q != null) {
                 while (q.moveToNext()) {
                     String name = q.getString(1);
-                    if (!name.startsWith("librecontacts_")) continue;
+                    if (name == null || !isOwnArchiveName(name)) continue;
+                    if (DocumentsContract.Document.MIME_TYPE_DIR.equals(q.getString(2))) continue;
                     Uri file = DocumentsContract.buildDocumentUriUsingTree(tree, q.getString(0));
-                    if (!(name.endsWith(".lcb") || name.endsWith(".lcb.enc"))) {
-                        notABackup.add(file);
-                        continue;
-                    }
-                    String base = name;
-                    for (String suffix : new String[]{".enc", ".lcb"}) {
-                        if (base.endsWith(suffix)) base = base.substring(0, base.length() - suffix.length());
-                    }
-                    sets.computeIfAbsent(base, k -> new ArrayList<>()).add(file);
+                    String base = stripArchiveSuffixes(name);
+                    if (isTimestamped(base)) sets.computeIfAbsent(base, k -> new ArrayList<>()).add(file);
+                    else notABackup.add(file);
                 }
             }
         }
@@ -448,6 +445,32 @@ public final class BackupManager {
     }
 
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+
+    /** True when {@code name} looks like an archive this app created: the exact
+     *  {@code librecontacts_...} prefix followed by our {@code .lcb}/{@code .lcb.enc}
+     *  suffix. Anything else — including user files or folders merely sharing
+     *  the prefix — is never treated as app-owned. */
+    static boolean isOwnArchiveName(String name) {
+        if (name == null || !name.startsWith("librecontacts_")) return false;
+        return name.endsWith(".lcb") || name.endsWith(".lcb.enc");
+    }
+
+    private static String stripArchiveSuffixes(String name) {
+        String base = name;
+        for (String suffix : BACKUP_SUFFIXES) {
+            if (base.endsWith(suffix)) base = base.substring(0, base.length() - suffix.length());
+        }
+        return base;
+    }
+
+    static boolean isTimestamped(String baseName) {
+        try {
+            LocalDateTime.parse(baseName.substring("librecontacts_".length()), TIMESTAMP_FORMAT);
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
 
     private static Map<String, LocalDateTime> parseTimestamps(List<String> names) {
         Map<String, LocalDateTime> parsed = new HashMap<>();
