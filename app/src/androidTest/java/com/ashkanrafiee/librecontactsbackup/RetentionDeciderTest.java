@@ -146,6 +146,17 @@ public class RetentionDeciderTest {
         assertKeptExactly(backups, policy, new java.util.HashSet<>(backups.stream().map(b -> b.id).collect(java.util.stream.Collectors.toList())));
     }
 
+    @Test public void simpleKeepAllDoesNotLeakIntoPeriodicMode() {
+        // "Keep all" chosen in SIMPLE mode must not disable retention once the
+        // user switches to an increasing-age configuration.
+        List<StoredBackup> backups = Arrays.asList(
+                stored("old", 9, 1, 10), stored("mid", 9, 10, 10), stored("newest", 9, 13, 10));
+        RetentionPolicy policy = new RetentionPolicy(RetentionPolicy.Mode.PERIODIC, RetentionPolicy.KEEP_ALL, 7, 0, 0);
+        // The stale simpleKeep of KEEP_ALL must not leak in: the September
+        // backlog outside the daily window is still trimmed.
+        assertKeptExactly(backups, policy, ids(stored("mid", 9, 10, 10), stored("newest", 9, 13, 10)));
+    }
+
     @Test public void emptySetKeepsNothing() {
         RetentionPolicy policy = new RetentionPolicy(RetentionPolicy.Mode.PERIODIC, 5, 7, 4, 3);
         assertTrue(decide(java.util.Collections.emptyList(), policy).isEmpty());

@@ -36,9 +36,10 @@ public final class RetentionPolicy {
     }
 
     /** True when the policy should never delete anything. Reached through the
-     *  SIMPLE "keep all" option or the PERIODIC "everything" preset. Never
-     *  reachable from the count steppers, which are capped well below this. */
-    public boolean keepAll() { return simpleKeep > 100 || dailyKeep > 100; }
+     *  SIMPLE "keep all" option (keep-all legacy PERIODIC data honors a value
+     *  above the stepper cap too). Reviewed per mode so a "keep all" picked in
+     *  one mode never leaks into the other. */
+    public boolean keepAll() { return mode == Mode.SIMPLE ? simpleKeep > 100 : dailyKeep > 100; }
 
     public static RetentionPolicy defaults() {
         return new RetentionPolicy(Mode.SIMPLE, DEFAULT_KEEP, DEFAULT_DAILY, DEFAULT_WEEKLY, DEFAULT_MONTHLY);
