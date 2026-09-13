@@ -107,7 +107,7 @@ public final class BackupArchiveWriter {
             byte[] hash = digest.digest(data);
             StringBuilder sb = new StringBuilder();
             for (byte b : hash) {
-                sb.append(String.format("%02x", b));
+                sb.append(String.format("%02x", b & 0xFF));
             }
             return sb.toString();
         } catch (NoSuchAlgorithmException e) {
