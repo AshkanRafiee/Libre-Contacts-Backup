@@ -188,12 +188,49 @@ public class EncryptionBackwardCompatTest {
     }
 
     @Test
+    public void unreasonablyHighIterationCount_rejectedWithoutDerivingKey() throws Exception {
+        // Above the sane ceiling (10 M) must be rejected before the CPU-intensive
+        // derivation loop, even if the archive would otherwise be authentic.
+        byte[] archive = encryptV2Reference(realPlaintextArchive(), PASSWORD, 600_000);
+        byte[] tampered = archive.clone();
+        int magicLen = "LIBRECB2".getBytes(java.nio.charset.StandardCharsets.US_ASCII).length;
+        int high = 10_000_001;
+        tampered[magicLen]     = (byte) (high >>> 24);
+        tampered[magicLen + 1] = (byte) (high >>> 16);
+        tampered[magicLen + 2] = (byte) (high >>> 8);
+        tampered[magicLen + 3] = (byte) high;
+        Uri uri = writeToTempFile(tampered, "v2_too_many_iterations.lcb.enc");
+        try {
+            BackupManager.openArchive(context(), uri, PASSWORD, (m, c, t) -> {});
+            fail("expected an unreasonably high iteration count to be rejected");
+        } catch (SecurityException expected) {
+            // correct
+        }
+    }
+
+    @Test
     public void unencryptedArchive_isNotFlaggedAsEncrypted() throws Exception {
         byte[] plaintext = realPlaintextArchive();
         Uri uri = writeToTempFile(plaintext, "plain.lcb");
         assertFalse(BackupManager.isEncrypted(context(), uri));
         BackupArchiveReader.ArchiveData data = BackupManager.openArchive(context(), uri, null, (m, c, t) -> {});
         assertTrue(data.checksumValid);
+    }
+
+    @Test
+    public void productionEncryptArchive_roundTripsThroughOpenArchive() throws Exception {
+        // Exercises BackupManager's own private encryptArchive (the exact code the
+        // app runs on every real encrypted backup) end to end, rather than only
+        // the mirror encryptV2Reference used elsewhere here.
+        byte[] plaintext = realPlaintextArchive();
+        java.lang.reflect.Method encrypt = BackupManager.class.getDeclaredMethod("encryptArchive", byte[].class, String.class);
+        encrypt.setAccessible(true);
+        byte[] archive = (byte[]) encrypt.invoke(null, plaintext, PASSWORD);
+        Uri uri = writeToTempFile(archive, "production_encrypted.lcb.enc");
+
+        assertTrue(BackupManager.isEncrypted(context(), uri));
+        BackupArchiveReader.ArchiveData data = BackupManager.openArchive(context(), uri, PASSWORD, (m, c, t) -> {});
+        assertTrue("archive written by production encryptArchive must decrypt and validate", data.checksumValid);
     }
 
     // Mirrors BackupManager's own v2 write format exactly (MAGIC_V2 + iterations +
