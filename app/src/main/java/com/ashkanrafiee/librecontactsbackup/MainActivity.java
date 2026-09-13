@@ -316,7 +316,6 @@ public class MainActivity extends Activity {
 
         LinearLayout form = new LinearLayout(this); form.setOrientation(LinearLayout.VERTICAL); form.setPadding(dp(24), dp(8), dp(24), 0);
         form.addView(label(getString(R.string.dialog_keep_title), 18, resColor(R.color.text_primary)));
-        TextView hint = label(getString(R.string.dialog_retention_current, retentionLabel(this)), 12, muted); hint.setPadding(0, dp(6), 0, 0); form.addView(hint);
 
         RadioGroup group = new RadioGroup(this);
         final int[] selected = {-1};
