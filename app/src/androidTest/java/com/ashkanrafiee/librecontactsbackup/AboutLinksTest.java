@@ -9,7 +9,7 @@ import org.junit.runner.RunWith;
 
 import java.net.URI;
 
-/** The About screen's app website link must stay a valid HTTPS URL on the app host. */
+/** The About screen's website and issues links must stay valid HTTPS URLs. */
 @RunWith(AndroidJUnit4.class)
 public class AboutLinksTest {
 
@@ -17,5 +17,12 @@ public class AboutLinksTest {
         URI uri = new URI(AboutActivity.APP_WEBSITE);
         assertEquals("https", uri.getScheme());
         assertEquals("librecontactsbackup.ashkanrafiee.com", uri.getHost());
+    }
+
+    @Test public void issues_link_points_at_the_libre_repo() throws Exception {
+        URI uri = new URI(AboutActivity.ISSUES_URL);
+        assertEquals("https", uri.getScheme());
+        assertEquals("github.com", uri.getHost());
+        assertEquals("/AshkanRafiee/Libre-Contacts-Backup/issues", uri.getPath());
     }
 }
