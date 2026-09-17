@@ -171,6 +171,9 @@
     <string name="sim_written_suffix"> （%1$d 个已写入 SIM 卡）</string>
     <string name="sim_restore_failed_warning">%1$d 个条目无法写入 SIM 卡 — SIM 卡可能已满或不支持</string>
     <string name="sim_restore_fallback_warning">%1$d 个条目已改为恢复到你的设备联系人中</string>
+    <string name="sim_target_title">恢复到：</string>
+    <string name="sim_target_original">其原始 SIM 卡</string>
+    <string name="sim_target_card">SIM 卡 %1$d</string>
 
     <string name="about_title">关于</string>
     <string name="about_section_heading">关于本应用</string>

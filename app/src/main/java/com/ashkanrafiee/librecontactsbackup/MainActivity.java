@@ -26,7 +26,9 @@ import com.ashkanrafiee.librecontactsbackup.snapshot.BackupAnalyzer;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreCategory;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreOptions;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreResult;
+import com.ashkanrafiee.librecontactsbackup.snapshot.SimContactsReader;
 import com.ashkanrafiee.librecontactsbackup.snapshot.SimRestoreDestination;
+import com.ashkanrafiee.librecontactsbackup.snapshot.SimTarget;
 
 import java.lang.ref.WeakReference;
 import java.text.DateFormatSymbols;
@@ -721,6 +723,7 @@ public class MainActivity extends Activity {
                 if (entry.getValue().isChecked()) selected.add(entry.getKey());
             }
             SimRestoreDestination destination = SimRestoreDestination.DEVICE;
+            int targetSubId = SimTarget.ORIGINAL_CARDS;
             if (simSection != null && simSection.box.isChecked()) {
                 selected.add(RestoreCategory.SIM_CONTACTS);
                 switch (simSection.destination.getCheckedRadioButtonId()) {
@@ -728,20 +731,34 @@ public class MainActivity extends Activity {
                     case SimSection.ID_BOTH: destination = SimRestoreDestination.BOTH; break;
                     default: destination = SimRestoreDestination.DEVICE;
                 }
+                targetSubId = simSection.resolveTarget(destination);
             }
             dialog.dismiss();
-            performRestore(snapshot, RestoreOptions.of(selected), destination);
+            performRestore(snapshot, RestoreOptions.of(selected), destination, targetSubId);
         });
         dialog.show();
     }
 
     private static final class SimSection {
-        static final int ID_DEVICE = 1, ID_SIM_CARD = 2, ID_BOTH = 3;
+        static final int ID_DEVICE = 1, ID_SIM_CARD = 2, ID_BOTH = 3, ID_TARGET_ORIGINAL = 4;
         final CheckBox box;
         final RadioGroup destination;
-        SimSection(CheckBox box, RadioGroup destination) {
+        /** Which card to write SIM entries to; {@code null} when no SIM phonebook is present. */
+        final RadioGroup target;
+        final Map<Integer, Integer> targetSubscriptionIdByRadioId;
+        SimSection(CheckBox box, RadioGroup destination, RadioGroup target, Map<Integer, Integer> targetSubscriptionIdByRadioId) {
             this.box = box;
             this.destination = destination;
+            this.target = target;
+            this.targetSubscriptionIdByRadioId = targetSubscriptionIdByRadioId;
+        }
+        int resolveTarget(SimRestoreDestination dest) {
+            if (target == null
+                    || (dest != SimRestoreDestination.SIM_CARD && dest != SimRestoreDestination.BOTH)) {
+                return SimTarget.ORIGINAL_CARDS;
+            }
+            Integer subId = targetSubscriptionIdByRadioId.get(target.getCheckedRadioButtonId());
+            return subId != null ? subId : SimTarget.ORIGINAL_CARDS;
         }
     }
 
@@ -788,23 +805,87 @@ public class MainActivity extends Activity {
         destParams.bottomMargin = dp(10);
         content.addView(destination, destParams);
 
+        // "Restore onto which card?" — only relevant once the user picks a SIM
+        // destination (SIM card or both), and only when the device currently
+        // exposes at least one SIM phonebook. "Original cards" keeps every
+        // entry on the card it was backed up from; a specific card redirects
+        // all entries there (the way to move contacts onto a newly acquired
+        // SIM).
+        final SimTargetOptions targetOptions = buildSimTargetOptions(content);
+
         box.setOnCheckedChangeListener((btn, checked) -> {
             device.setEnabled(checked);
             simCard.setEnabled(checked);
             both.setEnabled(checked);
+            RadioGroup target = targetOptions.group;
+            if (target != null) target.setVisibility(checked && !device.isChecked() ? View.VISIBLE : View.GONE);
         });
-        return new SimSection(box, destination);
+        destination.setOnCheckedChangeListener((group, checkedId) -> {
+            RadioGroup target = targetOptions.group;
+            if (target != null) target.setVisibility(box.isChecked() && checkedId != SimSection.ID_DEVICE ? View.VISIBLE : View.GONE);
+        });
+        return new SimSection(box, destination, targetOptions.group, targetOptions.subscriptionIdByRadioId);
+    }
+
+    private static final class SimTargetOptions {
+        final RadioGroup group; // null when the device exposes no SIM phonebook
+        final Map<Integer, Integer> subscriptionIdByRadioId;
+        SimTargetOptions(RadioGroup group, Map<Integer, Integer> map) {
+            this.group = group;
+            this.subscriptionIdByRadioId = map;
+        }
+    }
+
+    /**
+     * Builds the "restore onto which card?" radio group appended under the
+     * SIM destination radios. Returns an empty-option holder when the device
+     * currently exposes no SIM phonebook, in which case the destination
+     * collapses to "original cards" only.
+     */
+    private SimTargetOptions buildSimTargetOptions(LinearLayout content) {
+        List<Integer> cards = new ArrayList<>();
+        try { cards.addAll(SimContactsReader.activeAdnSubscriptionIds(getContentResolver())); }
+        catch (Exception e) { cards.clear(); }
+        if (cards.isEmpty()) return new SimTargetOptions(null, Collections.<Integer, Integer>emptyMap());
+
+        RadioGroup target = new RadioGroup(this);
+        target.setOrientation(RadioGroup.VERTICAL);
+        target.addView(label(getString(R.string.sim_target_title), 11, muted));
+        RadioButton original = new RadioButton(this);
+        original.setText(getString(R.string.sim_target_original));
+        original.setId(SimSection.ID_TARGET_ORIGINAL);
+        original.setChecked(true);
+        target.addView(original);
+        Map<Integer, Integer> targetSubscriptionIdByRadioId = new HashMap<>();
+        for (int i = 0; i < cards.size(); i++) {
+            RadioButton card = new RadioButton(this);
+            card.setText(getString(R.string.sim_target_card, i + 1));
+            int radioId = SimSection.ID_TARGET_ORIGINAL + 1 + i;
+            card.setId(radioId);
+            targetSubscriptionIdByRadioId.put(radioId, cards.get(i));
+            target.addView(card);
+        }
+        LinearLayout.LayoutParams targetParams = new LinearLayout.LayoutParams(-1, -2);
+        targetParams.setMarginStart(dp(6));
+        targetParams.bottomMargin = dp(10);
+        content.addView(target, targetParams);
+        target.setVisibility(View.GONE);
+        return new SimTargetOptions(target, targetSubscriptionIdByRadioId);
     }
 
     void performRestore(AndroidContactsSnapshot snapshot, RestoreOptions options) {
-        performRestore(snapshot, options, SimRestoreDestination.DEVICE);
+        performRestore(snapshot, options, SimRestoreDestination.DEVICE, SimTarget.ORIGINAL_CARDS);
     }
 
     void performRestore(AndroidContactsSnapshot snapshot, RestoreOptions options, SimRestoreDestination simDestination) {
+        performRestore(snapshot, options, simDestination, SimTarget.ORIGINAL_CARDS);
+    }
+
+    void performRestore(AndroidContactsSnapshot snapshot, RestoreOptions options, SimRestoreDestination simDestination, int targetSubId) {
         showRestoreProgress(getString(R.string.restore_progress_restoring_contacts));
         new Thread(() -> {
             try {
-                RestoreResult result = BackupManager.restoreWithOptions(this, snapshot, options, simDestination, (message, current, total) -> {
+                RestoreResult result = BackupManager.restoreWithOptions(this, snapshot, options, simDestination, targetSubId, (message, current, total) -> {
                     runOnUiThread(() -> { if (restoreProgressText != null) restoreProgressText.setText(message); });
                 });
                 BackupManager.prefs(this).edit().putLong("lastRestore", System.currentTimeMillis())

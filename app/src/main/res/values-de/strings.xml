@@ -171,6 +171,9 @@
     <string name="sim_written_suffix"> (%1$d auf SIM-Karte geschrieben)</string>
     <string name="sim_restore_failed_warning">%1$d Einträge konnten nicht auf die SIM-Karte geschrieben werden — die SIM-Karte ist möglicherweise voll oder wird nicht unterstützt</string>
     <string name="sim_restore_fallback_warning">%1$d Einträge wurden stattdessen in deine Gerätekontakte wiederhergestellt</string>
+    <string name="sim_target_title">Wiederherstellen auf:</string>
+    <string name="sim_target_original">Ihre ursprünglichen SIM-Karten</string>
+    <string name="sim_target_card">SIM-Karte %1$d</string>
 
     <string name="about_title">Info</string>
     <string name="about_section_heading">ÜBER DIESE APP</string>

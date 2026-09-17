@@ -171,6 +171,9 @@
     <string name="sim_written_suffix"> (%1$d SIM kartına yazıldı)</string>
     <string name="sim_restore_failed_warning">%1$d kayıt SIM kartına yazılamadı — SIM dolu veya desteklenmiyor olabilir</string>
     <string name="sim_restore_fallback_warning">Bunun yerine %1$d kayıt cihaz kişilerine geri yüklendi</string>
+    <string name="sim_target_title">Hangi karta geri yüklensin:</string>
+    <string name="sim_target_original">Orijinal SIM kartlarına</string>
+    <string name="sim_target_card">SIM kart %1$d</string>
 
     <string name="about_title">Hakkında</string>
     <string name="about_section_heading">BU UYGULAMA HAKKINDA</string>
