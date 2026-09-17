@@ -168,6 +168,7 @@
     <string name="about_source_label">Código fuente</string>
     <string name="about_github_label">Perfil de GitHub</string>
     <string name="about_website_label">Sitio web</string>
+    <string name="about_app_website_label">Sitio de la aplicación</string>
     <string name="about_suggestions_label">Sugerencias</string>
     <string name="about_footer">Libre Contacts Backup · Versión %1$s</string>
     <string name="about_no_browser">No hay ningún navegador disponible</string>

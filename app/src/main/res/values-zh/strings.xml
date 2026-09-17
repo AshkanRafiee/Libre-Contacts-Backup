@@ -168,6 +168,7 @@
     <string name="about_source_label">源代码</string>
     <string name="about_github_label">GitHub 主页</string>
     <string name="about_website_label">官方网站</string>
+    <string name="about_app_website_label">应用网站</string>
     <string name="about_suggestions_label">意见反馈</string>
     <string name="about_footer">Libre Contacts Backup · 版本 %1$s</string>
     <string name="about_no_browser">没有可用的浏览器</string>

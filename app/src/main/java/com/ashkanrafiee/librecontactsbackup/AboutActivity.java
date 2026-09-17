@@ -12,6 +12,7 @@ import android.widget.*;
 
 public class AboutActivity extends Activity {
     private static final String SUPPORT_EMAIL = "librecontactsbackup.abstract692@passmail.net";
+    static final String APP_WEBSITE = "https://librecontactsbackup.ashkanrafiee.com/";
     int background, card, muted, mint, link, textPrimary, subtitle, textTertiary;
     /** Spacing-only tightening: true on small screens OR any non-English language. Never used for font sizes or icon dimensions — see {@link #onCreate}. */
     boolean dense;
@@ -56,6 +57,7 @@ public class AboutActivity extends Activity {
         body.addView(info(getString(R.string.about_source_label), "github.com/AshkanRafiee/Libre-Contacts-Backup", v -> open("https://github.com/AshkanRafiee/Libre-Contacts-Backup")), margins(0, 0, 0, 8));
         body.addView(info(getString(R.string.about_github_label), "github.com/AshkanRafiee", v -> open("https://github.com/AshkanRafiee/")), margins(0, 0, 0, 8));
         body.addView(info(getString(R.string.about_website_label), "AshkanRafiee.com", v -> open("https://AshkanRafiee.com")), margins(0, 0, 0, 8));
+        body.addView(info(getString(R.string.about_app_website_label), "librecontactsbackup.ashkanrafiee.com", v -> open(APP_WEBSITE)), margins(0, 0, 0, 8));
         body.addView(info(getString(R.string.about_suggestions_label), SUPPORT_EMAIL, v -> email()), margins(0, 0, 0, d(20, 16)));
         String version = "1.0"; try { version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception ignored) { }
         TextView footer = text(getString(R.string.about_footer, version), 11, textTertiary); footer.setGravity(Gravity.CENTER); body.addView(footer);

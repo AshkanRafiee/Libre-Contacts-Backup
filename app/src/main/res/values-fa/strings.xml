@@ -168,6 +168,7 @@
     <string name="about_source_label">کد منبع</string>
     <string name="about_github_label">پروفایل گیت‌هاب</string>
     <string name="about_website_label">وب‌سایت</string>
+    <string name="about_app_website_label">وب‌سایت برنامه</string>
     <string name="about_suggestions_label">پیشنهادها</string>
     <string name="about_footer">Libre Contacts Backup · نسخهٔ %1$s</string>
     <string name="about_no_browser">مرورگری در دسترس نیست</string>
