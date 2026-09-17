@@ -10,6 +10,16 @@ A free, open-source, native Android app that backs up your contacts — fully of
 - **As close to lossless as the Contacts Provider allows** — preserves the full Contact → RawContact → Data hierarchy (every readable field, every account, every custom type), not a lossy flattened copy.
 - **Optional encryption** — AES-256-GCM with a key derived from your password (PBKDF2, 600,000 iterations); the password itself is stored on-device behind an Android Keystore key so scheduled backups can run unattended.
 
+## Download
+
+Libre Contacts Backup can be installed from any of these sources:
+
+- **GitHub** — the fastest way to get the latest updates is installing the signed APK directly from the [GitHub Releases](https://github.com/AshkanRafiee/Libre-Contacts-Backup/releases) page. Pair it with [Obtainium](https://obtainium.imranr.dev/) to receive and install updates automatically.
+- **F-Droid** — the preferred store edition for users who like app stores; get it from the [F-Droid listing](https://f-droid.org/en/packages/com.ashkanrafiee.librecontactsbackup/).
+- **Myket and Cafe Bazaar** — alternative store editions, handy for users less familiar with the options above:
+  - [Cafe Bazaar](https://cafebazaar.ir/app/com.ashkanrafiee.librecontactsbackup)
+  - [Myket](https://myket.ir/app/com.ashkanrafiee.librecontactsbackup)
+
 ## Backup format
 
 Each backup is a single timestamped `.lcb` archive containing:
