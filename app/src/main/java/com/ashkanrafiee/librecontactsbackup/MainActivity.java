@@ -26,6 +26,7 @@ import com.ashkanrafiee.librecontactsbackup.snapshot.BackupAnalyzer;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreCategory;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreOptions;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreResult;
+import com.ashkanrafiee.librecontactsbackup.snapshot.SimRestoreDestination;
 
 import java.lang.ref.WeakReference;
 import java.text.DateFormatSymbols;
@@ -628,6 +629,7 @@ public class MainActivity extends Activity {
             case GROUPS: return r.getQuantityString(R.plurals.groups_count, count, count);
             case ADDITIONAL_DATA: return r.getQuantityString(R.plurals.fields_count, count, count);
             case ACCOUNT_INFO: return r.getQuantityString(R.plurals.account_contacts_count, count, count);
+            case SIM_CONTACTS: return r.getQuantityString(R.plurals.sim_contacts_count, count, count);
             default: return String.valueOf(count);
         }
     }
@@ -663,7 +665,11 @@ public class MainActivity extends Activity {
         scroll.addView(content, new ScrollView.LayoutParams(-1, -2));
 
         LinkedHashMap<RestoreCategory, CheckBox> boxes = new LinkedHashMap<>();
+        final int simCount = analysis.countFor(RestoreCategory.SIM_CONTACTS);
         for (RestoreCategory category : RestoreCategory.values()) {
+            // SIM contacts get a dedicated row with its own destination
+            // choice (device / SIM card / both) below the generic list.
+            if (category == RestoreCategory.SIM_CONTACTS) continue;
             LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.TOP);
             row.setPadding(0, dp(10), 0, dp(10));
 
@@ -688,6 +694,10 @@ public class MainActivity extends Activity {
             row.setOnClickListener(v -> box.toggle());
             content.addView(row);
         }
+        // Shown only when the backup actually captured SIM entries — an old
+        // backup without SIM data must not offer a destination that has
+        // nothing to do.
+        final SimSection simSection = simCount > 0 ? buildSimRestoreSection(content, simCount) : null;
         panel.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
 
         LinearLayout buttons = new LinearLayout(this); buttons.setOrientation(LinearLayout.HORIZONTAL);
@@ -710,17 +720,91 @@ public class MainActivity extends Activity {
             for (Map.Entry<RestoreCategory, CheckBox> entry : boxes.entrySet()) {
                 if (entry.getValue().isChecked()) selected.add(entry.getKey());
             }
+            SimRestoreDestination destination = SimRestoreDestination.DEVICE;
+            if (simSection != null && simSection.box.isChecked()) {
+                selected.add(RestoreCategory.SIM_CONTACTS);
+                switch (simSection.destination.getCheckedRadioButtonId()) {
+                    case SimSection.ID_SIM_CARD: destination = SimRestoreDestination.SIM_CARD; break;
+                    case SimSection.ID_BOTH: destination = SimRestoreDestination.BOTH; break;
+                    default: destination = SimRestoreDestination.DEVICE;
+                }
+            }
             dialog.dismiss();
-            performRestore(snapshot, RestoreOptions.of(selected));
+            performRestore(snapshot, RestoreOptions.of(selected), destination);
         });
         dialog.show();
     }
 
+    private static final class SimSection {
+        static final int ID_DEVICE = 1, ID_SIM_CARD = 2, ID_BOTH = 3;
+        final CheckBox box;
+        final RadioGroup destination;
+        SimSection(CheckBox box, RadioGroup destination) {
+            this.box = box;
+            this.destination = destination;
+        }
+    }
+
+    /**
+     * Builds the SIM contacts section of the restore-selection dialog: a
+     * checkbox row (like every other category) plus a destination radio
+     * group — restore as device contacts, write back to the SIM card, or
+     * both. The radios are only enabled while the category is checked.
+     */
+    private SimSection buildSimRestoreSection(LinearLayout content, int simCount) {
+        LinearLayout simRow = new LinearLayout(this); simRow.setOrientation(LinearLayout.HORIZONTAL); simRow.setGravity(Gravity.TOP);
+        simRow.setPadding(0, dp(10), 0, dp(6));
+
+        CheckBox box = new CheckBox(this);
+        box.setChecked(RestoreCategory.SIM_CONTACTS.recommended);
+        LinearLayout.LayoutParams boxParams = new LinearLayout.LayoutParams(-2, -2);
+        boxParams.topMargin = dp(2);
+        simRow.addView(box, boxParams);
+
+        LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
+        String count = categoryCountLabel(this, RestoreCategory.SIM_CONTACTS, simCount);
+        words.addView(label(getString(R.string.category_sim_title) + "  ·  " + count, 14, resColor(R.color.text_primary)));
+        words.addView(label(getString(R.string.category_sim_description) + " " + getString(R.string.category_sim_example), 11, muted));
+        LinearLayout.LayoutParams wordParams = new LinearLayout.LayoutParams(0, -2, 1);
+        wordParams.setMarginStart(dp(10));
+        simRow.addView(words, wordParams);
+        simRow.setOnClickListener(v -> box.toggle());
+        content.addView(simRow);
+
+        RadioGroup destination = new RadioGroup(this);
+        destination.setOrientation(RadioGroup.VERTICAL);
+        RadioButton device = new RadioButton(this); device.setText(getString(R.string.sim_restore_device));
+        RadioButton simCard = new RadioButton(this); simCard.setText(getString(R.string.sim_restore_sim_card));
+        RadioButton both = new RadioButton(this); both.setText(getString(R.string.sim_restore_both));
+        device.setId(SimSection.ID_DEVICE);
+        simCard.setId(SimSection.ID_SIM_CARD);
+        both.setId(SimSection.ID_BOTH);
+        device.setChecked(true);
+        destination.addView(device);
+        destination.addView(simCard);
+        destination.addView(both);
+        LinearLayout.LayoutParams destParams = new LinearLayout.LayoutParams(-1, -2);
+        destParams.setMarginStart(dp(6));
+        destParams.bottomMargin = dp(10);
+        content.addView(destination, destParams);
+
+        box.setOnCheckedChangeListener((btn, checked) -> {
+            device.setEnabled(checked);
+            simCard.setEnabled(checked);
+            both.setEnabled(checked);
+        });
+        return new SimSection(box, destination);
+    }
+
     void performRestore(AndroidContactsSnapshot snapshot, RestoreOptions options) {
+        performRestore(snapshot, options, SimRestoreDestination.DEVICE);
+    }
+
+    void performRestore(AndroidContactsSnapshot snapshot, RestoreOptions options, SimRestoreDestination simDestination) {
         showRestoreProgress(getString(R.string.restore_progress_restoring_contacts));
         new Thread(() -> {
             try {
-                RestoreResult result = BackupManager.restoreWithOptions(this, snapshot, options, (message, current, total) -> {
+                RestoreResult result = BackupManager.restoreWithOptions(this, snapshot, options, simDestination, (message, current, total) -> {
                     runOnUiThread(() -> { if (restoreProgressText != null) restoreProgressText.setText(message); });
                 });
                 BackupManager.prefs(this).edit().putLong("lastRestore", System.currentTimeMillis())
