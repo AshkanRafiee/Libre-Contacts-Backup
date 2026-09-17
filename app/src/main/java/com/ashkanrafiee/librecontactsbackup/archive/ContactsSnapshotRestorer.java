@@ -1300,9 +1300,17 @@ public final class ContactsSnapshotRestorer {
                         try {
                             ok = writeOneToModernSim(resolver, sim);
                         } catch (Exception e) {
-                            Log.w(TAG, "Modern SIM write failed, trying legacy provider", e);
+                            Log.w(TAG, "Modern SIM write failed", e);
                         }
-                        if (!ok) {
+                        // On a multi-SIM device (physical + eSIM, or two cards)
+                        // an entry must go back to the very card it was captured
+                        // from. Only fall through to the legacy default-SIM
+                        // provider when the source subscription is genuinely
+                        // unknown; a known-but-unwritable card (e.g. removed
+                        // since the backup) must not silently land on a
+                        // different SIM, and instead follows the defined
+                        // fallback/report path in the caller.
+                        if (!ok && sim.subscriptionId < 0) {
                             try {
                                 ok = insertLegacyAdn(resolver, sim);
                             } catch (Exception legacyEx) {
