@@ -24,6 +24,7 @@ import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreResult;
 import com.ashkanrafiee.librecontactsbackup.snapshot.SimContact;
 import com.ashkanrafiee.librecontactsbackup.snapshot.SimRestoreDestination;
 import com.ashkanrafiee.librecontactsbackup.snapshot.SimSnapshotMapper;
+import com.ashkanrafiee.librecontactsbackup.snapshot.SimTarget;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -137,6 +138,19 @@ public final class ContactsSnapshotRestorer {
     }
 
     /**
+     * Restores SIM entries to whichever card they were backed up from (or the
+     * defined fallback), the default behaviour when no explicit card picker is
+     * shown.
+     */
+    public static RestoreResult restore(Context context,
+                                         AndroidContactsSnapshot snapshot,
+                                         RestoreOptions options,
+                                         SimRestoreDestination simDestination,
+                                         RestoreProgress progress) {
+        return restore(context, snapshot, options, simDestination, SimTarget.ORIGINAL_CARDS, progress);
+    }
+
+    /**
      * Performs a restore: creates new contacts matching the snapshot,
      * materializing only the categories selected in {@code options}.
      * Each source RawContact is recreated as its own target RawContact
@@ -147,7 +161,11 @@ public final class ContactsSnapshotRestorer {
      *
      * When {@link RestoreCategory#SIM_CONTACTS} is selected, the snapshot's
      * SIM card entries are restored to the destination named by
-     * {@code simDestination} (device, SIM card, or both).
+     * {@code simDestination} (device, SIM card, or both). With
+     * {@link SimTarget#ORIGINAL_CARDS} every entry goes back to the card it
+     * was captured from (multi-SIM phones keep each entry on its own card);
+     * a concrete {@code targetSubId} redirects every SIM entry to that single
+     * card — the way to move contacts onto a newly acquired SIM.
      *
      * Categories not selected are simply never written to the target
      * Contacts Provider during this call — the snapshot object (and the
@@ -158,6 +176,7 @@ public final class ContactsSnapshotRestorer {
                                          AndroidContactsSnapshot snapshot,
                                          RestoreOptions options,
                                          SimRestoreDestination simDestination,
+                                         int targetSubId,
                                          RestoreProgress progress) {
 
         RestoreResult result = new RestoreResult();
@@ -218,7 +237,7 @@ public final class ContactsSnapshotRestorer {
         separateAccidentallyMergedContacts(resolver, restoredRawContactIds, sourceContactIndexByRawId, result);
 
         if (options.includes(RestoreCategory.SIM_CONTACTS)) {
-            restoreSimEntries(context, snapshot, simDestination, result);
+            restoreSimEntries(context, snapshot, simDestination, targetSubId, result);
         }
 
         if (result.groupMembershipsUnrestored > 0) {
@@ -1182,6 +1201,7 @@ public final class ContactsSnapshotRestorer {
     private static void restoreSimEntries(Context context,
                                            AndroidContactsSnapshot snapshot,
                                            SimRestoreDestination destination,
+                                           int targetSubId,
                                            RestoreResult result) {
         List<SimContact> sims = snapshot.getSimContacts();
         result.simContactsRead = sims.size();
@@ -1200,7 +1220,7 @@ public final class ContactsSnapshotRestorer {
         }
 
         if (toSim) {
-            List<Integer> failedSimIndices = writeSimToCard(context.getContentResolver(), sims);
+            List<Integer> failedSimIndices = writeSimToCard(context.getContentResolver(), sims, targetSubId);
             for (int i = 0; i < sims.size(); i++) {
                 onSim[i] = !failedSimIndices.contains(i);
             }
@@ -1225,8 +1245,9 @@ public final class ContactsSnapshotRestorer {
 
         int failed = 0;
         for (int i = 0; i < sims.size(); i++) {
-            if (toDevice && onDevice[i]) continue;
-            if (toSim && onSim[i]) continue;
+            boolean reachedSim = toSim && onSim[i];
+            boolean reachedDevice = onDevice[i]; // main device pass, or the SIM_CARD fallback
+            if (reachedSim || reachedDevice) continue;
             failed++;
         }
         result.simRestoreFailed = failed;
@@ -1286,40 +1307,41 @@ public final class ContactsSnapshotRestorer {
      * Attempts to write every SIM entry to the SIM card phonebook: the modern
      * {@link SimPhonebookContract} ADN provider on API 31+, the legacy
      * {@code content://icc/adn} provider below that (and as a fallback when
-     * the modern provider rejects the write). Returns the indices of the
-     * entries that could not be written, so callers can fall back or report.
+     * the modern provider rejects the write). With {@code targetSubId >= 0}
+     * every entry is redirected to that single card (the way to move contacts
+     * onto a newly acquired SIM); with {@link SimTarget#ORIGINAL_CARDS} each
+     * entry goes back to the card it was captured from. Returns the indices
+     * of the entries that could not be written, so callers can fall back or
+     * report.
      */
-    private static List<Integer> writeSimToCard(ContentResolver resolver, List<SimContact> sims) {
+    private static List<Integer> writeSimToCard(ContentResolver resolver, List<SimContact> sims, int targetSubId) {
         List<Integer> failed = new ArrayList<>();
         for (int i = 0; i < sims.size(); i++) {
             SimContact sim = sims.get(i);
+            if (sim.number == null || sim.number.isEmpty()) { failed.add(i); continue; }
             boolean ok = false;
             try {
-                if (sim.number != null && !sim.number.isEmpty()) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        try {
-                            ok = writeOneToModernSim(resolver, sim);
-                        } catch (Exception e) {
-                            Log.w(TAG, "Modern SIM write failed", e);
-                        }
-                        // On a multi-SIM device (physical + eSIM, or two cards)
-                        // an entry must go back to the very card it was captured
-                        // from. Only fall through to the legacy default-SIM
-                        // provider when the source subscription is genuinely
-                        // unknown; a known-but-unwritable card (e.g. removed
-                        // since the backup) must not silently land on a
-                        // different SIM, and instead follows the defined
-                        // fallback/report path in the caller.
-                        if (!ok && sim.subscriptionId < 0) {
-                            try {
-                                ok = insertLegacyAdn(resolver, sim);
-                            } catch (Exception legacyEx) {
-                                Log.w(TAG, "Legacy SIM write failed", legacyEx);
-                            }
-                        }
-                    } else {
-                        ok = insertLegacyAdn(resolver, sim);
+                if (targetSubId >= 0) {
+                    try {
+                        ok = writeOneToModernSim(resolver, sim, targetSubId);
+                    } catch (Exception e) {
+                        Log.w(TAG, "SIM write to card " + targetSubId + " failed", e);
                     }
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    try {
+                        ok = writeOneToModernSim(resolver, sim, -1);
+                    } catch (Exception e) {
+                        Log.w(TAG, "Modern SIM write failed", e);
+                    }
+                    if (!ok && sim.subscriptionId < 0) {
+                        try {
+                            ok = insertLegacyAdn(resolver, sim);
+                        } catch (Exception legacyEx) {
+                            Log.w(TAG, "Legacy SIM write failed", legacyEx);
+                        }
+                    }
+                } else {
+                    ok = insertLegacyAdn(resolver, sim);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "SIM write failed for " + (sim.number != null ? sim.number : "?"), e);
@@ -1329,8 +1351,9 @@ public final class ContactsSnapshotRestorer {
         return failed;
     }
 
-    private static boolean writeOneToModernSim(ContentResolver resolver, SimContact sim) throws Exception {
-        int subId = sim.subscriptionId >= 0 ? sim.subscriptionId : defaultSimSubscriptionId(resolver);
+    private static boolean writeOneToModernSim(ContentResolver resolver, SimContact sim, int targetSubId) throws Exception {
+        int subId = targetSubId >= 0 ? targetSubId
+                : sim.subscriptionId >= 0 ? sim.subscriptionId : defaultSimSubscriptionId(resolver);
         if (subId < 0) return false;
         ContentValues values = new ContentValues();
         values.put(SimPhonebookContract.SimRecords.NAME, sim.name != null ? sim.name : "");

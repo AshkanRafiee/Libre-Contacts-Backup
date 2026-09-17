@@ -25,6 +25,7 @@ import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreResult;
 import com.ashkanrafiee.librecontactsbackup.snapshot.SimContact;
 import com.ashkanrafiee.librecontactsbackup.snapshot.SimContactsReader;
 import com.ashkanrafiee.librecontactsbackup.snapshot.SimRestoreDestination;
+import com.ashkanrafiee.librecontactsbackup.snapshot.SimTarget;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -247,7 +248,20 @@ public final class BackupManager {
     public static RestoreResult restoreWithOptions(Context c, AndroidContactsSnapshot snapshot,
                                                     RestoreOptions options, SimRestoreDestination simDestination,
                                                     RestoreProgress progress) {
-        return ContactsSnapshotRestorer.restore(c, snapshot, options, simDestination,
+        return restoreWithOptions(c, snapshot, options, simDestination, SimTarget.ORIGINAL_CARDS, progress);
+    }
+
+    /**
+     * As {@link #restoreWithOptions(Context, AndroidContactsSnapshot, RestoreOptions, SimRestoreDestination, RestoreProgress)}
+     * but with an explicit SIM target card: {@link SimTarget#ORIGINAL_CARDS}
+     * keeps each entry on the card it was captured from, while a concrete
+     * subscription id redirects every SIM entry to that single card (for
+     * moving contacts onto a newly acquired SIM).
+     */
+    public static RestoreResult restoreWithOptions(Context c, AndroidContactsSnapshot snapshot,
+                                                    RestoreOptions options, SimRestoreDestination simDestination,
+                                                    int targetSubId, RestoreProgress progress) {
+        return ContactsSnapshotRestorer.restore(c, snapshot, options, simDestination, targetSubId,
                 (message, current, total) -> progress.update(message, current, total));
     }
 

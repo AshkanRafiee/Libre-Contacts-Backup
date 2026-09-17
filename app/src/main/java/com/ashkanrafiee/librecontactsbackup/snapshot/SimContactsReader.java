@@ -9,6 +9,7 @@ import android.provider.SimPhonebookContract;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -64,6 +65,25 @@ public final class SimContactsReader {
         } catch (Exception e) {
             Log.w(TAG, "Legacy SIM phonebook unreadable", e);
             return new Result(false);
+        }
+    }
+
+    /**
+     * Best-effort list of subscription ids that currently expose a SIM
+     * phonebook (ADN) elementary file — i.e. the cards a restore could write
+     * contacts to. Returns an empty list on providers that are absent,
+     * unsupported, or empty (no SIM inserted); callers use this to offer the
+     * user a target-card choice.
+     */
+    public static List<Integer> activeAdnSubscriptionIds(ContentResolver resolver) {
+        try {
+            int[] subs = adnSubscriptionIds(resolver);
+            List<Integer> out = new ArrayList<>(subs.length);
+            for (int sub : subs) out.add(sub);
+            return out;
+        } catch (Exception e) {
+            Log.w(TAG, "Could not enumerate SIM card subscriptions", e);
+            return Collections.emptyList();
         }
     }
 
