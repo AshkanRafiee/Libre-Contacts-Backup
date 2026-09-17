@@ -20,6 +20,7 @@ import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreOptions;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreResult;
 import com.ashkanrafiee.librecontactsbackup.snapshot.SimContact;
 import com.ashkanrafiee.librecontactsbackup.snapshot.SimRestoreDestination;
+import com.ashkanrafiee.librecontactsbackup.snapshot.SimTarget;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -198,6 +199,40 @@ public class SimBackupRestoreTest {
         assertEquals(0, result.simContactsRead + result.simContactsRestoredDevice
                 + result.simContactsRestoredSim + result.simRestoreFailed);
         assertEquals(0, rawContactCount());
+    }
+
+    @Test public void restore_to_a_chosen_target_card_redirects_every_entry() throws Exception {
+        AndroidContactsSnapshot snapshot = twoEntrySimSnapshot();
+
+        // An explicit target redirects ALL entries to that single card — even
+        // entries whose original card is recorded elsewhere. An absent target
+        // must leave nothing on any currently inserted card.
+        RestoreResult result = ContactsSnapshotRestorer.restore(targetContext(), snapshot,
+                RestoreOptions.of(RestoreCategory.SIM_CONTACTS), SimRestoreDestination.SIM_CARD,
+                999999, (m, c, t) -> {});
+
+        assertEquals(2, result.simContactsRead);
+        assertEquals("redirected entries must not land on any inserted card",
+                0, result.simContactsRestoredSim);
+        int rescued = result.simContactsRestoredDevice + result.simRestoreFailed;
+        assertEquals("every entry must fall back to the device or be reported", 2, rescued);
+    }
+
+    @Test public void original_cards_target_is_the_default_of_the_public_overload() throws Exception {
+        AndroidContactsSnapshot snapshot = new AndroidContactsSnapshot();
+        snapshot.addSimContact(new SimContact("Sara Sim", "+15550123"));
+
+        RestoreResult via5arg = ContactsSnapshotRestorer.restore(targetContext(), snapshot,
+                RestoreOptions.of(RestoreCategory.SIM_CONTACTS), SimRestoreDestination.SIM_CARD, (m, c, t) -> {});
+        RestoreResult via6arg = ContactsSnapshotRestorer.restore(targetContext(), snapshot,
+                RestoreOptions.of(RestoreCategory.SIM_CONTACTS), SimRestoreDestination.SIM_CARD,
+                SimTarget.ORIGINAL_CARDS, (m, c, t) -> {});
+
+        assertEquals("the 5-arg restore must behave exactly like the original-cards target",
+                via5arg.simContactsRestoredSim, via6arg.simContactsRestoredSim);
+        assertEquals(via5arg.simContactsRestoredDevice, via6arg.simContactsRestoredDevice);
+        assertEquals(via5arg.simRestoreFailed, via6arg.simRestoreFailed);
+        assertEquals(1, via6arg.simContactsRead);
     }
 
     private boolean providerHasNumber(String number) {
