@@ -155,10 +155,22 @@
     <string name="category_account_example">örn. bir kişinin Google hesabınla bağlantılı olması</string>
     <string name="category_account_not_recommended">başka bir cihaza veya hesaba geri yüklerken önerilmez — kişi yine de geri yüklenir, ama yerel bir kişi olarak. Not: bir hesabı korumak, o uygulamanın kişiyi zaten eşitlenmiş olarak tanıyacağını garanti etmez — bu, ayara değil uygulamaya bağlıdır</string>
 
+    <string name="category_sim_title">SIM kartı kişileri</string>
+    <string name="category_sim_description">Bu cihazın SIM kartında saklanan ve bu yedeklemenin bir parçası olarak yakalanan adlar ve numaralar.</string>
+    <string name="category_sim_example">örn. “Sara · +1 555-0123”</string>
+
     <string name="restore_brief_errors">Geri yüklendi: %1$d, başarısız: %2$d%3$s</string>
     <string name="restore_brief_warnings">Geri yüklendi: %1$s (uyarılarla)%2$s</string>
     <string name="restore_brief_success">Geri yüklendi: %1$s, %2$s%3$s</string>
     <string name="restore_skipped_suffix"> (%1$d seçilmedi)</string>
+
+    <!-- SIM card restore destination (restore-selection dialog) -->
+    <string name="sim_restore_device">Cihaz kişileri</string>
+    <string name="sim_restore_sim_card">SIM kartı</string>
+    <string name="sim_restore_both">Her ikisi</string>
+    <string name="sim_written_suffix"> (%1$d SIM kartına yazıldı)</string>
+    <string name="sim_restore_failed_warning">%1$d kayıt SIM kartına yazılamadı — SIM dolu veya desteklenmiyor olabilir</string>
+    <string name="sim_restore_fallback_warning">Bunun yerine %1$d kayıt cihaz kişilerine geri yüklendi</string>
 
     <string name="about_title">Hakkında</string>
     <string name="about_section_heading">BU UYGULAMA HAKKINDA</string>
@@ -205,6 +217,10 @@
     <plurals name="account_contacts_count">
         <item quantity="one">%1$d kişi bir hesaba bağlı</item>
         <item quantity="other">%1$d kişi bir hesaba bağlı</item>
+    </plurals>
+    <plurals name="sim_contacts_count">
+        <item quantity="one">%1$d SIM kartı kişisi</item>
+        <item quantity="other">%1$d SIM kartı kişisi</item>
     </plurals>
     <plurals name="backup_sets_count">
         <item quantity="one">%1$d set</item>

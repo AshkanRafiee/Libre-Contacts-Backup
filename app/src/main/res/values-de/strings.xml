@@ -155,10 +155,22 @@
     <string name="category_account_example">z. B. dass ein Kontakt mit deinem Google-Konto verknüpft ist</string>
     <string name="category_account_not_recommended">nicht empfohlen bei einer Wiederherstellung auf ein anderes Gerät oder Konto — der Kontakt wird trotzdem wiederhergestellt, jedoch als lokaler Kontakt. Hinweis: Das Beibehalten eines Kontos garantiert nicht, dass diese App den Kontakt als bereits synchronisiert erkennt — das hängt von der App ab, nicht von dieser Einstellung</string>
 
+    <string name="category_sim_title">SIM-Karten-Kontakte</string>
+    <string name="category_sim_description">Namen und Nummern, die auf der SIM-Karte dieses Geräts gespeichert sind und als Teil dieser Sicherung erfasst wurden.</string>
+    <string name="category_sim_example">z. B. „Sara · +1 555-0123“</string>
+
     <string name="restore_brief_errors">Wiederhergestellt: %1$d, fehlgeschlagen: %2$d%3$s</string>
     <string name="restore_brief_warnings">Wiederhergestellt: %1$s (mit Warnungen)%2$s</string>
     <string name="restore_brief_success">Wiederhergestellt: %1$s, %2$s%3$s</string>
     <string name="restore_skipped_suffix"> (%1$d nicht ausgewählt)</string>
+
+    <!-- SIM card restore destination (restore-selection dialog) -->
+    <string name="sim_restore_device">Gerätekontakte</string>
+    <string name="sim_restore_sim_card">SIM-Karte</string>
+    <string name="sim_restore_both">Beides</string>
+    <string name="sim_written_suffix"> (%1$d auf SIM-Karte geschrieben)</string>
+    <string name="sim_restore_failed_warning">%1$d Einträge konnten nicht auf die SIM-Karte geschrieben werden — die SIM-Karte ist möglicherweise voll oder wird nicht unterstützt</string>
+    <string name="sim_restore_fallback_warning">%1$d Einträge wurden stattdessen in deine Gerätekontakte wiederhergestellt</string>
 
     <string name="about_title">Info</string>
     <string name="about_section_heading">ÜBER DIESE APP</string>
@@ -205,6 +217,10 @@
     <plurals name="account_contacts_count">
         <item quantity="one">%1$d Kontakt mit einem Konto verknüpft</item>
         <item quantity="other">%1$d Kontakte mit einem Konto verknüpft</item>
+    </plurals>
+    <plurals name="sim_contacts_count">
+        <item quantity="one">%1$d SIM-Karten-Kontakt</item>
+        <item quantity="other">%1$d SIM-Karten-Kontakte</item>
     </plurals>
     <plurals name="backup_sets_count">
         <item quantity="one">%1$d Satz</item>

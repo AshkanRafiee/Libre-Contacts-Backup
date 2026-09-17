@@ -155,10 +155,22 @@
     <string name="category_account_example">مثلاً اینکه یک مخاطب به حساب گوگل شما مرتبط است</string>
     <string name="category_account_not_recommended">هنگام بازگردانی به دستگاه یا حساب دیگر توصیه نمی‌شود — مخاطب همچنان بازگردانده می‌شود، اما به‌صورت مخاطب محلی. توجه: نگه‌داشتن یک حساب تضمین نمی‌کند که آن برنامه مخاطب را از پیش همگام‌شده بشناسد — این به برنامه بستگی دارد نه به این تنظیم</string>
 
+    <string name="category_sim_title">مخاطبین سیم‌کارت</string>
+    <string name="category_sim_description">نام‌ها و شماره‌های ذخیره‌شده روی سیم‌کارت این دستگاه، که به‌عنوان بخشی از این پشتیبان ثبت شده‌اند.</string>
+    <string name="category_sim_example">مثلاً «سارا · +1 555-0123»</string>
+
     <string name="restore_brief_errors">بازگردانی‌شده: %1$d، ناموفق: %2$d%3$s</string>
     <string name="restore_brief_warnings">بازگردانی‌شده: %1$s (با هشدار)%2$s</string>
     <string name="restore_brief_success">بازگردانی‌شده: %1$s، %2$s%3$s</string>
     <string name="restore_skipped_suffix"> (%1$d انتخاب نشده)</string>
+
+    <!-- SIM card restore destination (restore-selection dialog) -->
+    <string name="sim_restore_device">مخاطبین دستگاه</string>
+    <string name="sim_restore_sim_card">سیم‌کارت</string>
+    <string name="sim_restore_both">هر دو</string>
+    <string name="sim_written_suffix"> (%1$d مورد روی سیم‌کارت نوشته شد)</string>
+    <string name="sim_restore_failed_warning">%1$d مورد روی سیم‌کارت نوشته نشد — سیم‌کارت ممکن است پر باشد یا پشتیبانی نشود</string>
+    <string name="sim_restore_fallback_warning">در عوض، %1$d مورد در مخاطبین دستگاه شما بازگردانده شد</string>
 
     <string name="about_title">درباره</string>
     <string name="about_section_heading">دربارهٔ این برنامه</string>
@@ -205,6 +217,10 @@
     <plurals name="account_contacts_count">
         <item quantity="one">%1$d مخاطب مرتبط با یک حساب</item>
         <item quantity="other">%1$d مخاطب مرتبط با یک حساب</item>
+    </plurals>
+    <plurals name="sim_contacts_count">
+        <item quantity="one">%1$d مخاطب سیم‌کارت</item>
+        <item quantity="other">%1$d مخاطب سیم‌کارت</item>
     </plurals>
     <plurals name="backup_sets_count">
         <item quantity="one">%1$d مجموعه</item>

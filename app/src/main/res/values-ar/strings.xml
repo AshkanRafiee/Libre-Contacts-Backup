@@ -155,10 +155,22 @@
     <string name="category_account_example">مثال: أن تكون جهة اتصال مرتبطة بحساب Google الخاص بك</string>
     <string name="category_account_not_recommended">غير موصى به عند الاستعادة إلى جهاز أو حساب مختلف — تُستعاد جهة الاتصال على أي حال، ولكن كجهة اتصال محلية. ملاحظة: الاحتفاظ بحساب لا يضمن أن يتعرّف ذلك التطبيق على جهة الاتصال كمتزامنة مسبقًا — فهذا يعتمد على التطبيق، لا على هذا الإعداد</string>
 
+    <string name="category_sim_title">جهات اتصال بطاقة SIM</string>
+    <string name="category_sim_description">الأسماء والأرقام المخزّنة على بطاقة SIM لهذا الجهاز، الملتقطة كجزء من هذه النسخة الاحتياطية.</string>
+    <string name="category_sim_example">مثال: «سارة · +1 555-0123»</string>
+
     <string name="restore_brief_errors">تمت الاستعادة: %1$d، فشل: %2$d%3$s</string>
     <string name="restore_brief_warnings">تمت الاستعادة: %1$s (مع تحذيرات)%2$s</string>
     <string name="restore_brief_success">تمت الاستعادة: %1$s، %2$s%3$s</string>
     <string name="restore_skipped_suffix"> (%1$d غير محدَّد)</string>
+
+    <!-- SIM card restore destination (restore-selection dialog) -->
+    <string name="sim_restore_device">جهات اتصال الجهاز</string>
+    <string name="sim_restore_sim_card">بطاقة SIM</string>
+    <string name="sim_restore_both">كلاهما</string>
+    <string name="sim_written_suffix"> (%1$d مكتوبة على بطاقة SIM)</string>
+    <string name="sim_restore_failed_warning">تعذّر كتابة %1$d من المدخلات على بطاقة SIM — قد تكون البطاقة ممتلئة أو غير مدعومة</string>
+    <string name="sim_restore_fallback_warning">بدلاً من ذلك، تمت استعادة %1$d من المدخلات إلى جهات اتصال جهازك</string>
 
     <string name="about_title">حول التطبيق</string>
     <string name="about_section_heading">حول هذا التطبيق</string>
@@ -229,6 +241,14 @@
         <item quantity="few">%1$d جهات اتصال مرتبطة بحساب</item>
         <item quantity="many">%1$d جهة اتصال مرتبطة بحساب</item>
         <item quantity="other">%1$d جهة اتصال مرتبطة بحساب</item>
+    </plurals>
+    <plurals name="sim_contacts_count">
+        <item quantity="zero">لا توجد جهات اتصال على بطاقة SIM</item>
+        <item quantity="one">جهة اتصال واحدة على بطاقة SIM</item>
+        <item quantity="two">جهتا اتصال على بطاقة SIM</item>
+        <item quantity="few">%1$d جهات اتصال على بطاقة SIM</item>
+        <item quantity="many">%1$d جهة اتصال على بطاقة SIM</item>
+        <item quantity="other">%1$d جهة اتصال على بطاقة SIM</item>
     </plurals>
     <plurals name="backup_sets_count">
         <item quantity="zero">لا توجد مجموعات نسخ احتياطي</item>

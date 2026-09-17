@@ -155,10 +155,22 @@
     <string name="category_account_example">p. ej. que un contacto esté vinculado a tu cuenta de Google</string>
     <string name="category_account_not_recommended">no recomendado al restaurar en otro dispositivo o cuenta — el contacto se restaura igualmente, pero como contacto local. Nota: conservar una cuenta no garantiza que esa app reconozca el contacto como ya sincronizado — eso depende de la app, no de este ajuste</string>
 
+    <string name="category_sim_title">Contactos de la tarjeta SIM</string>
+    <string name="category_sim_description">Nombres y números almacenados en la tarjeta SIM de este dispositivo, capturados como parte de esta copia de seguridad.</string>
+    <string name="category_sim_example">p. ej. «Sara · +1 555-0123»</string>
+
     <string name="restore_brief_errors">Restaurado: %1$d, fallidos: %2$d%3$s</string>
     <string name="restore_brief_warnings">Restaurado: %1$s (con avisos)%2$s</string>
     <string name="restore_brief_success">Restaurado: %1$s, %2$s%3$s</string>
     <string name="restore_skipped_suffix"> (%1$d no seleccionados)</string>
+
+    <!-- SIM card restore destination (restore-selection dialog) -->
+    <string name="sim_restore_device">Contactos del dispositivo</string>
+    <string name="sim_restore_sim_card">Tarjeta SIM</string>
+    <string name="sim_restore_both">Ambos</string>
+    <string name="sim_written_suffix"> (%1$d escritos en la tarjeta SIM)</string>
+    <string name="sim_restore_failed_warning">%1$d entradas no pudieron escribirse en la tarjeta SIM — la SIM puede estar llena o no ser compatible</string>
+    <string name="sim_restore_fallback_warning">%1$d entradas se restauraron en tus contactos del dispositivo en su lugar</string>
 
     <string name="about_title">Acerca de</string>
     <string name="about_section_heading">ACERCA DE ESTA APLICACIÓN</string>
@@ -205,6 +217,10 @@
     <plurals name="account_contacts_count">
         <item quantity="one">%1$d contacto vinculado a una cuenta</item>
         <item quantity="other">%1$d contactos vinculados a una cuenta</item>
+    </plurals>
+    <plurals name="sim_contacts_count">
+        <item quantity="one">%1$d contacto de SIM</item>
+        <item quantity="other">%1$d contactos de SIM</item>
     </plurals>
     <plurals name="backup_sets_count">
         <item quantity="one">%1$d conjunto</item>

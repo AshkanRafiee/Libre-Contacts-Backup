@@ -170,11 +170,23 @@
     <string name="category_account_example">e.g. that a contact is linked to your Google account</string>
     <string name="category_account_not_recommended">not recommended when restoring to a different device or account — the contact still restores, just as a local contact. Note: keeping an account doesn\'t guarantee that app will recognize the contact as already synced — that depends on the app, not this setting</string>
 
+    <string name="category_sim_title">SIM card contacts</string>
+    <string name="category_sim_description">Names and numbers stored on this device\'s SIM card, captured as part of this backup.</string>
+    <string name="category_sim_example">e.g. “Sara · +1 555-0123”</string>
+
     <!-- Restore brief summary (toast after a restore finishes) -->
     <string name="restore_brief_errors">Restored: %1$d, failed: %2$d%3$s</string>
     <string name="restore_brief_warnings">Restored: %1$s (with warnings)%2$s</string>
     <string name="restore_brief_success">Restored: %1$s, %2$s%3$s</string>
     <string name="restore_skipped_suffix"> (%1$d not selected)</string>
+
+    <!-- SIM card restore destination (restore-selection dialog) -->
+    <string name="sim_restore_device">Device contacts</string>
+    <string name="sim_restore_sim_card">SIM card</string>
+    <string name="sim_restore_both">Both</string>
+    <string name="sim_written_suffix"> (%1$d written to SIM card)</string>
+    <string name="sim_restore_failed_warning">%1$d entries could not be written to the SIM card — the SIM may be full or unsupported</string>
+    <string name="sim_restore_fallback_warning">%1$d entries were restored to your device contacts instead</string>
 
     <!-- About screen -->
     <string name="about_title">About</string>
@@ -224,6 +236,10 @@
     <plurals name="account_contacts_count">
         <item quantity="one">%1$d contact linked to an account</item>
         <item quantity="other">%1$d contacts linked to an account</item>
+    </plurals>
+    <plurals name="sim_contacts_count">
+        <item quantity="one">%1$d SIM contact</item>
+        <item quantity="other">%1$d SIM contacts</item>
     </plurals>
     <plurals name="backup_sets_count">
         <item quantity="one">%1$d set</item>
