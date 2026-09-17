@@ -2,7 +2,7 @@ Libre Contacts Backup is a FLOSS native Android app for private, local-first con
 
 Features:
 * Lossless backup preserving the full Contact → RawContact → Data hierarchy, including contact groups
-* SIM card phonebook captured in every backup; on restore, SIM contacts can be written back to the SIM card, into the device address book, or both — on multi-SIM and eSIM phones every contact goes back to the card it came from, or you can redirect all contacts to a specific card
+* SIM card phonebook captured in every backup; on restore, SIM contacts can be written back to the SIM card, into the device address book, or both — and on phones with more than one SIM (including an eSIM) you pick which of the available cards they go to
 * Scheduled local backups at a time you choose — daily, weekly on a selected weekday, or monthly on a selected day (if a month is shorter than that day, it runs on the month's last day) — with no internet connection required
 * Single-file LCB archives containing canonical JSON, VCF, CSV, and normalized exports
 * Optional AES-256-GCM password-protected encryption (Android Keystore backed)
