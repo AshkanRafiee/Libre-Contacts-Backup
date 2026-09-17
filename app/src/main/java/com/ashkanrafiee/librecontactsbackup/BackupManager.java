@@ -22,6 +22,9 @@ import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactsSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.ContactsSnapshotReader;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreOptions;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreResult;
+import com.ashkanrafiee.librecontactsbackup.snapshot.SimContact;
+import com.ashkanrafiee.librecontactsbackup.snapshot.SimContactsReader;
+import com.ashkanrafiee.librecontactsbackup.snapshot.SimRestoreDestination;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -124,6 +127,15 @@ public final class BackupManager {
 
             // Step 1: Read lossless snapshot from provider
             AndroidContactsSnapshot snapshot = ContactsSnapshotReader.read(c);
+            // Capture the SIM card phonebook (best-effort) so every backup
+            // carries the SIM contacts as a separate, additive part. A device
+            // with no SIM or a non-exposed provider simply yields zero entries.
+            try {
+                SimContactsReader.Result sim = SimContactsReader.readSimContacts(c.getContentResolver());
+                for (SimContact simContact : sim.contacts) snapshot.addSimContact(simContact);
+            } catch (Exception e) {
+                Log.w("LibreContactsBackup", "SIM phonebook capture failed; continuing without it", e);
+            }
 
             // Step 2: Write .lcb archive
             String stamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(new Date());
@@ -148,6 +160,11 @@ public final class BackupManager {
             prefs(c).edit().putLong("last", System.currentTimeMillis()).apply();
 
             String message = savedContactsMessage(c, snapshot.getContactCount());
+            if (snapshot.getSimContactCount() > 0) {
+                String simPart = c.getResources().getQuantityString(
+                        R.plurals.sim_contacts_count, snapshot.getSimContactCount(), snapshot.getSimContactCount());
+                message += " · " + simPart;
+            }
             if (notify) MainActivity.notice(c, c.getString(R.string.notice_backup_complete_title), message);
             return new BackupOutcome(true, message);
         } catch (Exception e) {
@@ -218,7 +235,19 @@ public final class BackupManager {
      */
     public static RestoreResult restoreWithOptions(Context c, AndroidContactsSnapshot snapshot,
                                                     RestoreOptions options, RestoreProgress progress) {
-        return ContactsSnapshotRestorer.restore(c, snapshot, options,
+        return restoreWithOptions(c, snapshot, options, SimRestoreDestination.DEVICE, progress);
+    }
+
+    /**
+     * As {@link #restoreWithOptions(Context, AndroidContactsSnapshot, RestoreOptions, RestoreProgress)}
+     * but with an explicit {@link SimRestoreDestination} for the backup's SIM
+     * card entries (used when the user picked a SIM destination in the
+     * restore-selection dialog).
+     */
+    public static RestoreResult restoreWithOptions(Context c, AndroidContactsSnapshot snapshot,
+                                                    RestoreOptions options, SimRestoreDestination simDestination,
+                                                    RestoreProgress progress) {
+        return ContactsSnapshotRestorer.restore(c, snapshot, options, simDestination,
                 (message, current, total) -> progress.update(message, current, total));
     }
 
