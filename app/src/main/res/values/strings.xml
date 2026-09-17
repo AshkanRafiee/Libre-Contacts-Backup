@@ -188,7 +188,6 @@
     <string name="about_suggestions_label">Suggestions</string>
     <string name="about_footer">Libre Contacts Backup · Version %1$s</string>
     <string name="about_no_browser">No browser available</string>
-    <string name="about_no_email_app">No email app available</string>
 
     <!-- Scheduled backup notifications -->
     <string name="notification_channel_scheduled_backups">Scheduled backups</string>

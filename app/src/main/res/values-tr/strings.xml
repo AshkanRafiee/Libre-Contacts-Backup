@@ -171,7 +171,6 @@
     <string name="about_suggestions_label">Öneriler</string>
     <string name="about_footer">Libre Contacts Backup · Sürüm %1$s</string>
     <string name="about_no_browser">Kullanılabilir tarayıcı yok</string>
-    <string name="about_no_email_app">Kullanılabilir e-posta uygulaması yok</string>
 
     <string name="notification_channel_scheduled_backups">Zamanlanmış yedeklemeler</string>
     <string name="notification_backup_complete_title">Libre Contacts Backup tamamlandı</string>

@@ -171,7 +171,6 @@
     <string name="about_suggestions_label">Sugerencias</string>
     <string name="about_footer">Libre Contacts Backup · Versión %1$s</string>
     <string name="about_no_browser">No hay ningún navegador disponible</string>
-    <string name="about_no_email_app">No hay ninguna aplicación de correo disponible</string>
 
     <string name="notification_channel_scheduled_backups">Copias de seguridad programadas</string>
     <string name="notification_backup_complete_title">Copia de seguridad de Libre Contacts Backup completada</string>

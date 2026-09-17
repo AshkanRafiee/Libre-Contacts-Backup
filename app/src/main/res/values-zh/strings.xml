@@ -171,7 +171,6 @@
     <string name="about_suggestions_label">意见反馈</string>
     <string name="about_footer">Libre Contacts Backup · 版本 %1$s</string>
     <string name="about_no_browser">没有可用的浏览器</string>
-    <string name="about_no_email_app">没有可用的邮件应用</string>
 
     <string name="notification_channel_scheduled_backups">计划备份</string>
     <string name="notification_backup_complete_title">Libre Contacts Backup 备份完成</string>

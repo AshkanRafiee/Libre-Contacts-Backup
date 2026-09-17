@@ -11,8 +11,8 @@ import android.view.*;
 import android.widget.*;
 
 public class AboutActivity extends Activity {
-    private static final String SUPPORT_EMAIL = "librecontactsbackup.abstract692@passmail.net";
     static final String APP_WEBSITE = "https://librecontactsbackup.ashkanrafiee.com/";
+    static final String ISSUES_URL = "https://github.com/AshkanRafiee/Libre-Contacts-Backup/issues";
     int background, card, muted, mint, link, textPrimary, subtitle, textTertiary;
     /** Spacing-only tightening: true on small screens OR any non-English language. Never used for font sizes or icon dimensions — see {@link #onCreate}. */
     boolean dense;
@@ -57,12 +57,11 @@ public class AboutActivity extends Activity {
         body.addView(info(getString(R.string.about_source_label), "github.com/AshkanRafiee/Libre-Contacts-Backup", v -> open("https://github.com/AshkanRafiee/Libre-Contacts-Backup")), margins(0, 0, 0, 8));
         body.addView(info(getString(R.string.about_github_label), "github.com/AshkanRafiee", v -> open("https://github.com/AshkanRafiee/")), margins(0, 0, 0, 8));
         body.addView(info(getString(R.string.about_website_label), "librecontactsbackup.ashkanrafiee.com", v -> open(APP_WEBSITE)), margins(0, 0, 0, 8));
-        body.addView(info(getString(R.string.about_suggestions_label), SUPPORT_EMAIL, v -> email()), margins(0, 0, 0, d(20, 16)));
+        body.addView(info(getString(R.string.about_suggestions_label), "github.com/AshkanRafiee/Libre-Contacts-Backup/issues", v -> open(ISSUES_URL)), margins(0, 0, 0, d(20, 16)));
         String version = "1.0"; try { version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception ignored) { }
         TextView footer = text(getString(R.string.about_footer, version), 11, textTertiary); footer.setGravity(Gravity.CENTER); body.addView(footer);
     }
     TextView section(String heading, String body) { TextView v = text(heading + "\n" + body, 12, muted); v.setLineSpacing(2, 1.05f); return v; }
     LinearLayout info(String heading, String value, View.OnClickListener click) { LinearLayout box = new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL); box.setPadding(dp(16), dp(d(13, 11)), dp(16), dp(d(13, 11))); box.setBackground(rounded(card, 15)); TextView h = text(heading, 12, muted); box.addView(h); TextView v = text(value, 14, click == null ? textPrimary : link); v.setPadding(0, dp(5), 0, 0); v.setMaxLines(2); v.setEllipsize(TextUtils.TruncateAt.END); if (click != null) { v.setPaintFlags(v.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG); box.setOnClickListener(click); } box.addView(v); return box; }
     void open(String url) { try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception e) { Toast.makeText(this, getString(R.string.about_no_browser), Toast.LENGTH_SHORT).show(); } }
-    void email() { try { startActivity(new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:" + SUPPORT_EMAIL))); } catch (Exception e) { Toast.makeText(this, getString(R.string.about_no_email_app), Toast.LENGTH_SHORT).show(); } }
 }
