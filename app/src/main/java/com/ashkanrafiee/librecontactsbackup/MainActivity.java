@@ -807,6 +807,12 @@ public class MainActivity extends Activity {
         simRow.setOnClickListener(v -> box.toggle());
         content.addView(simRow);
 
+        // A single heading frames the whole choice as a question about the
+        // entries' destination — "restore them to X" — so the options below
+        // read as places to put the contacts, never as a second filter over
+        // which entries get restored.
+        LinearLayout destinationBox = new LinearLayout(this); destinationBox.setOrientation(LinearLayout.VERTICAL);
+        destinationBox.addView(label(getString(R.string.sim_restore_destination_title), 11, muted));
         RadioGroup destination = new RadioGroup(this);
         destination.setOrientation(RadioGroup.VERTICAL);
         RadioButton device = new RadioButton(this); device.setText(getString(R.string.sim_restore_device));
@@ -819,10 +825,11 @@ public class MainActivity extends Activity {
         destination.addView(device);
         destination.addView(simCard);
         destination.addView(both);
+        destinationBox.addView(destination);
         LinearLayout.LayoutParams destParams = new LinearLayout.LayoutParams(-1, -2);
         destParams.setMarginStart(dp(6));
         destParams.bottomMargin = dp(10);
-        content.addView(destination, destParams);
+        content.addView(destinationBox, destParams);
 
         // "Restore to which card?" — only relevant once the user picks a SIM
         // destination (SIM card or both), and only when the device currently
