@@ -2,6 +2,7 @@ Libre Contacts Backup 是一款原生、自由开源（FLOSS）的 Android 应�
 
 功能特点：
 * 无损备份，完整保留 Contact → RawContact → Data 的层级结构，包括联系人分组
+* 每次备份均包含 SIM 卡通讯录；恢复时可将 SIM 联系人写回 SIM 卡、导入设备通讯录，或同时写入两者
 * 可在你选定的时间自动执行每日本地备份，无需联网
 * 单文件 LCB 存档，包含标准的 JSON、VCF、CSV 及规范化导出格式
 * 可选的 AES-256-GCM 密码加密（基于 Android Keystore）

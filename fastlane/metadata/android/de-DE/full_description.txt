@@ -2,6 +2,7 @@ Libre Contacts Backup ist eine native, freie (FLOSS) Android-App für private, l
 
 Funktionen:
 * Verlustfreie Sicherung, die die vollständige Contact-→-RawContact-→-Data-Hierarchie einschließlich Kontaktgruppen bewahrt
+* SIM-Karten-Telefonbuch wird bei jeder Sicherung mit erfasst; bei der Wiederherstellung können SIM-Kontakte zurück auf die SIM-Karte, in das Gerätadressbuch oder beides geschrieben werden
 * Geplante tägliche lokale Sicherungen zu einer von dir gewählten Uhrzeit, ganz ohne Internetverbindung
 * Einzeldatei-LCB-Archive mit kanonischen JSON-, VCF-, CSV- und normalisierten Exporten
 * Optionale, passwortgeschützte AES-256-GCM-Verschlüsselung (gestützt auf den Android Keystore)

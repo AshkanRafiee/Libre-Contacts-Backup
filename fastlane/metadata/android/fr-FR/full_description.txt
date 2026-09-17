@@ -2,6 +2,7 @@ Libre Contacts Backup est une application Android native et libre (FLOSS) pour d
 
 Fonctionnalités :
 * Sauvegarde sans perte préservant toute la hiérarchie Contact → RawContact → Data, y compris les groupes de contacts
+* Carnet téléphonique de la carte SIM systématiquement inclus dans chaque sauvegarde ; lors de la restauration, les contacts SIM peuvent être réécrits sur la carte SIM, dans le carnet d'adresses de l'appareil, ou les deux
 * Sauvegardes locales quotidiennes planifiées à l'heure de votre choix, sans connexion internet requise
 * Archives LCB en un seul fichier contenant des exports JSON canoniques, VCF, CSV et normalisés
 * Chiffrement optionnel protégé par mot de passe en AES-256-GCM (basé sur l'Android Keystore)
