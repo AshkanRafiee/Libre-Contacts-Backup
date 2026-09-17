@@ -4,6 +4,7 @@ import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactsSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactSnapshot.DataRowSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactSnapshot.RawContactSnapshot;
+import com.ashkanrafiee.librecontactsbackup.snapshot.SimContact;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,7 +46,10 @@ public final class NormalizedJsonExporter {
      * This preserves every row, every column, and every piece of binary data,
      * including the Groups table needed to restore group_membership rows.
      *
-     * Format is an object: { "contacts": [...], "groups": [...] }.
+     * Format is an object: { "contacts": [...], "groups": [...], "simContacts": [...] }.
+     * The "simContacts" key is optional on input: archives written before SIM
+     * card support parse to an empty list, and this app's snapshots are read
+     * by versions without SIM support as if the key were absent.
      */
     public static String exportCanonical(AndroidContactsSnapshot snapshot) throws JSONException {
         JSONObject root = new JSONObject();
@@ -60,6 +64,12 @@ public final class NormalizedJsonExporter {
             groupsArr.put(group.toJson());
         }
         root.put("groups", groupsArr);
+
+        JSONArray simArr = new JSONArray();
+        for (SimContact sim : snapshot.simContacts) {
+            simArr.put(sim.toJson());
+        }
+        root.put("simContacts", simArr);
 
         return root.toString(2);
     }
@@ -76,6 +86,7 @@ public final class NormalizedJsonExporter {
 
         JSONArray contactsArr;
         JSONArray groupsArr = null;
+        JSONArray simArr = null;
         if (trimmed.startsWith("[")) {
             contactsArr = new JSONArray(trimmed);
         } else {
@@ -83,6 +94,7 @@ public final class NormalizedJsonExporter {
             contactsArr = root.optJSONArray("contacts");
             if (contactsArr == null) contactsArr = new JSONArray();
             groupsArr = root.optJSONArray("groups");
+            simArr = root.optJSONArray("simContacts");
         }
 
         for (int i = 0; i < contactsArr.length(); i++) {
@@ -91,6 +103,11 @@ public final class NormalizedJsonExporter {
         if (groupsArr != null) {
             for (int i = 0; i < groupsArr.length(); i++) {
                 snapshot.addGroup(AndroidContactsSnapshot.GroupSnapshot.fromJson(groupsArr.getJSONObject(i)));
+            }
+        }
+        if (simArr != null) {
+            for (int i = 0; i < simArr.length(); i++) {
+                snapshot.addSimContact(SimContact.fromJson(simArr.getJSONObject(i)));
             }
         }
         return snapshot;
