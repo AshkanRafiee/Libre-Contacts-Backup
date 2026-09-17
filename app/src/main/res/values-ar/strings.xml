@@ -167,12 +167,11 @@
     <!-- SIM card restore destination (restore-selection dialog) -->
     <string name="sim_restore_device">جهات اتصال الجهاز</string>
     <string name="sim_restore_sim_card">بطاقة SIM</string>
-    <string name="sim_restore_both">كلاهما</string>
+    <string name="sim_restore_both">كلاهما (الجهاز وبطاقة SIM)</string>
     <string name="sim_written_suffix"> (%1$d مكتوبة على بطاقة SIM)</string>
     <string name="sim_restore_failed_warning">تعذّر كتابة %1$d من المدخلات على بطاقة SIM — قد تكون البطاقة ممتلئة أو غير مدعومة</string>
     <string name="sim_restore_fallback_warning">بدلاً من ذلك، تمت استعادة %1$d من المدخلات إلى جهات اتصال جهازك</string>
-    <string name="sim_target_title">الاستعادة على:</string>
-    <string name="sim_target_original">بطاقات SIM الأصلية</string>
+    <string name="sim_target_title">الاستعادة إلى أي بطاقة SIM:</string>
     <string name="sim_target_card">بطاقة SIM %1$d</string>
 
     <string name="about_title">حول التطبيق</string>

@@ -167,12 +167,11 @@
     <!-- SIM card restore destination (restore-selection dialog) -->
     <string name="sim_restore_device">Contacts de l\'appareil</string>
     <string name="sim_restore_sim_card">Carte SIM</string>
-    <string name="sim_restore_both">Les deux</string>
+    <string name="sim_restore_both">Les deux (appareil et carte SIM)</string>
     <string name="sim_written_suffix"> (%1$d écrits sur la carte SIM)</string>
     <string name="sim_restore_failed_warning">%1$d entrées n\'ont pas pu être écrites sur la carte SIM — la SIM est peut-être pleine ou non prise en charge</string>
     <string name="sim_restore_fallback_warning">%1$d entrées ont été restaurées dans les contacts de votre appareil à la place</string>
-    <string name="sim_target_title">Restaurer sur :</string>
-    <string name="sim_target_original">Leurs cartes SIM d\'origine</string>
+    <string name="sim_target_title">Restaurer sur quelle carte SIM :</string>
     <string name="sim_target_card">Carte SIM %1$d</string>
 
     <string name="about_title">À propos</string>
