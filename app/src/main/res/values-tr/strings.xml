@@ -168,7 +168,6 @@
     <string name="about_source_label">Kaynak kodu</string>
     <string name="about_github_label">GitHub profili</string>
     <string name="about_website_label">Web sitesi</string>
-    <string name="about_app_website_label">Uygulama web sitesi</string>
     <string name="about_suggestions_label">Öneriler</string>
     <string name="about_footer">Libre Contacts Backup · Sürüm %1$s</string>
     <string name="about_no_browser">Kullanılabilir tarayıcı yok</string>

@@ -168,7 +168,6 @@
     <string name="about_source_label">الشيفرة المصدرية</string>
     <string name="about_github_label">الملف الشخصي على GitHub</string>
     <string name="about_website_label">الموقع الإلكتروني</string>
-    <string name="about_app_website_label">موقع التطبيق</string>
     <string name="about_suggestions_label">اقتراحات</string>
     <string name="about_footer">Libre Contacts Backup · الإصدار %1$s</string>
     <string name="about_no_browser">لا يوجد متصفح متاح</string>
