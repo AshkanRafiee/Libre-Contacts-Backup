@@ -166,7 +166,8 @@
     <string name="about_created_by_label">أُنشئ بواسطة</string>
     <string name="about_license_label">الترخيص</string>
     <string name="about_source_label">الشيفرة المصدرية</string>
-    <string name="about_github_label">الملف الشخصي على GitHub</string>
+    <string name="about_privacy_label">الخصوصية</string>
+    <string name="about_privacy_value">محلي · مشفر · بدون سحابة · بدون حساب</string>
     <string name="about_website_label">الموقع الإلكتروني</string>
     <string name="about_suggestions_label">اقتراحات</string>
     <string name="about_footer">Libre Contacts Backup · الإصدار %1$s</string>

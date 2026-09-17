@@ -166,7 +166,8 @@
     <string name="about_created_by_label">Erstellt von</string>
     <string name="about_license_label">Lizenz</string>
     <string name="about_source_label">Quellcode</string>
-    <string name="about_github_label">GitHub-Profil</string>
+    <string name="about_privacy_label">Datenschutz</string>
+    <string name="about_privacy_value">Lokal · verschlüsselt · keine Cloud · kein Konto</string>
     <string name="about_website_label">Website</string>
     <string name="about_suggestions_label">Vorschläge</string>
     <string name="about_footer">Libre Contacts Backup · Version %1$s</string>
