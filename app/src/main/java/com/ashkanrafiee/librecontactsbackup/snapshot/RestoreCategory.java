@@ -48,7 +48,13 @@ public enum RestoreCategory {
             R.string.category_account_title,
             R.string.category_account_description,
             R.string.category_account_example,
-            false, R.string.category_account_not_recommended);
+            false, R.string.category_account_not_recommended),
+
+    SIM_CONTACTS(
+            R.string.category_sim_title,
+            R.string.category_sim_description,
+            R.string.category_sim_example,
+            true, 0);
 
     public final int titleRes;
     public final int descriptionRes;

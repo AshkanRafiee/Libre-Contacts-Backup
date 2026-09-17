@@ -59,6 +59,12 @@ public final class RestoreResult {
     public int dataRowsFailed;
     public int groupMembershipsUnrestored;
 
+    // SIM card entries carried in the backup, and where this restore put them.
+    public int simContactsRead;
+    public int simContactsRestoredDevice;
+    public int simContactsRestoredSim;
+    public int simRestoreFailed;
+
     public final ArrayList<String> warnings = new ArrayList<>();
     public final ArrayList<String> errors = new ArrayList<>();
 
@@ -115,6 +121,18 @@ public final class RestoreResult {
         if (groupMembershipsUnrestored > 0) {
             sb.append("Group memberships not restored: ").append(groupMembershipsUnrestored).append("\n");
         }
+        if (simContactsRead > 0) {
+            sb.append("SIM contacts: ").append(simContactsRead).append("\n");
+            if (simContactsRestoredDevice > 0) {
+                sb.append("  Restored to device: ").append(simContactsRestoredDevice).append("\n");
+            }
+            if (simContactsRestoredSim > 0) {
+                sb.append("  Restored to SIM: ").append(simContactsRestoredSim).append("\n");
+            }
+            if (simRestoreFailed > 0) {
+                sb.append("  Failed: ").append(simRestoreFailed).append("\n");
+            }
+        }
         sb.append("Warnings: ").append(warnings.size()).append("\n");
         sb.append("Errors: ").append(errors.size()).append("\n");
         return sb.toString();
@@ -126,18 +144,23 @@ public final class RestoreResult {
      */
     public String briefSummary(Context context) {
         Resources r = context.getResources();
-        String skippedSuffix = skippedByUserChoice > 0
-                ? context.getString(R.string.restore_skipped_suffix, skippedByUserChoice) : "";
+        String suffix = "";
+        if (skippedByUserChoice > 0) {
+            suffix += context.getString(R.string.restore_skipped_suffix, skippedByUserChoice);
+        }
+        if (simContactsRestoredSim > 0) {
+            suffix += context.getString(R.string.sim_written_suffix, simContactsRestoredSim);
+        }
         if (hasErrors()) {
-            return context.getString(R.string.restore_brief_errors, dataRowsRestored, dataRowsFailed, skippedSuffix);
+            return context.getString(R.string.restore_brief_errors, dataRowsRestored, dataRowsFailed, suffix);
         }
         if (hasWarnings()) {
             String dataFieldsPart = r.getQuantityString(R.plurals.data_fields_count, dataRowsRestored, dataRowsRestored);
-            return context.getString(R.string.restore_brief_warnings, dataFieldsPart, skippedSuffix);
+            return context.getString(R.string.restore_brief_warnings, dataFieldsPart, suffix);
         }
         String contactsPart = r.getQuantityString(R.plurals.contacts_count, contactsCreated, contactsCreated);
         String dataFieldsPart = r.getQuantityString(R.plurals.data_fields_count, dataRowsRestored, dataRowsRestored);
-        return context.getString(R.string.restore_brief_success, contactsPart, dataFieldsPart, skippedSuffix);
+        return context.getString(R.string.restore_brief_success, contactsPart, dataFieldsPart, suffix);
     }
 
     public static final class FailedRow {

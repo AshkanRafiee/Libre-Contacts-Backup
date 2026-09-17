@@ -46,6 +46,7 @@ public final class BackupAnalyzer {
         }
         analysis.categoryCounts.put(RestoreCategory.GROUPS, snapshot.getGroups().size());
         analysis.categoryCounts.put(RestoreCategory.ACCOUNT_INFO, accountLinkedRawContacts);
+        analysis.categoryCounts.put(RestoreCategory.SIM_CONTACTS, snapshot.getSimContactCount());
 
         return analysis;
     }
