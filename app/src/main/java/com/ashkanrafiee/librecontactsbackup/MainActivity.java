@@ -668,38 +668,20 @@ public class MainActivity extends Activity {
 
         LinkedHashMap<RestoreCategory, CheckBox> boxes = new LinkedHashMap<>();
         final int simCount = analysis.countFor(RestoreCategory.SIM_CONTACTS);
+        // Recommended categories first, then the SIM section, then the
+        // less-likely extra options — so the choices people actually make sit
+        // together at the top of the list.
         for (RestoreCategory category : RestoreCategory.values()) {
-            // SIM contacts get a dedicated row with its own destination
-            // choice (device / SIM card / both) below the generic list.
-            if (category == RestoreCategory.SIM_CONTACTS) continue;
-            LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.TOP);
-            row.setPadding(0, dp(10), 0, dp(10));
-
-            CheckBox box = new CheckBox(this);
-            box.setChecked(category.recommended);
-            boxes.put(category, box);
-            LinearLayout.LayoutParams boxParams = new LinearLayout.LayoutParams(-2, -2);
-            boxParams.topMargin = dp(2);
-            row.addView(box, boxParams);
-
-            LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
-            String count = categoryCountLabel(this, category, analysis.countFor(category));
-            words.addView(label(getString(category.titleRes) + "  ·  " + count, 14, resColor(R.color.text_primary)));
-            words.addView(label(getString(category.descriptionRes) + " " + getString(category.exampleRes), 11, muted));
-            if (!category.recommended) {
-                words.addView(label(getString(R.string.restore_not_recommended, getString(category.notRecommendedReasonRes)), 11, resColor(R.color.amber)));
-            }
-            LinearLayout.LayoutParams wordParams = new LinearLayout.LayoutParams(0, -2, 1);
-            wordParams.setMarginStart(dp(10));
-            row.addView(words, wordParams);
-
-            row.setOnClickListener(v -> box.toggle());
-            content.addView(row);
+            if (category == RestoreCategory.SIM_CONTACTS || !category.recommended) continue;
+            addCategoryRow(content, boxes, analysis, category);
         }
-        // Shown only when the backup actually captured SIM entries — an old
-        // backup without SIM data must not offer a destination that has
-        // nothing to do.
+        // SIM contacts get a dedicated row with its own destination choice
+        // (device / SIM card / both) above the not-recommended categories.
         final SimSection simSection = simCount > 0 ? buildSimRestoreSection(content, simCount) : null;
+        for (RestoreCategory category : RestoreCategory.values()) {
+            if (category == RestoreCategory.SIM_CONTACTS || category.recommended) continue;
+            addCategoryRow(content, boxes, analysis, category);
+        }
         panel.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
 
         LinearLayout buttons = new LinearLayout(this); buttons.setOrientation(LinearLayout.HORIZONTAL);
@@ -739,26 +721,63 @@ public class MainActivity extends Activity {
         dialog.show();
     }
 
+    private void addCategoryRow(LinearLayout content, LinkedHashMap<RestoreCategory, CheckBox> boxes,
+                                BackupAnalysis analysis, RestoreCategory category) {
+        LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.TOP);
+        row.setPadding(0, dp(10), 0, dp(10));
+
+        CheckBox box = new CheckBox(this);
+        box.setChecked(category.recommended);
+        boxes.put(category, box);
+        LinearLayout.LayoutParams boxParams = new LinearLayout.LayoutParams(-2, -2);
+        boxParams.topMargin = dp(2);
+        row.addView(box, boxParams);
+
+        LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
+        String count = categoryCountLabel(this, category, analysis.countFor(category));
+        words.addView(label(getString(category.titleRes) + "  ·  " + count, 14, resColor(R.color.text_primary)));
+        words.addView(label(getString(category.descriptionRes) + " " + getString(category.exampleRes), 11, muted));
+        if (!category.recommended) {
+            words.addView(label(getString(R.string.restore_not_recommended, getString(category.notRecommendedReasonRes)), 11, resColor(R.color.amber)));
+        }
+        LinearLayout.LayoutParams wordParams = new LinearLayout.LayoutParams(0, -2, 1);
+        wordParams.setMarginStart(dp(10));
+        row.addView(words, wordParams);
+
+        row.setOnClickListener(v -> box.toggle());
+        content.addView(row);
+    }
+
     private static final class SimSection {
-        static final int ID_DEVICE = 1, ID_SIM_CARD = 2, ID_BOTH = 3, ID_TARGET_ORIGINAL = 4;
+        static final int ID_DEVICE = 1, ID_SIM_CARD = 2, ID_BOTH = 3;
         final CheckBox box;
         final RadioGroup destination;
-        /** Which card to write SIM entries to; {@code null} when no SIM phonebook is present. */
+        /** Which card to write SIM entries to; {@code null} when there are not at least two available cards. */
         final RadioGroup target;
+        /**
+         * The card written when no card picker is shown: the single available
+         * card's subscription id, or {@link SimTarget#ORIGINAL_CARDS} when the
+         * device exposes no SIM phonebook at all.
+         */
+        final int fixedTargetSubId;
         final Map<Integer, Integer> targetSubscriptionIdByRadioId;
-        SimSection(CheckBox box, RadioGroup destination, RadioGroup target, Map<Integer, Integer> targetSubscriptionIdByRadioId) {
+        SimSection(CheckBox box, RadioGroup destination, RadioGroup target, int fixedTargetSubId, Map<Integer, Integer> targetSubscriptionIdByRadioId) {
             this.box = box;
             this.destination = destination;
             this.target = target;
+            this.fixedTargetSubId = fixedTargetSubId;
             this.targetSubscriptionIdByRadioId = targetSubscriptionIdByRadioId;
         }
         int resolveTarget(SimRestoreDestination dest) {
-            if (target == null
-                    || (dest != SimRestoreDestination.SIM_CARD && dest != SimRestoreDestination.BOTH)) {
+            // The card picker is a restore-to choice: it only matters when the
+            // destination actually writes to a SIM card. For a device-only
+            // restore no card applies.
+            if (dest != SimRestoreDestination.SIM_CARD && dest != SimRestoreDestination.BOTH) {
                 return SimTarget.ORIGINAL_CARDS;
             }
+            if (target == null) return fixedTargetSubId;
             Integer subId = targetSubscriptionIdByRadioId.get(target.getCheckedRadioButtonId());
-            return subId != null ? subId : SimTarget.ORIGINAL_CARDS;
+            return subId != null ? subId : fixedTargetSubId;
         }
     }
 
@@ -805,12 +824,11 @@ public class MainActivity extends Activity {
         destParams.bottomMargin = dp(10);
         content.addView(destination, destParams);
 
-        // "Restore onto which card?" — only relevant once the user picks a SIM
+        // "Restore to which card?" — only relevant once the user picks a SIM
         // destination (SIM card or both), and only when the device currently
-        // exposes at least one SIM phonebook. "Original cards" keeps every
-        // entry on the card it was backed up from; a specific card redirects
-        // all entries there (the way to move contacts onto a newly acquired
-        // SIM).
+        // exposes more than one SIM phonebook. It is purely a restore-to
+        // choice for the entries being restored. With a single available card
+        // — or none — there is no picker and that card is used directly.
         final SimTargetOptions targetOptions = buildSimTargetOptions(content);
 
         box.setOnCheckedChangeListener((btn, checked) -> {
@@ -824,44 +842,46 @@ public class MainActivity extends Activity {
             RadioGroup target = targetOptions.group;
             if (target != null) target.setVisibility(box.isChecked() && checkedId != SimSection.ID_DEVICE ? View.VISIBLE : View.GONE);
         });
-        return new SimSection(box, destination, targetOptions.group, targetOptions.subscriptionIdByRadioId);
+        return new SimSection(box, destination, targetOptions.group, targetOptions.fixedTargetSubId, targetOptions.subscriptionIdByRadioId);
     }
 
     private static final class SimTargetOptions {
-        final RadioGroup group; // null when the device exposes no SIM phonebook
+        final RadioGroup group; // null when there are not two cards to choose between
+        final int fixedTargetSubId; // the single available card, or SimTarget.ORIGINAL_CARDS when none
         final Map<Integer, Integer> subscriptionIdByRadioId;
-        SimTargetOptions(RadioGroup group, Map<Integer, Integer> map) {
+        SimTargetOptions(RadioGroup group, int fixedTargetSubId, Map<Integer, Integer> map) {
             this.group = group;
+            this.fixedTargetSubId = fixedTargetSubId;
             this.subscriptionIdByRadioId = map;
         }
     }
 
     /**
-     * Builds the "restore onto which card?" radio group appended under the
-     * SIM destination radios. Returns an empty-option holder when the device
-     * currently exposes no SIM phonebook, in which case the destination
-     * collapses to "original cards" only.
+     * Builds the "restore to which card?" radio group appended under the SIM
+     * destination radios. It is a pure restore-to choice — the destination of
+     * the SIM contacts being restored, never a second filter on top of the
+     * count shown in the category row. When the device exposes zero cards
+     * there is nothing to pick and the restore falls back to the default
+     * card; when it exposes exactly one there is nothing to pick either and
+     * that card is used directly.
      */
     private SimTargetOptions buildSimTargetOptions(LinearLayout content) {
         List<Integer> cards = new ArrayList<>();
         try { cards.addAll(SimContactsReader.activeAdnSubscriptionIds(getContentResolver())); }
         catch (Exception e) { cards.clear(); }
-        if (cards.isEmpty()) return new SimTargetOptions(null, Collections.<Integer, Integer>emptyMap());
+        if (cards.isEmpty()) return new SimTargetOptions(null, SimTarget.ORIGINAL_CARDS, Collections.<Integer, Integer>emptyMap());
+        if (cards.size() == 1) return new SimTargetOptions(null, cards.get(0), Collections.<Integer, Integer>emptyMap());
 
         RadioGroup target = new RadioGroup(this);
         target.setOrientation(RadioGroup.VERTICAL);
         target.addView(label(getString(R.string.sim_target_title), 11, muted));
-        RadioButton original = new RadioButton(this);
-        original.setText(getString(R.string.sim_target_original));
-        original.setId(SimSection.ID_TARGET_ORIGINAL);
-        original.setChecked(true);
-        target.addView(original);
         Map<Integer, Integer> targetSubscriptionIdByRadioId = new HashMap<>();
         for (int i = 0; i < cards.size(); i++) {
             RadioButton card = new RadioButton(this);
             card.setText(getString(R.string.sim_target_card, i + 1));
-            int radioId = SimSection.ID_TARGET_ORIGINAL + 1 + i;
+            int radioId = SimSection.ID_BOTH + 1 + i;
             card.setId(radioId);
+            card.setChecked(i == 0);
             targetSubscriptionIdByRadioId.put(radioId, cards.get(i));
             target.addView(card);
         }
@@ -870,7 +890,7 @@ public class MainActivity extends Activity {
         targetParams.bottomMargin = dp(10);
         content.addView(target, targetParams);
         target.setVisibility(View.GONE);
-        return new SimTargetOptions(target, targetSubscriptionIdByRadioId);
+        return new SimTargetOptions(target, SimTarget.ORIGINAL_CARDS, targetSubscriptionIdByRadioId);
     }
 
     void performRestore(AndroidContactsSnapshot snapshot, RestoreOptions options) {
