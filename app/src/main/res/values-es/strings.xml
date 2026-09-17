@@ -165,13 +165,14 @@
     <string name="restore_skipped_suffix"> (%1$d no seleccionados)</string>
 
     <!-- SIM card restore destination (restore-selection dialog) -->
+    <string name="sim_restore_destination_title">Restaurar contactos SIM a:</string>
     <string name="sim_restore_device">Contactos del dispositivo</string>
     <string name="sim_restore_sim_card">Tarjeta SIM</string>
     <string name="sim_restore_both">Ambas (dispositivo y tarjeta SIM)</string>
     <string name="sim_written_suffix"> (%1$d escritos en la tarjeta SIM)</string>
     <string name="sim_restore_failed_warning">%1$d entradas no pudieron escribirse en la tarjeta SIM — la SIM puede estar llena o no ser compatible</string>
     <string name="sim_restore_fallback_warning">%1$d entradas se restauraron en tus contactos del dispositivo en su lugar</string>
-    <string name="sim_target_title">Restaurar a qué tarjeta SIM:</string>
+    <string name="sim_target_title">¿A qué tarjeta:</string>
     <string name="sim_target_card">Tarjeta SIM %1$d</string>
 
     <string name="about_title">Acerca de</string>

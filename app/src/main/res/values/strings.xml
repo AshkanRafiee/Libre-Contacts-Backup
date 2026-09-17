@@ -181,13 +181,14 @@
     <string name="restore_skipped_suffix"> (%1$d not selected)</string>
 
     <!-- SIM card restore destination (restore-selection dialog) -->
+    <string name="sim_restore_destination_title">Restore SIM contacts to:</string>
     <string name="sim_restore_device">Device contacts</string>
     <string name="sim_restore_sim_card">SIM card</string>
     <string name="sim_restore_both">Both (device and SIM card)</string>
     <string name="sim_written_suffix"> (%1$d written to SIM card)</string>
     <string name="sim_restore_failed_warning">%1$d entries could not be written to the SIM card — the SIM may be full or unsupported</string>
     <string name="sim_restore_fallback_warning">%1$d entries were restored to your device contacts instead</string>
-    <string name="sim_target_title">Restore to which SIM card:</string>
+    <string name="sim_target_title">To which card:</string>
     <string name="sim_target_card">SIM card %1$d</string>
 
     <!-- About screen -->

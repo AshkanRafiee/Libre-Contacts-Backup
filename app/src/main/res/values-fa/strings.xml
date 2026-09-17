@@ -165,13 +165,14 @@
     <string name="restore_skipped_suffix"> (%1$d انتخاب نشده)</string>
 
     <!-- SIM card restore destination (restore-selection dialog) -->
+    <string name="sim_restore_destination_title">بازگردانی مخاطبین سیم‌کارت به:</string>
     <string name="sim_restore_device">مخاطبین دستگاه</string>
     <string name="sim_restore_sim_card">سیم‌کارت</string>
     <string name="sim_restore_both">هر دو (دستگاه و سیم‌کارت)</string>
     <string name="sim_written_suffix"> (%1$d مورد روی سیم‌کارت نوشته شد)</string>
     <string name="sim_restore_failed_warning">%1$d مورد روی سیم‌کارت نوشته نشد — سیم‌کارت ممکن است پر باشد یا پشتیبانی نشود</string>
     <string name="sim_restore_fallback_warning">در عوض، %1$d مورد در مخاطبین دستگاه شما بازگردانده شد</string>
-    <string name="sim_target_title">بازگردانی به کدام سیم‌کارت:</string>
+    <string name="sim_target_title">به کدام سیم‌کارت:</string>
     <string name="sim_target_card">سیم‌کارت %1$d</string>
 
     <string name="about_title">درباره</string>
