@@ -19,6 +19,7 @@ public final class AndroidContactsSnapshot {
 
     public final ArrayList<AndroidContactSnapshot> contacts = new ArrayList<>();
     public final ArrayList<GroupSnapshot> groups = new ArrayList<>();
+    public final ArrayList<SimContact> simContacts = new ArrayList<>();
 
     public AndroidContactsSnapshot() {}
 
@@ -28,6 +29,10 @@ public final class AndroidContactsSnapshot {
 
     public void addGroup(GroupSnapshot group) {
         groups.add(group);
+    }
+
+    public void addSimContact(SimContact simContact) {
+        simContacts.add(simContact);
     }
 
     public int getContactCount() { return contacts.size(); }
@@ -51,6 +56,12 @@ public final class AndroidContactsSnapshot {
     public List<GroupSnapshot> getGroups() {
         return Collections.unmodifiableList(groups);
     }
+
+    public List<SimContact> getSimContacts() {
+        return Collections.unmodifiableList(simContacts);
+    }
+
+    public int getSimContactCount() { return simContacts.size(); }
 
     /**
      * Represents a single row of the Groups table (an account's contact group,
