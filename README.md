@@ -8,6 +8,7 @@ A free, open-source, native Android app that backs up your contacts — fully of
 - **Scheduled backups** — daily, weekly, or monthly at a time you choose, running automatically in the background, entirely on-device.
 - **Retention by age** — keep the newest backups per day, week, and month with counts you choose (e.g. 7 daily + 4 weekly + 3 monthly), so backups of increasing age stay available while old ones thin out; or keep it simple and just keep the last N sets.
 - **As close to lossless as the Contacts Provider allows** — preserves the full Contact → RawContact → Data hierarchy (every readable field, every account, every custom type), not a lossy flattened copy.
+- **SIM card phonebook included** — every backup also captures the contacts stored on your SIM card; on restore, you choose whether they are written back to the SIM card, into the device address book, or both. On multi-SIM or eSIM phones, each contact goes back to the very card it was captured from — or you can redirect all contacts to one specific card (e.g. a newly acquired SIM).
 - **Optional encryption** — AES-256-GCM with a key derived from your password (PBKDF2, 600,000 iterations); the password itself is stored on-device behind an Android Keystore key so scheduled backups can run unattended.
 
 ## Download
