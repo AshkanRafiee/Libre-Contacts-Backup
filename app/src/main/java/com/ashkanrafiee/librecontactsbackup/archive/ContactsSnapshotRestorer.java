@@ -1291,8 +1291,7 @@ public final class ContactsSnapshotRestorer {
                         sourceContactIndexByRawId.put(id, index);
                     }
                 } else {
-                    result.addError("SIM entry could not be restored to device: "
-                            + (sims.get(index - 1).number != null ? sims.get(index - 1).number : "?"));
+                    result.addError("SIM entry " + index + " could not be restored to the device address book");
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Failed to restore SIM entry to device", e);
@@ -1344,7 +1343,8 @@ public final class ContactsSnapshotRestorer {
                     ok = insertLegacyAdn(resolver, sim);
                 }
             } catch (Exception e) {
-                Log.e(TAG, "SIM write failed for " + (sim.number != null ? sim.number : "?"), e);
+                // Deliberately no contact data in the log: entry indices only.
+                Log.e(TAG, "SIM write failed for entry " + i, e);
             }
             if (!ok) failed.add(i);
         }
