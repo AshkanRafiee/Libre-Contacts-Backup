@@ -259,7 +259,7 @@ else
 fi
 
 # ============================================================
-# TEST 6: Address field mapping (SDK 35)
+# TEST 6: Address field mapping (SDK 36)
 # ============================================================
 info ""
 info "=== TEST 6: Address field mapping ==="
@@ -372,14 +372,14 @@ info "  (Merge logic tested via restore round-trip in TEST 12)"
 # TEST 12: Restore deduplication (manual verification instructions)
 # ============================================================
 info ""
-info "=== TEST 12: Restore deduplication instructions ==="
-info "  To manually verify merge behavior:"
+info "=== TEST 12: Restore does not merge into existing contacts ==="
+info "  To manually verify:"
 info "  1. Create contact 'MergeTest' with phone +15550003333 and email merge@old.com"
 info "  2. Backup"
 info "  3. Add work phone +15550004444 to MergeTest on device"
 info "  4. Restore from the backup"
-info "  5. Verify MergeTest has BOTH phones and BOTH emails"
-info "  6. Verify only ONE MergeTest contact exists"
+info "  5. Restore creates the backed-up contact anew: 'MergeTest' now exists twice (the device copy with its work phone, and the restored copy with the backed-up fields). The two must be linked as one contact, not merged into one raw contact"
+info "  6. Two different people who merely share a name must never be merged"
 
 # ============================================================
 # TEST 13: Edge cases - null/empty data
