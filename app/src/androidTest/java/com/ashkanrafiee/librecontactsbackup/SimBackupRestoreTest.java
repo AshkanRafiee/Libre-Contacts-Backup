@@ -12,6 +12,8 @@ import android.provider.ContactsContract;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.ashkanrafiee.librecontactsbackup.archive.BackupArchiveReader;
+import com.ashkanrafiee.librecontactsbackup.archive.BackupArchiveWriter;
 import com.ashkanrafiee.librecontactsbackup.archive.ContactsSnapshotRestorer;
 import com.ashkanrafiee.librecontactsbackup.export.NormalizedJsonExporter;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactsSnapshot;
@@ -28,6 +30,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 
 /**
  * Tests for SIM card contact backup/restore: canonical-archive round-trip
@@ -124,6 +130,37 @@ public class SimBackupRestoreTest {
         AndroidContactsSnapshot imported = NormalizedJsonExporter.importCanonical(before);
         String after = NormalizedJsonExporter.exportCanonical(imported);
         assertEquals("Canonical JSON must be byte-identical after a round trip", before, after);
+    }
+
+    @Test public void sim_contacts_survive_the_full_archive_round_trip() throws Exception {
+        AndroidContactsSnapshot original = twoEntrySimSnapshot();
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        BackupArchiveWriter.writeArchive(targetContext(), original, baos);
+
+        BackupArchiveReader.ArchiveData archiveData;
+        try (InputStream is = new ByteArrayInputStream(baos.toByteArray())) {
+            archiveData = BackupArchiveReader.readArchive(is);
+        }
+        assertNotNull("Archive must be readable", archiveData.snapshot);
+        assertEquals("the .lcb archive must carry the SIM entries", 2, archiveData.snapshot.getSimContactCount());
+        SimContact sara = archiveData.snapshot.getSimContacts().get(0);
+        assertEquals("Sara Sim", sara.name);
+        assertEquals("+15550123", sara.number);
+        assertEquals(-1, sara.subscriptionId);
+        SimContact bob = archiveData.snapshot.getSimContacts().get(1);
+        assertEquals("Bob Sim", bob.name);
+        assertEquals("+15550987", bob.number);
+        assertEquals(1, bob.subscriptionId);
+        assertEquals(0, bob.slotIndex);
+
+        RestoreResult result = ContactsSnapshotRestorer.restore(targetContext(), archiveData.snapshot,
+                RestoreOptions.of(RestoreCategory.SIM_CONTACTS), SimRestoreDestination.DEVICE, (m, c, t) -> {});
+        assertEquals(2, result.simContactsRead);
+        assertEquals(2, result.simContactsRestoredDevice);
+        assertEquals(0, result.simRestoreFailed);
+        assertTrue("SIM numbers must land in the address book after an archive round trip",
+                providerHasNumber("+15550123") && providerHasNumber("+15550987"));
     }
 
     @Test public void restore_to_device_creates_local_contacts() throws Exception {
