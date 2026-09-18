@@ -591,7 +591,12 @@ public class MainActivity extends Activity {
                 });
                 AndroidContactsSnapshot snapshot = BackupManager.resolveSnapshot(archiveData);
                 BackupAnalysis analysis = BackupAnalyzer.analyze(snapshot);
-                runOnUiThread(() -> { hideRestoreProgress(); showRestoreSelectionDialog(snapshot, analysis); });
+                // SIM card enumeration is a ContentProvider query that some
+                // OEM simphonebook providers answer slowly, so it runs here on
+                // the background thread rather than when the restore dialog is
+                // built on the UI thread.
+                List<Integer> simCards = SimContactsReader.activeAdnSubscriptionIds(getContentResolver());
+                runOnUiThread(() -> { hideRestoreProgress(); showRestoreSelectionDialog(snapshot, analysis, simCards); });
             } catch (Exception e) {
                 // GCM's own authentication check is exactly what fails when
                 // the wrong password derives the wrong key — a real crypto
@@ -645,7 +650,7 @@ public class MainActivity extends Activity {
      * never modified regardless of the choice made here. Tapping anywhere
      * in a row — including its text — toggles that row's checkbox.
      */
-    void showRestoreSelectionDialog(AndroidContactsSnapshot snapshot, BackupAnalysis analysis) {
+    void showRestoreSelectionDialog(AndroidContactsSnapshot snapshot, BackupAnalysis analysis, List<Integer> simCards) {
         LinearLayout panel = new LinearLayout(this); panel.setOrientation(LinearLayout.VERTICAL);
         panel.setPadding(dp(22), dp(20), dp(22), dp(16));
         panel.setBackground(rounded(card, 22));
@@ -677,7 +682,7 @@ public class MainActivity extends Activity {
         }
         // SIM contacts get a dedicated row with its own destination choice
         // (device / SIM card / both) above the not-recommended categories.
-        final SimSection simSection = simCount > 0 ? buildSimRestoreSection(content, simCount) : null;
+        final SimSection simSection = simCount > 0 ? buildSimRestoreSection(content, simCount, simCards) : null;
         for (RestoreCategory category : RestoreCategory.values()) {
             if (category == RestoreCategory.SIM_CONTACTS || category.recommended) continue;
             addCategoryRow(content, boxes, analysis, category);
@@ -787,7 +792,7 @@ public class MainActivity extends Activity {
      * group — restore as device contacts, write back to the SIM card, or
      * both. The radios are only enabled while the category is checked.
      */
-    private SimSection buildSimRestoreSection(LinearLayout content, int simCount) {
+    private SimSection buildSimRestoreSection(LinearLayout content, int simCount, List<Integer> simCards) {
         LinearLayout simRow = new LinearLayout(this); simRow.setOrientation(LinearLayout.HORIZONTAL); simRow.setGravity(Gravity.TOP);
         simRow.setPadding(0, dp(10), 0, dp(6));
 
@@ -836,7 +841,7 @@ public class MainActivity extends Activity {
         // exposes more than one SIM phonebook. It is purely a restore-to
         // choice for the entries being restored. With a single available card
         // — or none — there is no picker and that card is used directly.
-        final SimTargetOptions targetOptions = buildSimTargetOptions(content);
+        final SimTargetOptions targetOptions = buildSimTargetOptions(content, simCards);
 
         box.setOnCheckedChangeListener((btn, checked) -> {
             device.setEnabled(checked);
@@ -867,29 +872,28 @@ public class MainActivity extends Activity {
      * Builds the "restore to which card?" radio group appended under the SIM
      * destination radios. It is a pure restore-to choice — the destination of
      * the SIM contacts being restored, never a second filter on top of the
-     * count shown in the category row. When the device exposes zero cards
-     * there is nothing to pick and the restore falls back to the default
-     * card; when it exposes exactly one there is nothing to pick either and
-     * that card is used directly.
+     * count shown in the category row. {@code simCards} is the list of
+     * subscription ids that currently expose a SIM phonebook, fetched off the
+     * UI thread by the restore flow (never a ContentProvider query here).
+     * When the device exposes zero cards there is nothing to pick and the
+     * restore falls back to the default card; when it exposes exactly one
+     * there is nothing to pick either and that card is used directly.
      */
-    private SimTargetOptions buildSimTargetOptions(LinearLayout content) {
-        List<Integer> cards = new ArrayList<>();
-        try { cards.addAll(SimContactsReader.activeAdnSubscriptionIds(getContentResolver())); }
-        catch (Exception e) { cards.clear(); }
-        if (cards.isEmpty()) return new SimTargetOptions(null, SimTarget.ORIGINAL_CARDS, Collections.<Integer, Integer>emptyMap());
-        if (cards.size() == 1) return new SimTargetOptions(null, cards.get(0), Collections.<Integer, Integer>emptyMap());
+    private SimTargetOptions buildSimTargetOptions(LinearLayout content, List<Integer> simCards) {
+        if (simCards.isEmpty()) return new SimTargetOptions(null, SimTarget.ORIGINAL_CARDS, Collections.<Integer, Integer>emptyMap());
+        if (simCards.size() == 1) return new SimTargetOptions(null, simCards.get(0), Collections.<Integer, Integer>emptyMap());
 
         RadioGroup target = new RadioGroup(this);
         target.setOrientation(RadioGroup.VERTICAL);
         target.addView(label(getString(R.string.sim_target_title), 11, muted));
         Map<Integer, Integer> targetSubscriptionIdByRadioId = new HashMap<>();
-        for (int i = 0; i < cards.size(); i++) {
+        for (int i = 0; i < simCards.size(); i++) {
             RadioButton card = new RadioButton(this);
             card.setText(getString(R.string.sim_target_card, i + 1));
             int radioId = SimSection.ID_BOTH + 1 + i;
             card.setId(radioId);
             card.setChecked(i == 0);
-            targetSubscriptionIdByRadioId.put(radioId, cards.get(i));
+            targetSubscriptionIdByRadioId.put(radioId, simCards.get(i));
             target.addView(card);
         }
         LinearLayout.LayoutParams targetParams = new LinearLayout.LayoutParams(-1, -2);
