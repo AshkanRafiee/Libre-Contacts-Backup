@@ -52,9 +52,17 @@ To produce a signed release, add your own keystore details in a `signing.propert
 
 ## Test
 
+Instrumented tests run against a connected device/emulator with `adb`. Build the debug and test APKs, install them on the device, and run via direct `adb` instrumentation:
+
 ```bash
-./gradlew connectedDebugAndroidTest   # instrumented tests, needs a device/emulator
+./gradlew assembleDebug assembleDebugAndroidTest
+adb install -t -g app/build/outputs/apk/debug/app-debug.apk
+adb install -t -g app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb shell am instrument -w \
+  com.ashkanrafiee.librecontactsbackup.test/androidx.test.runner.AndroidJUnitRunner
 ```
+
+A green run ends with `OK (N tests)`. Run a single test class by adding `-e class <name>`.
 
 ## License
 
