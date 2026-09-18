@@ -135,7 +135,7 @@
 
     <string name="category_contact_info_title">Informations de contact</string>
     <string name="category_contact_info_description">Noms, numéros de téléphone, e-mails, adresses, organisations, notes, anniversaires et autres champs de contact courants.</string>
-    <string name="category_contact_info_example">ex. « Jean Dupont · +33 6 12 34 56 78 · jean@exemple.com »</string>
+    <string name="category_contact_info_example">ex. « Ashkan Rafiee · +33 6 12 34 56 78 · ashkan@exemple.com »</string>
 
     <string name="category_photos_title">Photos de contact</string>
     <string name="category_photos_description">Les photos que vous avez définies pour vos contacts.</string>
@@ -157,7 +157,7 @@
 
     <string name="category_sim_title">Contacts de la carte SIM</string>
     <string name="category_sim_description">Noms et numéros stockés sur la carte SIM de cet appareil, capturés dans le cadre de cette sauvegarde.</string>
-    <string name="category_sim_example">ex. « Sara · +1 555-0123 »</string>
+    <string name="category_sim_example">ex. « Nazanin · +1 555-0123 »</string>
 
     <string name="restore_brief_errors">Restauré : %1$d, échec : %2$d%3$s</string>
     <string name="restore_brief_warnings">Restauré : %1$s (avec avertissements)%2$s</string>

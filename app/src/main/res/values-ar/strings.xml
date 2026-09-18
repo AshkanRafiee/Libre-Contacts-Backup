@@ -135,7 +135,7 @@
 
     <string name="category_contact_info_title">معلومات جهة الاتصال</string>
     <string name="category_contact_info_description">الأسماء وأرقام الهواتف والبريد الإلكتروني والعناوين والمؤسسات والملاحظات وأعياد الميلاد وحقول جهات الاتصال الشائعة الأخرى.</string>
-    <string name="category_contact_info_example">مثال: «أحمد محمد · ‎+966 5X XXX XXXX‎ · ahmed@example.com»</string>
+    <string name="category_contact_info_example">مثال: «أشكان رفيعي · ‎+966 5X XXX XXXX‎ · ashkan@example.com»</string>
 
     <string name="category_photos_title">صور جهات الاتصال</string>
     <string name="category_photos_description">الصور التي عيّنتها لجهات اتصالك.</string>
@@ -157,7 +157,7 @@
 
     <string name="category_sim_title">جهات اتصال بطاقة SIM</string>
     <string name="category_sim_description">الأسماء والأرقام المخزّنة على بطاقة SIM لهذا الجهاز، الملتقطة كجزء من هذه النسخة الاحتياطية.</string>
-    <string name="category_sim_example">مثال: «سارة · +1 555-0123»</string>
+    <string name="category_sim_example">مثال: «نازنين · +1 555-0123»</string>
 
     <string name="restore_brief_errors">تمت الاستعادة: %1$d، فشل: %2$d%3$s</string>
     <string name="restore_brief_warnings">تمت الاستعادة: %1$s (مع تحذيرات)%2$s</string>

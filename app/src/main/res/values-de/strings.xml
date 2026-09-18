@@ -135,7 +135,7 @@
 
     <string name="category_contact_info_title">Kontaktinformationen</string>
     <string name="category_contact_info_description">Namen, Telefonnummern, E-Mail-Adressen, Adressen, Organisationen, Notizen, Geburtstage und andere alltägliche Kontaktfelder.</string>
-    <string name="category_contact_info_example">z. B. „Max Mustermann · +49 151 23456789 · max@beispiel.de“</string>
+    <string name="category_contact_info_example">z. B. „Ashkan Rafiee · +49 151 23456789 · ashkan@beispiel.de“</string>
 
     <string name="category_photos_title">Kontaktfotos</string>
     <string name="category_photos_description">Fotos, die du für deine Kontakte festgelegt hast.</string>
@@ -157,7 +157,7 @@
 
     <string name="category_sim_title">SIM-Karten-Kontakte</string>
     <string name="category_sim_description">Namen und Nummern, die auf der SIM-Karte dieses Geräts gespeichert sind und als Teil dieser Sicherung erfasst wurden.</string>
-    <string name="category_sim_example">z. B. „Sara · +1 555-0123“</string>
+    <string name="category_sim_example">z. B. „Nazanin · +1 555-0123“</string>
 
     <string name="restore_brief_errors">Wiederhergestellt: %1$d, fehlgeschlagen: %2$d%3$s</string>
     <string name="restore_brief_warnings">Wiederhergestellt: %1$s (mit Warnungen)%2$s</string>

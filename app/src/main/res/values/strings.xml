@@ -150,7 +150,7 @@
     <!-- Restore category labels -->
     <string name="category_contact_info_title">Contact information</string>
     <string name="category_contact_info_description">Names, phone numbers, emails, addresses, organizations, notes, birthdays, and other everyday contact fields.</string>
-    <string name="category_contact_info_example">e.g. “John Smith · +1 555-0100 · john@example.com”</string>
+    <string name="category_contact_info_example">e.g. “Ashkan Rafiee · +1 555-0100 · ashkan@example.com”</string>
 
     <string name="category_photos_title">Contact photos</string>
     <string name="category_photos_description">Photos you\'ve set for your contacts.</string>
@@ -172,7 +172,7 @@
 
     <string name="category_sim_title">SIM card contacts</string>
     <string name="category_sim_description">Names and numbers stored on this device\'s SIM card, captured as part of this backup.</string>
-    <string name="category_sim_example">e.g. “Sara · +1 555-0123”</string>
+    <string name="category_sim_example">e.g. “Nazanin · +1 555-0123”</string>
 
     <!-- Restore brief summary (toast after a restore finishes) -->
     <string name="restore_brief_errors">Restored: %1$d, failed: %2$d%3$s</string>

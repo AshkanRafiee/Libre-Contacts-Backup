@@ -135,7 +135,7 @@
 
     <string name="category_contact_info_title">اطلاعات مخاطب</string>
     <string name="category_contact_info_description">نام‌ها، شماره تلفن‌ها، ایمیل‌ها، نشانی‌ها، سازمان‌ها، یادداشت‌ها، تاریخ تولد و دیگر فیلدهای رایج مخاطب.</string>
-    <string name="category_contact_info_example">مثلاً «علی رضایی · ۰۹۱۲۱۲۳۴۵۶۷ · ali@example.com»</string>
+    <string name="category_contact_info_example">مثلاً «اشکان رفیعی · ۰۹۱۲۱۲۳۴۵۶۷ · ashkan@example.com»</string>
 
     <string name="category_photos_title">عکس‌های مخاطبین</string>
     <string name="category_photos_description">عکس‌هایی که برای مخاطبین خود تنظیم کرده‌اید.</string>
@@ -157,7 +157,7 @@
 
     <string name="category_sim_title">مخاطبین سیم‌کارت</string>
     <string name="category_sim_description">نام‌ها و شماره‌های ذخیره‌شده روی سیم‌کارت این دستگاه، که به‌عنوان بخشی از این پشتیبان ثبت شده‌اند.</string>
-    <string name="category_sim_example">مثلاً «سارا · +1 555-0123»</string>
+    <string name="category_sim_example">مثلاً «نازنین · +1 555-0123»</string>
 
     <string name="restore_brief_errors">بازگردانی‌شده: %1$d، ناموفق: %2$d%3$s</string>
     <string name="restore_brief_warnings">بازگردانی‌شده: %1$s (با هشدار)%2$s</string>

@@ -135,7 +135,7 @@
 
     <string name="category_contact_info_title">联系人信息</string>
     <string name="category_contact_info_description">姓名、电话号码、电子邮件、地址、单位、备注、生日以及其他常见联系人字段。</string>
-    <string name="category_contact_info_example">例如“张三 · +86 138 0013 8000 · zhangsan@example.com”</string>
+    <string name="category_contact_info_example">例如“Ashkan Rafiee · +86 138 0013 8000 · ashkan@example.com”</string>
 
     <string name="category_photos_title">联系人照片</string>
     <string name="category_photos_description">你为联系人设置的照片。</string>
@@ -157,7 +157,7 @@
 
     <string name="category_sim_title">SIM 卡联系人</string>
     <string name="category_sim_description">存储在此设备 SIM 卡上的姓名和号码，已作为此备份的一部分捕获。</string>
-    <string name="category_sim_example">例如“Sara · +1 555-0123”</string>
+    <string name="category_sim_example">例如“Nazanin · +1 555-0123”</string>
 
     <string name="restore_brief_errors">已恢复：%1$d，失败：%2$d%3$s</string>
     <string name="restore_brief_warnings">已恢复：%1$s（有警告）%2$s</string>

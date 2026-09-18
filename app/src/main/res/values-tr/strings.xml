@@ -135,7 +135,7 @@
 
     <string name="category_contact_info_title">Kişi bilgileri</string>
     <string name="category_contact_info_description">Adlar, telefon numaraları, e-postalar, adresler, kurumlar, notlar, doğum günleri ve diğer günlük kişi alanları.</string>
-    <string name="category_contact_info_example">örn. “Ahmet Yılmaz · +90 532 123 45 67 · ahmet@ornek.com”</string>
+    <string name="category_contact_info_example">örn. “Ashkan Rafiee · +90 532 123 45 67 · ashkan@ornek.com”</string>
 
     <string name="category_photos_title">Kişi fotoğrafları</string>
     <string name="category_photos_description">Kişilerin için ayarladığın fotoğraflar.</string>
@@ -157,7 +157,7 @@
 
     <string name="category_sim_title">SIM kartı kişileri</string>
     <string name="category_sim_description">Bu cihazın SIM kartında saklanan ve bu yedeklemenin bir parçası olarak yakalanan adlar ve numaralar.</string>
-    <string name="category_sim_example">örn. “Sara · +1 555-0123”</string>
+    <string name="category_sim_example">örn. “Nazanin · +1 555-0123”</string>
 
     <string name="restore_brief_errors">Geri yüklendi: %1$d, başarısız: %2$d%3$s</string>
     <string name="restore_brief_warnings">Geri yüklendi: %1$s (uyarılarla)%2$s</string>
