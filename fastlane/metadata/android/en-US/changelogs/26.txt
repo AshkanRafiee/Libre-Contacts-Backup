@@ -1,0 +1,6 @@
+Added:
+- SIM card phonebook is now captured in every backup — the names and numbers stored on your SIM card are backed up alongside your device contacts
+- On restore, choose where SIM contacts go: back to the SIM card, into the device address book, or both
+- On phones with more than one SIM (including an eSIM), pick which of the available cards the contacts are written to; on a single-SIM phone it uses that card automatically
+- If a SIM write fails (full or unsupported card), entries are restored to your device contacts instead and you are told, so nothing is silently lost
+- The About screen now shows a Privacy section and links the app website and issue tracker
