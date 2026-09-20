@@ -13,6 +13,7 @@ import android.widget.*;
 public class AboutActivity extends Activity {
     static final String APP_WEBSITE = "https://librecontactsbackup.ashkanrafiee.com/";
     static final String ISSUES_URL = "https://github.com/AshkanRafiee/Libre-Contacts-Backup/issues";
+    static final String DONATION_URL = "https://github.com/AshkanRafiee/Libre-Contacts-Backup#donate";
     int background, card, muted, mint, link, textPrimary, subtitle, textTertiary;
     /** Spacing-only tightening: true on small screens OR any non-English language. Never used for font sizes or icon dimensions — see {@link #onCreate}. */
     boolean dense;
@@ -57,6 +58,7 @@ public class AboutActivity extends Activity {
         body.addView(info(getString(R.string.about_source_label), "github.com/AshkanRafiee/Libre-Contacts-Backup", v -> open("https://github.com/AshkanRafiee/Libre-Contacts-Backup")), margins(0, 0, 0, 8));
         body.addView(info(getString(R.string.about_website_label), "librecontactsbackup.ashkanrafiee.com", v -> open(APP_WEBSITE)), margins(0, 0, 0, 8));
         body.addView(info(getString(R.string.about_suggestions_label), "github.com/AshkanRafiee/Libre-Contacts-Backup/issues", v -> open(ISSUES_URL)), margins(0, 0, 0, 8));
+        body.addView(info(getString(R.string.about_donate_label), "github.com/AshkanRafiee/Libre-Contacts-Backup#donate", v -> open(DONATION_URL)), margins(0, 0, 0, 8));
         body.addView(info(getString(R.string.about_privacy_label), getString(R.string.about_privacy_value), null), margins(0, 0, 0, d(20, 16)));
         String version = "1.0"; try { version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception ignored) { }
         TextView footer = text(getString(R.string.about_footer, version), 11, textTertiary); footer.setGravity(Gravity.CENTER); body.addView(footer);

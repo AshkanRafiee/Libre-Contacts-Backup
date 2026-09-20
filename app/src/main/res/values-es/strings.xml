@@ -185,6 +185,7 @@
     <string name="about_privacy_value">Local · cifrado · sin nube · sin cuenta</string>
     <string name="about_website_label">Sitio web</string>
     <string name="about_suggestions_label">Sugerencias</string>
+    <string name="about_donate_label">Donar</string>
     <string name="about_footer">Libre Contacts Backup · Versión %1$s</string>
     <string name="about_no_browser">No hay ningún navegador disponible</string>
 

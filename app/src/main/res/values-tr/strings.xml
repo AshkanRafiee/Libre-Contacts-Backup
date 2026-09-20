@@ -185,6 +185,7 @@
     <string name="about_privacy_value">Yerel · şifreli · bulut yok · hesap yok</string>
     <string name="about_website_label">Web sitesi</string>
     <string name="about_suggestions_label">Öneriler</string>
+    <string name="about_donate_label">Bağış Yap</string>
     <string name="about_footer">Libre Contacts Backup · Sürüm %1$s</string>
     <string name="about_no_browser">Kullanılabilir tarayıcı yok</string>
 

@@ -185,6 +185,7 @@
     <string name="about_privacy_value">محلي · مشفر · بدون سحابة · بدون حساب</string>
     <string name="about_website_label">الموقع الإلكتروني</string>
     <string name="about_suggestions_label">اقتراحات</string>
+    <string name="about_donate_label">تبرع</string>
     <string name="about_footer">Libre Contacts Backup · الإصدار %1$s</string>
     <string name="about_no_browser">لا يوجد متصفح متاح</string>
 

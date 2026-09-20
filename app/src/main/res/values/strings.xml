@@ -202,6 +202,7 @@
     <string name="about_privacy_value">Local-first · encrypted · no cloud · no account</string>
     <string name="about_website_label">Website</string>
     <string name="about_suggestions_label">Suggestions</string>
+    <string name="about_donate_label">Donate</string>
     <string name="about_footer">Libre Contacts Backup · Version %1$s</string>
     <string name="about_no_browser">No browser available</string>
 

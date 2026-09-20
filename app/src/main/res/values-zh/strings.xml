@@ -185,6 +185,7 @@
     <string name="about_privacy_value">本地优先 · 加密 · 无云端 · 无账户</string>
     <string name="about_website_label">官方网站</string>
     <string name="about_suggestions_label">意见反馈</string>
+    <string name="about_donate_label">捐赠</string>
     <string name="about_footer">Libre Contacts Backup · 版本 %1$s</string>
     <string name="about_no_browser">没有可用的浏览器</string>
 
