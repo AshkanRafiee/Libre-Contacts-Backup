@@ -64,6 +64,16 @@ adb shell am instrument -w \
 
 A green run ends with `OK (N tests)`. Run a single test class by adding `-e class <name>`.
 
+## Donate
+
+Libre Contacts Backup is free, open-source software, and always will be. If you find it useful, you can support its development with a donation in GRAM (prev. TON):
+
+```
+UQB4goexr3cp0QIdd2_fAJPW9REwZvrRQm-mltr1dMQtV9ig
+```
+
+Thank you for your support.
+
 ## License
 
 GPL-3.0. Source: https://github.com/AshkanRafiee/Libre-Contacts-Backup
