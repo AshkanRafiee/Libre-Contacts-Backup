@@ -1,0 +1,5 @@
+Added:
+- A Donate row on the About screen that opens the app's donation page
+- A Donate section in the project README, with the GRAM (formerly TON) address for supporting development
+Changed:
+- The main screen and About page now fit on a single screen without scrolling on typical phones — the layout is chosen by screen density and only the generous spacious whitespace was trimmed, fonts and controls are unchanged

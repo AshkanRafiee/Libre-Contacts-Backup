@@ -1,7 +1,7 @@
 plugins { id 'com.android.application' }
 
 android { namespace = 'com.ashkanrafiee.librecontactsbackup'; compileSdk 36; buildToolsVersion = '36.0.0'
-    defaultConfig { applicationId 'com.ashkanrafiee.librecontactsbackup'; minSdk 26; targetSdk 36; versionCode 26; versionName '2.6.0'
+    defaultConfig { applicationId 'com.ashkanrafiee.librecontactsbackup'; minSdk 26; targetSdk 36; versionCode 27; versionName '2.6.1'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     dependenciesInfo { includeInApk = false; includeInBundle = false }
