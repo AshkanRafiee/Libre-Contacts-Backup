@@ -26,11 +26,10 @@ public class AboutLinksTest {
         assertEquals("/AshkanRafiee/Libre-Contacts-Backup/issues", uri.getPath());
     }
 
-    @Test public void donation_link_points_at_the_repo_readme_donate_section() throws Exception {
+    @Test public void donation_link_points_at_the_website_donate_section() throws Exception {
         URI uri = new URI(AboutActivity.DONATION_URL);
         assertEquals("https", uri.getScheme());
-        assertEquals("github.com", uri.getHost());
-        assertEquals("/AshkanRafiee/Libre-Contacts-Backup", uri.getPath());
+        assertEquals("librecontactsbackup.ashkanrafiee.com", uri.getHost());
         assertEquals("donate", uri.getFragment());
     }
 }

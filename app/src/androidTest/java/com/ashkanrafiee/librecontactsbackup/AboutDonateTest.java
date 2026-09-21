@@ -12,7 +12,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-/** The About screen must render the donation row linking to the README's donate section. */
+/** The About screen must render the donation row linking to the website's donate section. */
 @RunWith(AndroidJUnit4.class)
 public class AboutDonateTest {
 
