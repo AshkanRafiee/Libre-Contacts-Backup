@@ -10,4 +10,4 @@ Libre Contacts Backup, özel ve önce yerel odaklı kişi yedeklemeleri için ye
 * Manuel CSV, VCF ve Excel uyumlu dışa aktarımlar
 * Otomatik yedekleme arşivleri için kullanıcı denetimli saklama süresi
 
-Libre Contacts Backup ücretsiz ve açık kaynaklıdır. İşinize yarıyorsa, geliştirilmesini destekleyebilirsiniz — bağış seçenekleri proje README'sinin Donate bölümünde yer alır: https://github.com/AshkanRafiee/Libre-Contacts-Backup#donate
+Libre Contacts Backup ücretsiz ve açık kaynaklıdır. İşinize yarıyorsa, geliştirilmesini destekleyebilirsiniz — bağış seçenekleri proje README'sinin Donate bölümünde yer alır: https://librecontactsbackup.ashkanrafiee.com/#donate

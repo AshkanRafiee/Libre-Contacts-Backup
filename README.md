@@ -72,6 +72,8 @@ Libre Contacts Backup is free, open-source software, and always will be. If you 
 UQB4goexr3cp0QIdd2_fAJPW9REwZvrRQm-mltr1dMQtV9ig
 ```
 
+You can also scan the QR code or open it in your wallet from the [donation page](https://librecontactsbackup.ashkanrafiee.com/#donate).
+
 Thank you for your support.
 
 ## License

@@ -10,4 +10,4 @@
 * تصدير يدوي بصيغ CSV وVCF ومتوافق مع Excel
 * مدة احتفاظ بأرشيفات النسخ الاحتياطي التلقائي يتحكم بها المستخدم
 
-تطبيق Libre Contacts Backup مجاني ومفتوح المصدر. إذا وجدته مفيدًا، يمكنك دعم تطويره — تتوفر خيارات التبرع في قسم Donate بدليل المشروع: https://github.com/AshkanRafiee/Libre-Contacts-Backup#donate
+تطبيق Libre Contacts Backup مجاني ومفتوح المصدر. إذا وجدته مفيدًا، يمكنك دعم تطويره — تتوفر خيارات التبرع في قسم Donate بدليل المشروع: https://librecontactsbackup.ashkanrafiee.com/#donate

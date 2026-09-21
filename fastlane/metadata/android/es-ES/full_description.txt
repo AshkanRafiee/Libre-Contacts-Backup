@@ -10,4 +10,4 @@ Características:
 * Exportaciones manuales en CSV, VCF y formato compatible con Excel
 * Retención controlada por el usuario para los archivos de copia de seguridad automática
 
-Libre Contacts Backup es gratuito y de código abierto. Si te resulta útil, puedes apoyar su desarrollo — las opciones de donación están en la sección Donate del README del proyecto: https://github.com/AshkanRafiee/Libre-Contacts-Backup#donate
+Libre Contacts Backup es gratuito y de código abierto. Si te resulta útil, puedes apoyar su desarrollo — las opciones de donación están en la sección Donate del README del proyecto: https://librecontactsbackup.ashkanrafiee.com/#donate
