@@ -92,6 +92,27 @@ The debug CI workflow is manual-only and can be run from the Actions tab with **
 
 Increment `versionCode` in `app/build.gradle` for every future release.
 
+## Test before tagging
+
+Run the full instrumented suite on a connected device or emulator before creating
+the release tag. Build the debug and test APKs, install both, and run them with
+direct `adb` instrumentation (the Gradle `connectedDebugAndroidTest` task hangs
+against a remote adb server):
+
+```bash
+./gradlew assembleDebug assembleDebugAndroidTest
+adb install -r -t -g app/build/outputs/apk/debug/app-debug.apk
+adb install -r -t -g app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb shell am instrument -w \
+  com.ashkanrafiee.librecontactsbackup.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+A green run ends with `OK (N tests)`. Installing the instrumented test APK
+requires `-r` when an older build is already installed
+(`INSTALL_FAILED_UPDATE_INCOMPATIBLE` otherwise). Also install the fresh final
+app on the emulator and glance at the main screen and About page to confirm the
+UI renders as intended.
+
 ## F-Droid
 
 F-Droid builds and signs the app itself. Do not give F-Droid your production keystore.
