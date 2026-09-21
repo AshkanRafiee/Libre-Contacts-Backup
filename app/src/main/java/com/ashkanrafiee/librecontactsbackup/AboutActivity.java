@@ -58,7 +58,7 @@ public class AboutActivity extends Activity {
         body.addView(info(getString(R.string.about_source_label), "github.com/AshkanRafiee/Libre-Contacts-Backup", v -> open("https://github.com/AshkanRafiee/Libre-Contacts-Backup")), margins(0, 0, 0, 8));
         body.addView(info(getString(R.string.about_website_label), "librecontactsbackup.ashkanrafiee.com", v -> open(APP_WEBSITE)), margins(0, 0, 0, 8));
         body.addView(info(getString(R.string.about_suggestions_label), "github.com/AshkanRafiee/Libre-Contacts-Backup/issues", v -> open(ISSUES_URL)), margins(0, 0, 0, 8));
-        body.addView(info(getString(R.string.about_donate_label), "librecontactsbackup.ashkanrafiee.com/donate", v -> open(DONATION_URL)), margins(0, 0, 0, 8));
+        body.addView(info(getString(R.string.about_donate_label), "librecontactsbackup.ashkanrafiee.com/#donate", v -> open(DONATION_URL)), margins(0, 0, 0, 8));
         body.addView(info(getString(R.string.about_privacy_label), getString(R.string.about_privacy_value), null), margins(0, 0, 0, d(20, 16)));
         String version = "1.0"; try { version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception ignored) { }
         TextView footer = text(getString(R.string.about_footer, version), 11, textTertiary); footer.setGravity(Gravity.CENTER); body.addView(footer);
