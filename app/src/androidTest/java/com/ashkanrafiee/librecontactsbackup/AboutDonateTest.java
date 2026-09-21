@@ -1,5 +1,6 @@
 package com.ashkanrafiee.librecontactsbackup;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import android.view.View;
@@ -16,28 +17,34 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 public class AboutDonateTest {
 
-    @Test public void about_screen_shows_the_donate_row() {
+    private static final String DONATE_URL_ROW = "librecontactsbackup.ashkanrafiee.com/#donate";
+
+    @Test public void about_screen_shows_the_donate_row_linking_to_the_donate_section() {
         try (ActivityScenario<AboutActivity> scenario = ActivityScenario.launch(AboutActivity.class)) {
             scenario.onActivity(activity -> {
-                View root = activity.getWindow().getDecorView();
-                assertTrue("donate label is missing",
-                    hasText(root, activity.getString(R.string.about_donate_label)));
+                View donateRow = findDonateRow(activity.getWindow().getDecorView(), activity.getString(R.string.about_donate_label));
+                assertTrue("donate row is missing", donateRow instanceof ViewGroup);
+                TextView value = (TextView) ((ViewGroup) donateRow).getChildAt(1);
+                assertEquals("donate row shows the wrong URL", DONATE_URL_ROW, value.getText().toString());
+                assertTrue("donate row is not clickable", donateRow.hasOnClickListeners());
             });
         }
     }
 
-    private boolean hasText(View view, String expected) {
-        if (view instanceof TextView && expected.equals(((TextView) view).getText().toString())) {
-            return true;
-        }
+    private View findDonateRow(View view, String label) {
         if (view instanceof ViewGroup) {
             ViewGroup group = (ViewGroup) view;
+            if (group.getChildCount() == 2 && group.getChildAt(0) instanceof TextView
+                    && label.equals(((TextView) group.getChildAt(0)).getText().toString())) {
+                return group;
+            }
             for (int i = 0; i < group.getChildCount(); i++) {
-                if (hasText(group.getChildAt(i), expected)) {
-                    return true;
+                View found = findDonateRow(group.getChildAt(i), label);
+                if (found != null) {
+                    return found;
                 }
             }
         }
-        return false;
+        return null;
     }
 }
