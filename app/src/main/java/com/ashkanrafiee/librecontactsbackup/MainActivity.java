@@ -134,8 +134,8 @@ public class MainActivity extends Activity {
     }
 
     void build() {
-        int[] window = windowPixels(); int widthPixels = window[0]; int heightPixels = window[1]; // Responsive breakpoint: narrow/short windows compact; large windows keep the spacious composition.
-        compact = widthPixels <= 1080 || heightPixels < 2700;
+        int[] window = windowPixels(); int widthPixels = window[0]; int heightPixels = window[1]; float density = getResources().getDisplayMetrics().density; // Responsive breakpoint in dp (≈360dp wide or ≈900dp tall): narrow/short windows go compact; larger windows keep the spacious composition. Pixel thresholds here would mis-trip on high-DPI displays.
+        compact = widthPixels / density <= 360 || heightPixels / density < 900;
         // Translated strings routinely run a little longer than their English
         // source, which on an otherwise spacious screen can be just enough to
         // force a scroll English never needs. Shrinking text or control sizes to

@@ -43,7 +43,7 @@ public class AboutActivity extends Activity {
         // treatment, same as MainActivity.build().)
         android.util.DisplayMetrics metrics = getResources().getDisplayMetrics();
         boolean nonEnglish = !"en".equals(getResources().getConfiguration().getLocales().get(0).getLanguage());
-        dense = metrics.widthPixels <= 1080 || metrics.heightPixels < 2700 || nonEnglish;
+        dense = metrics.widthPixels / metrics.density <= 360 || metrics.heightPixels / metrics.density < 900 || nonEnglish;
         LinearLayout root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setPadding(dp(20), dp(14), dp(20), dp(14)); root.setBackgroundColor(background);
         root.setOnApplyWindowInsetsListener((view, insets) -> { int top; int bottom; if (android.os.Build.VERSION.SDK_INT >= 30) { android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars()); top = bars.top; bottom = bars.bottom; } else { top = insets.getSystemWindowInsetTop(); bottom = insets.getSystemWindowInsetBottom(); } view.setPadding(dp(20), top + dp(14), dp(20), bottom + dp(14)); return insets; }); setContentView(root);
         boolean rtl = getResources().getConfiguration().getLayoutDirection() == View.LAYOUT_DIRECTION_RTL;
