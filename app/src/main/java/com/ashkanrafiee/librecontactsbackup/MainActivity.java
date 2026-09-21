@@ -146,7 +146,7 @@ public class MainActivity extends Activity {
         boolean nonEnglish = !"en".equals(getResources().getConfiguration().getLocales().get(0).getLanguage());
         dense = compact || nonEnglish;
         LinearLayout root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(20), dp(v(14, 8)), dp(20), dp(v(14, 8))); root.setBackgroundColor(background);
+        root.setPadding(dp(v(12, 8)), dp(v(12, 8)), dp(20), dp(v(12, 8))); root.setBackgroundColor(background);
         root.setOnApplyWindowInsetsListener((view, insets) -> { int top; int bottom; if (Build.VERSION.SDK_INT >= 30) { android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars()); top = bars.top; bottom = bars.bottom; } else { top = insets.getSystemWindowInsetTop(); bottom = insets.getSystemWindowInsetBottom(); } view.setPadding(dp(20), top + dp(v(14, 8)), dp(20), bottom + dp(v(14, 8))); return insets; });
         setContentView(root);
         ScrollView scroll = new ScrollView(this); scroll.setClipToPadding(false); scroll.setFillViewport(true);
@@ -157,9 +157,9 @@ public class MainActivity extends Activity {
         TextView mark = label("L", compact ? 16 : 18, resColor(R.color.accent_ink)); mark.setGravity(Gravity.CENTER); mark.setTypeface(null, android.graphics.Typeface.BOLD); mark.setBackground(rounded(mint, 12)); header.addView(mark, new LinearLayout.LayoutParams(dp(v(38, 34)), dp(v(38, 34))));
         LinearLayout name = new LinearLayout(this); name.setOrientation(LinearLayout.VERTICAL);
         name.addView(label(getString(R.string.app_name), compact ? 20 : 22, resColor(R.color.text_primary))); name.addView(label(getString(R.string.tagline_offline_encrypted), 12, muted));
-        LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(-2, -2); nameParams.setMarginStart(dp(10)); header.addView(name, nameParams); body.addView(header, margins(0, 0, 0, v(16, 10)));
+        LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(-2, -2); nameParams.setMarginStart(dp(10)); header.addView(name, nameParams); body.addView(header, margins(0, 0, 0, v(12, 10)));
 
-        LinearLayout hero = new LinearLayout(this); hero.setOrientation(LinearLayout.VERTICAL); hero.setPadding(dp(v(18, 14)), dp(d(17, 14)), dp(v(18, 14)), dp(d(16, 14)));
+        LinearLayout hero = new LinearLayout(this); hero.setOrientation(LinearLayout.VERTICAL); hero.setPadding(dp(v(14, 14)), dp(d(15, 14)), dp(v(14, 14)), dp(d(14, 14)));
         hero.setBackground(gradient(new int[]{resColor(R.color.hero_grad_start), resColor(R.color.hero_grad_end)}, 22));
         FrameLayout heroTop = new FrameLayout(this);
         LinearLayout heroWords = new LinearLayout(this); heroWords.setOrientation(LinearLayout.VERTICAL);
@@ -173,12 +173,12 @@ public class MainActivity extends Activity {
         heroWords.addView(backupProgress, progressParams);
         heroWords.addView(label(compact ? getString(R.string.hero_tagline_compact) : getString(R.string.hero_tagline_full), 12, resColor(R.color.subtitle)));
         int widthDp = (int) (getResources().getDisplayMetrics().widthPixels / getResources().getDisplayMetrics().density);
-        int orbitDp = compact ? Math.max(72, Math.min(82, (int) (widthDp * .23f))) : Math.max(88, Math.min(132, (int) (widthDp * .28f)));
+        int orbitDp = compact ? Math.max(72, Math.min(82, (int) (widthDp * .23f))) : Math.max(88, Math.min(120, (int) (widthDp * .24f)));
         FrameLayout.LayoutParams wordsParams = new FrameLayout.LayoutParams(-1, -2); wordsParams.setMarginEnd(dp(orbitDp + 12)); heroTop.addView(heroWords, wordsParams);
         heroTop.addView(new ContactOrbit(this), new FrameLayout.LayoutParams(dp(orbitDp), dp(orbitDp), Gravity.END | Gravity.TOP)); hero.addView(heroTop);
         Button backup = button(getString(R.string.backup_now), mint); backup.setTextColor(resColor(R.color.accent_ink)); backup.setOnClickListener(v -> backup());
         backupButton = backup;
-        LinearLayout.LayoutParams actionParams = new LinearLayout.LayoutParams(-1, dp(v(48, 44))); actionParams.setMargins(0, dp(v(15, 10)), 0, 0); hero.addView(backup, actionParams); body.addView(hero, margins(0, 0, 0, d(22, 18)));
+        LinearLayout.LayoutParams actionParams = new LinearLayout.LayoutParams(-1, dp(v(48, 44))); actionParams.setMargins(0, dp(v(12, 10)), 0, 0); hero.addView(backup, actionParams); body.addView(hero, margins(0, 0, 0, d(16, 18)));
 
         body.addView(label(getString(R.string.section_pocket), 10, muted), margins(0, 0, 0, v(8, 5)));
         folderValue = label(BackupManager.folderLabel(this), 13, resColor(R.color.link));
@@ -187,18 +187,18 @@ public class MainActivity extends Activity {
         body.addView(setting(getString(R.string.setting_schedule_title), getString(R.string.setting_schedule_subtitle), scheduleValue, false, v -> scheduleDialog()), margins(0, 0, 0, v(8, 5)));
         keepValue = label(retentionLabel(this), 13, resColor(R.color.link));
         body.addView(setting(getString(R.string.setting_retention_title), getString(R.string.setting_retention_subtitle), keepValue, false, v -> retentionDialog()), margins(0, 0, 0, v(8, 5)));
-        body.addView(setting(getString(R.string.setting_encryption_title), getString(R.string.setting_encryption_subtitle), null, true, v -> {}), margins(0, 0, 0, d(20, 16)));
+        body.addView(setting(getString(R.string.setting_encryption_title), getString(R.string.setting_encryption_subtitle), null, true, v -> {}), margins(0, 0, 0, d(14, 16)));
 
         body.addView(label(getString(R.string.section_export), 10, muted), margins(0, 0, 0, 3));
         body.addView(label(compact ? getString(R.string.export_note_compact) : getString(R.string.export_note_full), 11, resColor(R.color.amber)), margins(0, 0, 0, v(8, 5)));
         LinearLayout exports = new LinearLayout(this); exports.setOrientation(LinearLayout.HORIZONTAL);
         Button csv = button(getString(R.string.export_csv), resColor(R.color.button_surface)); Button vcf = button(getString(R.string.export_vcf), resColor(R.color.button_surface)); Button xls = button(getString(R.string.export_excel), resColor(R.color.button_surface));
         csv.setOnClickListener(v -> manualExport("csv")); vcf.setOnClickListener(v -> manualExport("vcf")); xls.setOnClickListener(v -> manualExport("xls"));
-        exports.addView(csv, new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1)); LinearLayout.LayoutParams exportGap = new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1); exportGap.setMargins(dp(v(8, 5)), 0, 0, 0); exports.addView(vcf, exportGap); LinearLayout.LayoutParams excelGap = new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1); excelGap.setMargins(dp(v(8, 5)), 0, 0, 0); exports.addView(xls, excelGap); body.addView(exports, margins(0, 0, 0, d(20, 16)));
+        exports.addView(csv, new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1)); LinearLayout.LayoutParams exportGap = new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1); exportGap.setMargins(dp(v(8, 5)), 0, 0, 0); exports.addView(vcf, exportGap); LinearLayout.LayoutParams excelGap = new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1); excelGap.setMargins(dp(v(8, 5)), 0, 0, 0); exports.addView(xls, excelGap); body.addView(exports, margins(0, 0, 0, d(14, 16)));
 
         body.addView(label(getString(R.string.section_restore), 10, muted), margins(0, 0, 0, v(8, 5)));
         Button restore = button(getString(R.string.restore_button), resColor(R.color.button_surface)); restore.setTextColor(resColor(R.color.button_text)); restore.setOnClickListener(v -> chooseFile());
-        LinearLayout.LayoutParams restoreParams = new LinearLayout.LayoutParams(-1, dp(v(48, 42))); restoreParams.setMargins(0, 0, 0, dp(v(12, 7))); body.addView(restore, restoreParams);
+        LinearLayout.LayoutParams restoreParams = new LinearLayout.LayoutParams(-1, dp(v(48, 42))); restoreParams.setMargins(0, 0, 0, dp(v(10, 7))); body.addView(restore, restoreParams);
         restoreStatus = label(getString(R.string.restore_status_none), 11, resColor(R.color.text_tertiary)); restoreStatus.setGravity(Gravity.CENTER); if (compact) restoreStatus.setVisibility(View.GONE); body.addView(restoreStatus, margins(0, 0, 0, 0));
         LinearLayout footer = new LinearLayout(this); footer.setGravity(Gravity.CENTER);
         TextView about = label(getString(R.string.footer_about), 11, resColor(R.color.link)); about.setOnClickListener(v -> startActivity(new Intent(this, AboutActivity.class)));
@@ -206,7 +206,7 @@ public class MainActivity extends Activity {
         languageValue = label(getString(R.string.footer_language), 11, resColor(R.color.link));
         languageValue.setOnClickListener(v -> languageDialog());
         footer.addView(about); footer.addView(footerSeparator); footer.addView(languageValue);
-        body.addView(footer, margins(0, d(18, 14), 0, 0));
+        body.addView(footer, margins(0, d(12, 14), 0, 0));
         Space breathingRoom = new Space(this); body.addView(breathingRoom, new LinearLayout.LayoutParams(1, 0, 1)); load();
     }
 
