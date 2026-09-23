@@ -149,7 +149,7 @@ public class MainActivity extends Activity {
         root.setPadding(dp(v(12, 8)), dp(v(12, 8)), dp(20), dp(v(12, 8))); root.setBackgroundColor(background);
         root.setOnApplyWindowInsetsListener((view, insets) -> { int top; int bottom; if (Build.VERSION.SDK_INT >= 30) { android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars()); top = bars.top; bottom = bars.bottom; } else { top = insets.getSystemWindowInsetTop(); bottom = insets.getSystemWindowInsetBottom(); } view.setPadding(dp(20), top + dp(v(14, 8)), dp(20), bottom + dp(v(14, 8))); return insets; });
         setContentView(root);
-        ScrollView scroll = new ScrollView(this); scroll.setClipToPadding(false); scroll.setFillViewport(true);
+        ScrollView scroll = new ScrollView(this); scroll.setClipToPadding(false); scroll.setFillViewport(true); scroll.setVerticalScrollBarEnabled(false);
         LinearLayout body = new LinearLayout(this); body.setOrientation(LinearLayout.VERTICAL); scroll.addView(body, new ScrollView.LayoutParams(-1, -1));
         root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
 
@@ -335,6 +335,7 @@ public class MainActivity extends Activity {
         form.addView(optionRow(getString(R.string.retention_mode_periodic), getString(R.string.dialog_retention_advanced), getString(R.string.retention_note_advanced), R.color.amber, getString(R.string.retention_explain_periodic), current.mode == RetentionPolicy.Mode.PERIODIC, v -> { if (dialog[0] != null) dialog[0].dismiss(); smartRetentionDialog(); }));
 
         ScrollView scroll = new ScrollView(this);
+        scroll.setVerticalScrollBarEnabled(false);
         scroll.addView(form);
 
         dialog[0] = new AlertDialog.Builder(this).setCustomTitle(titleBox).setView(scroll)
@@ -383,6 +384,7 @@ public class MainActivity extends Activity {
         form.addView(group);
 
         ScrollView keepScroll = new ScrollView(this);
+        keepScroll.setVerticalScrollBarEnabled(false);
         keepScroll.addView(form);
 
         AlertDialog dialog = new AlertDialog.Builder(this).setView(keepScroll)
@@ -456,6 +458,7 @@ public class MainActivity extends Activity {
         advancedToggle.setOnClickListener(v -> advanced.setVisibility(advanced.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE));
 
         ScrollView smartScroll = new ScrollView(this);
+        smartScroll.setVerticalScrollBarEnabled(false);
         smartScroll.addView(form);
 
         AlertDialog dialog = new AlertDialog.Builder(this).setView(smartScroll)
