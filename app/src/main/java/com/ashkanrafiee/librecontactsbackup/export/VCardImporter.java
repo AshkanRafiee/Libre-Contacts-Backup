@@ -9,13 +9,17 @@ import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactSnapshot.Data
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactSnapshot.RawContactSnapshot;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Imports a VCF (vCard 3.0) file into a lossless snapshot.
  *
  * Recognized vCard properties are converted into the appropriate
- * Android Data row MIME types and columns.
+ * Android Data row MIME types and columns. CATEGORIES becomes real
+ * groups with group_membership rows, since a vCard names a group but
+ * a group row ID from the file's own address book means nothing here.
  *
  * Unknown vCard properties/extensions are preserved as X-ANDROID-*
  * extension properties to prevent silent data loss during round trips.
@@ -26,6 +30,9 @@ import java.util.List;
  */
 public final class VCardImporter {
 
+    /** The provider MIME type of a row that puts a raw contact into a group. DATA1 is the group's row ID. */
+    private static final String MIME_GROUP_MEMBERSHIP = "vnd.android.cursor.item/group_membership";
+
     private VCardImporter() {}
 
     /**
@@ -34,6 +41,9 @@ public final class VCardImporter {
      */
     public static AndroidContactsSnapshot importVcf(String vcfContent) {
         AndroidContactsSnapshot snapshot = new AndroidContactsSnapshot();
+        // One group registry for the whole file, so the same name imported on
+        // two different cards is one group with two members, not two groups.
+        ImportedGroups groups = new ImportedGroups(snapshot);
 
         // Unfold VCF lines (continuation lines start with space/tab)
         String unfolded = unfold(vcfContent);
@@ -47,7 +57,7 @@ public final class VCardImporter {
         String[] cards = unfolded.split("(?m)^BEGIN:VCARD\\s*$");
         for (String card : cards) {
             if (card.trim().isEmpty()) continue;
-            AndroidContactSnapshot contact = parseVcard(card);
+            AndroidContactSnapshot contact = parseVcard(card, groups);
             if (contact != null) {
                 snapshot.addContact(contact);
             }
@@ -56,12 +66,16 @@ public final class VCardImporter {
         return snapshot;
     }
 
-    private static AndroidContactSnapshot parseVcard(String cardBody) {
+    private static AndroidContactSnapshot parseVcard(String cardBody, ImportedGroups groups) {
         AndroidContactSnapshot contact = new AndroidContactSnapshot();
         RawContactSnapshot rawContact = new RawContactSnapshot();
         contact.addRawContact(rawContact);
 
         String displayName = null;
+        // The card's group names, as read from CATEGORIES, in the order they
+        // appear. They become groups and membership rows only after the card
+        // has been confirmed to be a contact (see below).
+        List<String> categories = new ArrayList<>();
         // Fallback name (given + family from N) used only if FN is absent —
         // set aside rather than written straight to the name row's data1,
         // since FN and N can appear in either order and FN must always win
@@ -254,6 +268,21 @@ public final class VCardImporter {
                     break;
                 }
 
+                case "CATEGORIES": {
+                    // CATEGORIES (RFC 2426 §3.6.1) is a comma-separated list of
+                    // the categories/groups this card belongs to, and the only
+                    // part of a group a vCard can carry: a group row ID from
+                    // another address book means nothing here. The names are
+                    // held aside and turned into real groups below, once the
+                    // card is known to describe a contact at all.
+                    for (String title : splitVcardList(propValue)) {
+                        String name = title.trim();
+                        if (name.isEmpty() || categories.contains(name)) continue;
+                        categories.add(name);
+                    }
+                    break;
+                }
+
                 default: {
                     // Preserve unknown properties as X-ANDROID-* extensions
                     if (propName.startsWith("X-")) {
@@ -268,6 +297,18 @@ public final class VCardImporter {
         }
 
         if (rawContact.dataRows.isEmpty()) return null;
+
+        // The card is a contact, so its categories can become real groups: one
+        // group per name, shared across the file, with this contact's
+        // membership row pointing at it. This is what a restore needs to put
+        // the label back under its original name instead of a number. Held
+        // until here, a card that turned out to hold nothing else is dropped
+        // above without leaving an empty group behind.
+        for (String title : categories) {
+            DataRowSnapshot row = new DataRowSnapshot(MIME_GROUP_MEMBERSHIP);
+            row.data1 = String.valueOf(groups.idFor(title));
+            rawContact.addDataRow(row);
+        }
 
         // FN and N may appear in either order; whichever supplies the name
         // row's data1 is decided here, once, after seeing both — FN always
@@ -293,6 +334,37 @@ public final class VCardImporter {
         }
 
         return contact;
+    }
+
+    /**
+     * The groups recovered from one vCard file, shared by every card in it.
+     *
+     * vCard carries a group's name and nothing else, so the IDs handed out
+     * here are this import's own references rather than a provider's group
+     * row IDs: enough to tie each contact's membership row to the group it
+     * names, and to hand a restore target one group per name to match or
+     * create. A name seen twice is one group with two members, the way the
+     * address book that wrote the file had it.
+     */
+    private static final class ImportedGroups {
+        private final AndroidContactsSnapshot snapshot;
+        private final Map<String, Long> idByTitle = new HashMap<>();
+        private long nextId = 1;
+
+        ImportedGroups(AndroidContactsSnapshot snapshot) {
+            this.snapshot = snapshot;
+        }
+
+        long idFor(String title) {
+            Long existing = idByTitle.get(title);
+            if (existing != null) return existing;
+            AndroidContactsSnapshot.GroupSnapshot group = new AndroidContactsSnapshot.GroupSnapshot();
+            group.groupId = nextId++;
+            group.title = title;
+            snapshot.addGroup(group);
+            idByTitle.put(title, group.groupId);
+            return group.groupId;
+        }
     }
 
     private static DataRowSnapshot findOrCreateNameRow(RawContactSnapshot rawContact) {
@@ -540,8 +612,8 @@ public final class VCardImporter {
     }
 
     /**
-     * Splits a compound vCard value (N, ADR, ORG) on its real field
-     * separators only — a semicolon preceded by a backslash is an escaped
+     * Splits a compound vCard value (N, ADR, ORG, CATEGORIES) on its real field
+     * separators only — a separator preceded by a backslash is an escaped
      * literal, not a boundary. Splitting the already-unescaped string (the
      * previous approach) can't tell the two apart, since unescaping removes
      * the backslash before the split ever runs; splitting the raw value
@@ -549,10 +621,39 @@ public final class VCardImporter {
      * distinction.
      */
     private static String[] splitVcardFields(String rawValue) {
+        return splitVcardEscaped(rawValue, ';');
+    }
+
+    /**
+     * Same split, on the separator a CATEGORIES text-list uses: one property
+     * can name several categories, separated by commas.
+     */
+    private static String[] splitVcardList(String rawValue) {
+        return splitVcardEscaped(rawValue, ',');
+    }
+
+    private static String[] splitVcardEscaped(String rawValue, char separator) {
         if (rawValue == null) return new String[0];
-        String[] parts = rawValue.split("(?<!\\\\);", -1);
-        for (int i = 0; i < parts.length; i++) parts[i] = unescapeVcard(parts[i]);
-        return parts;
+        ArrayList<String> parts = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        for (int i = 0; i < rawValue.length(); i++) {
+            char c = rawValue.charAt(i);
+            // A backslash and whatever it escapes are one literal unit, so the
+            // escaped character is never a boundary — even when the backslash
+            // itself was escaped, which a plain "is the previous character a
+            // backslash" test gets wrong for a value like "Team\\,Work"
+            // (a literal backslash, then a real separator).
+            if (c == '\\' && i + 1 < rawValue.length()) {
+                current.append(c).append(rawValue.charAt(++i));
+            } else if (c == separator) {
+                parts.add(unescapeVcard(current.toString()));
+                current.setLength(0);
+            } else {
+                current.append(c);
+            }
+        }
+        parts.add(unescapeVcard(current.toString()));
+        return parts.toArray(new String[0]);
     }
 
     private static String unescapeVcard(String s) {

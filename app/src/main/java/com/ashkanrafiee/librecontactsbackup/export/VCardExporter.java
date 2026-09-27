@@ -1,5 +1,7 @@
 package com.ashkanrafiee.librecontactsbackup.export;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactsSnapshot;
@@ -12,23 +14,29 @@ import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactSnapshot.RawC
  *
  * This is NOT the canonical backup format. VCF cannot represent
  * every Android Contacts Provider field, but it covers the most
- * common contact data types.
+ * common contact data types. A contact's groups travel as CATEGORIES,
+ * the one place a vCard can name a group; a group_membership row's
+ * provider row ID is a number from the device the snapshot came from
+ * and identifies nothing anywhere else.
  *
  * The canonical backup is android-contacts.json.
  */
 public final class VCardExporter {
+
+    /** The provider MIME type of a row that puts a raw contact into a group. DATA1 is the group's row ID. */
+    private static final String MIME_GROUP_MEMBERSHIP = "vnd.android.cursor.item/group_membership";
 
     private VCardExporter() {}
 
     public static String exportVcf(AndroidContactsSnapshot snapshot) {
         StringBuilder sb = new StringBuilder();
         for (AndroidContactSnapshot contact : snapshot.contacts) {
-            exportContact(sb, contact);
+            exportContact(sb, contact, snapshot);
         }
         return sb.toString();
     }
 
-    private static void exportContact(StringBuilder sb, AndroidContactSnapshot contact) {
+    private static void exportContact(StringBuilder sb, AndroidContactSnapshot contact, AndroidContactsSnapshot snapshot) {
         sb.append("BEGIN:VCARD\r\nVERSION:3.0\r\n");
 
         // A VCARD represents a single visible contact, so every RawContact's
@@ -37,6 +45,7 @@ public final class VCardExporter {
         // is exported once per row, with no cross-RawContact deduplication.
 
         boolean hasName = false;
+        List<String> categories = new ArrayList<>();
         for (RawContactSnapshot rc : contact.rawContacts) {
             for (DataRowSnapshot row : rc.dataRows) {
                 String mime = row.mimeType;
@@ -86,6 +95,9 @@ public final class VCardExporter {
                     case "vnd.android.cursor.item/sip-address":
                         exportSip(sb, row);
                         break;
+                    case MIME_GROUP_MEMBERSHIP:
+                        exportGroupMembership(sb, row, snapshot, categories);
+                        break;
                     default:
                         exportRawAsExtension(sb, row);
                         break;
@@ -97,7 +109,51 @@ public final class VCardExporter {
             sb.append("FN:").append(escapeVcard(contact.displayName)).append("\r\n");
         }
 
+        exportCategories(sb, categories);
+
         sb.append("END:VCARD\r\n");
+    }
+
+    /**
+     * A contact's group memberships, collected as the group's real name for
+     * {@link #exportCategories} to write out once. A membership whose group is
+     * unknown to the snapshot keeps its raw row instead, as this exporter does
+     * with any other field it cannot interpret: an unresolved group ID is a
+     * number nobody can look up, but the row is still there in the file rather
+     * than dropped without a trace.
+     *
+     * Two groups that share a name are written as one category, since a vCard
+     * category is a name and carries nothing that could tell them apart.
+     */
+    private static void exportGroupMembership(StringBuilder sb, DataRowSnapshot row,
+                                              AndroidContactsSnapshot snapshot, List<String> categories) {
+        String title = snapshot.groupTitleFor(row.data1);
+        if (title == null) {
+            exportRawAsExtension(sb, row);
+            return;
+        }
+        if (!categories.contains(title)) categories.add(title);
+    }
+
+    /**
+     * Writes the contact's groups as CATEGORIES, the vCard 3.0 property for
+     * exactly this (RFC 2426 §3.6.1, a comma-separated text-list). It is the
+     * one representation of a group that travels: a name, readable in the file
+     * itself, understood by other address books and CardDAV servers.
+     *
+     * Group names are escaped like every other text value, commas included.
+     * A text-list is split on commas, so a name carrying one can't be written
+     * literally without breaking the list apart; escaping keeps the name in one
+     * piece for readers that honour escaping (including VCardImporter, below).
+     */
+    private static void exportCategories(StringBuilder sb, List<String> categories) {
+        if (categories.isEmpty()) return;
+        sb.append("CATEGORIES:");
+        for (int i = 0; i < categories.size(); i++) {
+            if (i > 0) sb.append(',');
+            sb.append(escapeVcard(categories.get(i)));
+        }
+        sb.append("\r\n");
     }
 
     private static void exportStructuredName(StringBuilder sb, DataRowSnapshot row) {

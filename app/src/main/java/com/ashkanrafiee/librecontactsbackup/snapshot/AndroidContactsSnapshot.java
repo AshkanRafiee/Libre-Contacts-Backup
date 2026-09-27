@@ -64,6 +64,33 @@ public final class AndroidContactsSnapshot {
     public int getSimContactCount() { return simContacts.size(); }
 
     /**
+     * The name of the group a group_membership row's {@code data1} refers to,
+     * or null when this snapshot has no group with that row ID, when the group
+     * has no name, or when the row doesn't carry a usable row ID at all.
+     *
+     * A membership row only ever holds the group's row ID, which is a number
+     * from the device the snapshot was read on and identifies nothing
+     * anywhere else. This is the one place that turns such a reference back
+     * into a name, so every derived export presents a group the same way
+     * instead of each one inventing its own idea of what row ID 7 means.
+     */
+    public String groupTitleFor(String groupRowId) {
+        if (groupRowId == null || groupRowId.trim().isEmpty()) return null;
+        long id;
+        try {
+            id = Long.parseLong(groupRowId.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+        for (GroupSnapshot group : groups) {
+            if (group.groupId != id) continue;
+            if (group.title == null || group.title.trim().isEmpty()) return null;
+            return group.title;
+        }
+        return null;
+    }
+
+    /**
      * Represents a single row of the Groups table (an account's contact group,
      * e.g. a Google "Label"). Captured so that group_membership Data rows can
      * be restored losslessly instead of being silently dropped.

@@ -28,7 +28,7 @@ Each backup is a single timestamped `.lcb` archive containing:
 | File | Purpose |
 |------|---------|
 | `android-contacts.json` | Canonical lossless snapshot — what restore reads from |
-| `contacts.vcf` | Standard vCard, for use with other apps |
+| `contacts.vcf` | Standard vCard for other apps, with your groups carried as vCard categories |
 | `contacts.json` / `contacts.csv` | Human-readable exports |
 | `manifest.json` | Checksums and format version |
 
