@@ -192,9 +192,18 @@ public final class NormalizedJsonExporter {
                         case MIME_SIP:
                             sipAddresses.put(row.toJson());
                             break;
-                        case MIME_GROUP:
-                            groups.put(row.toJson());
+                        case MIME_GROUP: {
+                            // data1 here is the group's provider row ID, which
+                            // names nothing outside the device it was read on
+                            // — so the group's title is added alongside it
+                            // rather than leaving a bare number in a file
+                            // meant to be read by a person.
+                            JSONObject membership = row.toJson();
+                            String title = snapshot.groupTitleFor(row.data1);
+                            if (title != null) membership.put("group", title);
+                            groups.put(membership);
                             break;
+                        }
                         default:
                             other.put(row.toJson());
                             break;

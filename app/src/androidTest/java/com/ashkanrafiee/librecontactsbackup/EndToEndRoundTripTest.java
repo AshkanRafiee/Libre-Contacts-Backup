@@ -36,6 +36,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import static org.junit.Assert.*;
 
@@ -857,6 +859,21 @@ public class EndToEndRoundTripTest {
         }
         assertEquals("Group should survive archive round-trip", 1, archiveData.snapshot.getGroups().size());
 
+        // The derived contacts.vcf has to name the group too. A membership row
+        // alone only carries the group's provider row ID, which says nothing
+        // about the group to anyone reading the file on another device.
+        String vcf = archiveEntry(baos.toByteArray(), "contacts.vcf");
+        assertTrue("The exported vCard must name the group it puts the contact in",
+                vcf.contains("CATEGORIES:Test Group Alpha"));
+        assertFalse("It must not pass the provider's group row ID off as the group's identity",
+                vcf.contains("X-ANDROID-vnd.android.cursor.item.group_membership"));
+
+        // Same for the human-readable contacts.json: a membership row on its
+        // own is a row ID with no name attached to it anywhere in the file.
+        String derivedJson = archiveEntry(baos.toByteArray(), "contacts.json");
+        assertTrue("The human-readable JSON must name the group as well, not just its row ID",
+                derivedJson.contains("\"group\": \"Test Group Alpha\""));
+
         cleanupContacts(); // wipes both raw_contacts and groups
         Thread.sleep(300);
 
@@ -893,6 +910,22 @@ public class EndToEndRoundTripTest {
             }
         }
         assertTrue("Restored contact should reference the mapped target group", found);
+    }
+
+    /** Pulls one entry out of an in-memory .lcb (ZIP) archive, so a test can inspect a derived file. */
+    private static String archiveEntry(byte[] archiveBytes, String entryName) throws Exception {
+        try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(archiveBytes))) {
+            ZipEntry entry;
+            while ((entry = zip.getNextEntry()) != null) {
+                if (!entryName.equals(entry.getName())) continue;
+                ByteArrayOutputStream contents = new ByteArrayOutputStream();
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = zip.read(buffer)) > 0) contents.write(buffer, 0, read);
+                return contents.toString("UTF-8");
+            }
+        }
+        throw new AssertionError("Archive has no " + entryName);
     }
 
     // ============================================================
