@@ -33,7 +33,6 @@
     <string name="export_note_compact">Manuel kopyalar: şifresiz, saklanmaz.</string>
     <string name="export_csv">CSV</string>
     <string name="export_vcf">VCF</string>
-    <string name="export_excel">Excel</string>
 
     <string name="restore_button">Yedekten geri yükle  ›</string>
     <string name="restore_status_none">Henüz geri yükleme yapılmadı</string>

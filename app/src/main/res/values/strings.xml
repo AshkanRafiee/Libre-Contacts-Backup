@@ -37,7 +37,6 @@
     <string name="export_note_compact">Manual copies: unencrypted, not retained.</string>
     <string name="export_csv">CSV</string>
     <string name="export_vcf">VCF</string>
-    <string name="export_excel">Excel</string>
 
     <!-- Restore section -->
     <string name="restore_button">Restore from backup  ›</string>

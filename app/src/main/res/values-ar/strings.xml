@@ -33,7 +33,6 @@
     <string name="export_note_compact">النسخ اليدوية: غير مشفّرة، ولا يُحتفَظ بها.</string>
     <string name="export_csv">CSV</string>
     <string name="export_vcf">VCF</string>
-    <string name="export_excel">Excel</string>
 
     <string name="restore_button">‹  الاستعادة من نسخة احتياطية</string>
     <string name="restore_status_none">لم تُجرَ أي عملية استعادة بعد</string>

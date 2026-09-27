@@ -36,7 +36,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class MainActivity extends Activity {
-    static final int FOLDER = 10, FILE = 11, MANUAL_CSV = 30, MANUAL_VCF = 31, MANUAL_XLS = 32;
+    static final int FOLDER = 10, FILE = 11, MANUAL_CSV = 30, MANUAL_VCF = 31;
     int mint, background, card, muted;
     TextView status, folderValue, scheduleValue, keepValue, languageValue, restoreStatus;
     Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat; boolean pendingBackup; int pendingScheduleMode; String pendingNotificationActions; boolean compact;
@@ -192,9 +192,9 @@ public class MainActivity extends Activity {
         body.addView(label(getString(R.string.section_export), 10, muted), margins(0, 0, 0, 3));
         body.addView(label(compact ? getString(R.string.export_note_compact) : getString(R.string.export_note_full), 11, resColor(R.color.amber)), margins(0, 0, 0, v(8, 5)));
         LinearLayout exports = new LinearLayout(this); exports.setOrientation(LinearLayout.HORIZONTAL);
-        Button csv = button(getString(R.string.export_csv), resColor(R.color.button_surface)); Button vcf = button(getString(R.string.export_vcf), resColor(R.color.button_surface)); Button xls = button(getString(R.string.export_excel), resColor(R.color.button_surface));
-        csv.setOnClickListener(v -> manualExport("csv")); vcf.setOnClickListener(v -> manualExport("vcf")); xls.setOnClickListener(v -> manualExport("xls"));
-        exports.addView(csv, new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1)); LinearLayout.LayoutParams exportGap = new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1); exportGap.setMargins(dp(v(8, 5)), 0, 0, 0); exports.addView(vcf, exportGap); LinearLayout.LayoutParams excelGap = new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1); excelGap.setMargins(dp(v(8, 5)), 0, 0, 0); exports.addView(xls, excelGap); body.addView(exports, margins(0, 0, 0, d(14, 16)));
+        Button csv = button(getString(R.string.export_csv), resColor(R.color.button_surface)); Button vcf = button(getString(R.string.export_vcf), resColor(R.color.button_surface));
+        csv.setOnClickListener(v -> manualExport("csv")); vcf.setOnClickListener(v -> manualExport("vcf"));
+        exports.addView(csv, new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1)); LinearLayout.LayoutParams exportGap = new LinearLayout.LayoutParams(0, dp(v(48, 42)), 1); exportGap.setMargins(dp(v(8, 5)), 0, 0, 0); exports.addView(vcf, exportGap); body.addView(exports, margins(0, 0, 0, d(14, 16)));
 
         body.addView(label(getString(R.string.section_restore), 10, muted), margins(0, 0, 0, v(8, 5)));
         Button restore = button(getString(R.string.restore_button), resColor(R.color.button_surface)); restore.setTextColor(resColor(R.color.button_text)); restore.setOnClickListener(v -> chooseFile());
@@ -248,7 +248,7 @@ public class MainActivity extends Activity {
     void chooseFolder() { startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION), FOLDER); }
     void chooseFile() { startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("application/octet-stream").addCategory(Intent.CATEGORY_OPENABLE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), FILE); }
     void manualExport(String format) { if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingManualFormat = format; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 23); return; } launchManualExport(format); }
-    void launchManualExport(String format) { int request = format.equals("csv") ? MANUAL_CSV : format.equals("vcf") ? MANUAL_VCF : MANUAL_XLS; String extension = format.equals("csv") ? ".csv" : format.equals("vcf") ? ".vcf" : ".xls"; String mime = format.equals("csv") ? "text/csv" : format.equals("vcf") ? "text/x-vcard" : "application/vnd.ms-excel"; String name = "manual_librecontacts_" + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(new Date()) + extension; startActivityForResult(new Intent(Intent.ACTION_CREATE_DOCUMENT).setType(mime).putExtra(Intent.EXTRA_TITLE, name).addCategory(Intent.CATEGORY_OPENABLE), request); }
+    void launchManualExport(String format) { boolean csv = format.equals("csv"); int request = csv ? MANUAL_CSV : MANUAL_VCF; String extension = csv ? ".csv" : ".vcf"; String mime = csv ? "text/csv" : "text/x-vcard"; String name = "manual_librecontacts_" + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(new Date()) + extension; startActivityForResult(new Intent(Intent.ACTION_CREATE_DOCUMENT).setType(mime).putExtra(Intent.EXTRA_TITLE, name).addCategory(Intent.CATEGORY_OPENABLE), request); }
     void backup() {
         if (BackupManager.folder(this).isEmpty()) { pendingBackup = true; chooseFolder(); return; }
         if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingBackup = true; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 21); return; }
@@ -513,7 +513,7 @@ public class MainActivity extends Activity {
     @SuppressLint("WrongConstant") // data.getFlags() is masked to exactly the two accepted persistable flags below
     @Override protected void onActivityResult(int request, int result, Intent data) {
         super.onActivityResult(request, result, data); if (result != RESULT_OK || data == null) { if (request == FOLDER) { pendingBackup = false; pendingScheduleMode = 0; pendingNotificationActions = null; } return; } Uri uri = data.getData();
-        try { if (request == MANUAL_CSV || request == MANUAL_VCF || request == MANUAL_XLS) { String format = request == MANUAL_CSV ? "csv" : request == MANUAL_VCF ? "vcf" : "xls"; new Thread(() -> { try { BackupManager.writeManualExport(this, uri, format); } catch (Exception e) { notice(this, getString(R.string.notice_export_failed_title), e.getMessage()); } }).start(); }
+        try { if (request == MANUAL_CSV || request == MANUAL_VCF) { String format = request == MANUAL_CSV ? "csv" : "vcf"; new Thread(() -> { try { BackupManager.writeManualExport(this, uri, format); } catch (Exception e) { notice(this, getString(R.string.notice_export_failed_title), e.getMessage()); } }).start(); }
             else if (request == FOLDER) { getContentResolver().takePersistableUriPermission(uri, data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION)); BackupManager.prefs(this).edit().putString("folder", uri.toString()).apply(); load(); if (pendingBackup) { pendingBackup = false; backup(); } else if (pendingScheduleMode > 0) { int mode = pendingScheduleMode; pendingScheduleMode = 0; if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingScheduleMode = mode; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 24); } else beginSchedule(mode); } else if (pendingNotificationActions != null) { String remaining = pendingNotificationActions; pendingNotificationActions = null; triggerNotificationAction(remaining); } }
             else {
                 // Restore needs READ_CONTACTS too, not just WRITE_CONTACTS: it queries

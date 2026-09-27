@@ -33,7 +33,6 @@
     <string name="export_note_compact">نسخه‌های دستی: بدون رمزگذاری، نگه‌داری نمی‌شوند.</string>
     <string name="export_csv">CSV</string>
     <string name="export_vcf">VCF</string>
-    <string name="export_excel">Excel</string>
 
     <string name="restore_button">‹  بازگرداندن از پشتیبان</string>
     <string name="restore_status_none">هنوز بازگردانی انجام نشده است</string>

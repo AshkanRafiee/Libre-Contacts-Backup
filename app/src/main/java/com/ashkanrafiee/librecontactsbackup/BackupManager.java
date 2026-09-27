@@ -17,7 +17,6 @@ import com.ashkanrafiee.librecontactsbackup.export.VCardImporter;
 import com.ashkanrafiee.librecontactsbackup.retention.RetentionDecider;
 import com.ashkanrafiee.librecontactsbackup.retention.RetentionPolicy;
 import com.ashkanrafiee.librecontactsbackup.retention.StoredBackup;
-import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactsSnapshot;
 import com.ashkanrafiee.librecontactsbackup.snapshot.ContactsSnapshotReader;
 import com.ashkanrafiee.librecontactsbackup.snapshot.RestoreOptions;
@@ -270,23 +269,22 @@ public final class BackupManager {
     // ============================================================
 
     /**
-     * Writes a manual export in the requested format.
+     * Writes a manual export in the requested format ("csv" or "vcf").
      * These are derived export formats, not the canonical backup.
      */
     public static void writeManualExport(Context c, Uri destination, String format) throws Exception {
         AndroidContactsSnapshot snapshot = ContactsSnapshotReader.read(c);
         String value;
-        String mime;
 
+        // Said out loud rather than falling through to a default, so a format
+        // this method doesn't write is reported instead of being written as a
+        // CSV under another format's name.
         if (format.equals("vcf")) {
             value = VCardExporter.exportVcf(snapshot);
-            mime = "text/x-vcard";
-        } else if (format.equals("xls")) {
-            value = excel(snapshot);
-            mime = "application/vnd.ms-excel";
-        } else {
+        } else if (format.equals("csv")) {
             value = NormalizedCsvExporter.exportCsv(snapshot);
-            mime = "text/csv";
+        } else {
+            throw new IllegalArgumentException("Unsupported manual export format: " + format);
         }
 
         try (OutputStream out = c.getContentResolver().openOutputStream(destination)) {
@@ -535,70 +533,4 @@ public final class BackupManager {
         }
         return parsed;
     }
-
-    // ============================================================
-    // Excel export (legacy compatibility)
-    // ============================================================
-
-    private static String excel(AndroidContactsSnapshot snapshot) {
-        StringBuilder b = new StringBuilder("<?xml version=\"1.0\"?><Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\" xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\"><Worksheet ss:Name=\"Contacts\"><Table>");
-        b.append("<Row><Cell><Data ss:Type=\"String\">Name</Data></Cell><Cell><Data ss:Type=\"String\">Phone</Data></Cell><Cell><Data ss:Type=\"String\">Email</Data></Cell><Cell><Data ss:Type=\"String\">Address</Data></Cell><Cell><Data ss:Type=\"String\">Organization</Data></Cell><Cell><Data ss:Type=\"String\">Title</Data></Cell><Cell><Data ss:Type=\"String\">Nickname</Data></Cell><Cell><Data ss:Type=\"String\">Notes</Data></Cell><Cell><Data ss:Type=\"String\">Events</Data></Cell><Cell><Data ss:Type=\"String\">Websites</Data></Cell><Cell><Data ss:Type=\"String\">IM</Data></Cell><Cell><Data ss:Type=\"String\">Relations</Data></Cell></Row>");
-
-        for (AndroidContactSnapshot contact : snapshot.contacts) {
-            String name = contact.displayName != null ? contact.displayName : "";
-            String phones = "", emails = "", addr = "", org = "", title = "", nick = "", notes = "", events = "", web = "", ims = "", rels = "";
-
-            for (AndroidContactSnapshot.RawContactSnapshot rc : contact.rawContacts) {
-                for (AndroidContactSnapshot.DataRowSnapshot row : rc.dataRows) {
-                    if (row.mimeType == null) continue;
-                    switch (row.mimeType) {
-                        case "vnd.android.cursor.item/phone_v2":
-                            if (row.data1 != null) phones = phones.isEmpty() ? row.data1 : phones + "; " + row.data1;
-                            break;
-                        case "vnd.android.cursor.item/email_v2":
-                            if (row.data1 != null) emails = emails.isEmpty() ? row.data1 : emails + "; " + row.data1;
-                            break;
-                        case "vnd.android.cursor.item/postal-address_v2":
-                        case "vnd.android.cursor.item/postal-address":
-                            // data4 = STREET (ContactsContract.CommonDataKinds.StructuredPostal)
-                            if (row.data4 != null && !row.data4.isEmpty())
-                                addr = addr.isEmpty() ? row.data4 : addr + "; " + row.data4;
-                            break;
-                        case "vnd.android.cursor.item/organization":
-                            if (row.data1 != null && org.isEmpty()) org = row.data1;
-                            if (row.data4 != null && title.isEmpty()) title = row.data4;
-                            break;
-                        case "vnd.android.cursor.item/nickname":
-                            if (row.data1 != null) nick = nick.isEmpty() ? row.data1 : nick + "; " + row.data1;
-                            break;
-                        case "vnd.android.cursor.item/note":
-                            if (row.data1 != null) notes = notes.isEmpty() ? row.data1 : notes + "; " + row.data1;
-                            break;
-                        case "vnd.android.cursor.item/contact_event":
-                            if (row.data1 != null) events = events.isEmpty() ? row.data1 : events + "; " + row.data1;
-                            break;
-                        case "vnd.android.cursor.item/website":
-                            if (row.data1 != null) web = web.isEmpty() ? row.data1 : web + "; " + row.data1;
-                            break;
-                        case "vnd.android.cursor.item/im":
-                            if (row.data1 != null) ims = ims.isEmpty() ? row.data1 : ims + "; " + row.data1;
-                            break;
-                        case "vnd.android.cursor.item/relation":
-                            if (row.data1 != null) rels = rels.isEmpty() ? row.data1 : rels + "; " + row.data1;
-                            break;
-                    }
-                }
-            }
-
-            b.append("<Row>");
-            excelCell(b, name); excelCell(b, phones); excelCell(b, emails); excelCell(b, addr);
-            excelCell(b, org); excelCell(b, title); excelCell(b, nick); excelCell(b, notes);
-            excelCell(b, events); excelCell(b, web); excelCell(b, ims); excelCell(b, rels);
-            b.append("</Row>");
-        }
-        return b.append("</Table></Worksheet></Workbook>").toString();
-    }
-
-    private static String xml(String value) { return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&apos;"); }
-    private static void excelCell(StringBuilder b, String value) { b.append("<Cell><Data ss:Type=\"String\">").append(xml(value != null ? value : "")).append("</Data></Cell>"); }
 }

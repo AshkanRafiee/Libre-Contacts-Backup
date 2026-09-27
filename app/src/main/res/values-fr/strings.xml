@@ -33,7 +33,6 @@
     <string name="export_note_compact">Copies manuelles : non chiffrées, non conservées.</string>
     <string name="export_csv">CSV</string>
     <string name="export_vcf">VCF</string>
-    <string name="export_excel">Excel</string>
 
     <string name="restore_button">Restaurer une sauvegarde  ›</string>
     <string name="restore_status_none">Aucune restauration effectuée</string>
