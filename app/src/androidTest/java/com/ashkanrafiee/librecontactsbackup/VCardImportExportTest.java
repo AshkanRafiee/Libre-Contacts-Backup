@@ -387,6 +387,25 @@ public class VCardImportExportTest {
     }
 
     @Test
+    public void anAbsurdlyLongCategoriesValueIsIgnoredRatherThanExpanded() {
+        // A crafted file can hold one enormous CATEGORIES line. It must not
+        // become a pile of groups on restore; the contact itself still imports.
+        StringBuilder names = new StringBuilder();
+        while (names.length() < 5000) names.append("Group").append(names.length()).append(',');
+
+        String vcf = "BEGIN:VCARD\r\nVERSION:3.0\r\n"
+                + "FN:Bounded Person\r\n"
+                + "CATEGORIES:" + names + "\r\n"
+                + "END:VCARD\r\n";
+
+        AndroidContactsSnapshot snapshot = VCardImporter.importVcf(vcf);
+
+        assertEquals("The contact is still a contact", 1, snapshot.getContactCount());
+        assertEquals("An oversized category list must not be expanded into groups",
+                0, snapshot.getGroups().size());
+    }
+
+    @Test
     public void groupNamesRoundTripThroughExportAndImport() {
         AndroidContactsSnapshot snapshot = snapshotInGroups("Round Trip Person", 3, 4);
         addGroup(snapshot, 3, "Work");

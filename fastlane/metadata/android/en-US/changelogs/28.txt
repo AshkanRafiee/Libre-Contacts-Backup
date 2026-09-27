@@ -1,4 +1,4 @@
 Fixed:
-- Group names in exports: a contact's groups now travel with their names, so a vCard file — and the readable files inside each backup — say which group a contact belongs to instead of showing a number that meant nothing on another phone
+- Group names in exports: a contact's groups now travel with their names, so a vCard file — and the readable JSON inside each backup — say which group a contact belongs to instead of showing a number that meant nothing on another phone
 Removed:
 - The Excel export. What it produced was a spreadsheet XML file given a .xls name, which many programs refuse to open; the CSV export has the same table and opens in Excel and other spreadsheet apps

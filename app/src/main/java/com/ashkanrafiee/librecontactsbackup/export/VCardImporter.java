@@ -10,8 +10,9 @@ import com.ashkanrafiee.librecontactsbackup.snapshot.AndroidContactSnapshot.RawC
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Imports a VCF (vCard 3.0) file into a lossless snapshot.
@@ -32,6 +33,15 @@ public final class VCardImporter {
 
     /** The provider MIME type of a row that puts a raw contact into a group. DATA1 is the group's row ID. */
     private static final String MIME_GROUP_MEMBERSHIP = "vnd.android.cursor.item/group_membership";
+
+    /**
+     * A real card names a handful of groups, so a CATEGORIES value longer than
+     * this is a crafted file rather than a contact. Bounding it here keeps one
+     * enormous line from expanding into a pile of strings and a pile of groups
+     * on restore, the same reasoning as the size caps in BackupArchiveReader.
+     * The rest of the card still imports; only the absurd value is ignored.
+     */
+    private static final int MAX_CATEGORIES_LENGTH = 4096;
 
     private VCardImporter() {}
 
@@ -75,7 +85,7 @@ public final class VCardImporter {
         // The card's group names, as read from CATEGORIES, in the order they
         // appear. They become groups and membership rows only after the card
         // has been confirmed to be a contact (see below).
-        List<String> categories = new ArrayList<>();
+        Set<String> categories = new LinkedHashSet<>();
         // Fallback name (given + family from N) used only if FN is absent —
         // set aside rather than written straight to the name row's data1,
         // since FN and N can appear in either order and FN must always win
@@ -275,10 +285,11 @@ public final class VCardImporter {
                     // another address book means nothing here. The names are
                     // held aside and turned into real groups below, once the
                     // card is known to describe a contact at all.
+                    if (propValue == null || propValue.length() > MAX_CATEGORIES_LENGTH) break;
                     for (String title : splitVcardList(propValue)) {
                         String name = title.trim();
-                        if (name.isEmpty() || categories.contains(name)) continue;
-                        categories.add(name);
+                        if (name.isEmpty()) continue;
+                        categories.add(name); // a set: a name repeated in the list is one group
                     }
                     break;
                 }
