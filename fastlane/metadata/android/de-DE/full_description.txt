@@ -2,12 +2,12 @@ Libre Contacts Backup ist eine native, freie (FLOSS) Android-App für private, l
 
 Funktionen:
 * Verlustfreie Sicherung, die die vollständige Contact-→-RawContact-→-Data-Hierarchie einschließlich Kontaktgruppen bewahrt
-* SIM-Karten-Telefonbuch wird bei jeder Sicherung mit erfasst; bei der Wiederherstellung können SIM-Kontakte zurück auf die SIM-Karte, in das Gerätadressbuch oder beides geschrieben werden
-* Geplante tägliche lokale Sicherungen zu einer von dir gewählten Uhrzeit, ganz ohne Internetverbindung
+* SIM-Karten-Telefonbuch wird bei jeder Sicherung mit erfasst; bei der Wiederherstellung können SIM-Kontakte zurück auf die SIM-Karte, in das Gerätadressbuch oder beides geschrieben werden — und bei mehreren SIM-Karten (auch eSIM) wählst du, auf welche Karte sie kommen sollen
+* Geplante lokale Sicherungen zu einer von dir gewählten Uhrzeit — täglich, wöchentlich an einem gewählten Wochentag oder monatlich an einem gewählten Tag (ist der Monat kürzer als dieser Tag, läuft die Sicherung am letzten Tag des Monats) — ganz ohne Internetverbindung
 * Einzeldatei-LCB-Archive mit kanonischen JSON-, VCF-, CSV- und normalisierten Exporten
 * Optionale, passwortgeschützte AES-256-GCM-Verschlüsselung (gestützt auf den Android Keystore)
 * Die Wiederherstellung führt jeden Quellkontakt korrekt zusammen, ohne unterschiedliche Personen mit gleichem Namen zu vermischen
-* Manuelle Exporte als CSV, VCF und Excel-kompatibel
-* Vom Nutzer kontrollierte Aufbewahrung automatischer Sicherungsarchive
+* Manuelle Exporte als CSV und VCF; die CSV-Datei lässt sich in Excel und anderen Tabellenprogrammen öffnen
+* Aufbewahrung nach Alter — die neuesten Sicherungen pro Tag, Woche und Monat in von dir gewählten Anzahlen (zum Beispiel 7 täglich, 4 wöchentlich, 3 monatlich), sodass die jüngste Vergangenheit dicht gesichert bleibt und ältere Geschichte ausdünnt — oder einfach die letzten N Sätze behalten
 
 Libre Contacts Backup ist kostenlos und Open Source. Wenn es Ihnen nützt, können Sie seine Entwicklung unterstützen — die Spendenmöglichkeiten finden Sie im Abschnitt Donate der Projekt-README: https://librecontactsbackup.ashkanrafiee.com/#donate

@@ -2,12 +2,12 @@ Libre Contacts Backup es una aplicación Android nativa y libre (FLOSS) para cop
 
 Características:
 * Copia de seguridad sin pérdidas que conserva toda la jerarquía Contact → RawContact → Data, incluidos los grupos de contactos
-* La libreta del teléfono de la tarjeta SIM se captura en cada copia de seguridad; al restaurar, los contactos de la SIM pueden escribirse de vuelta en la tarjeta SIM, en la libreta de contactos del dispositivo o en ambos
-* Copias de seguridad locales diarias programadas a la hora que elijas, sin necesidad de conexión a internet
+* La libreta del teléfono de la tarjeta SIM se captura en cada copia de seguridad; al restaurar, los contactos de la SIM pueden escribirse de vuelta en la tarjeta SIM, en la libreta de contactos del dispositivo o en ambos — y en teléfonos con más de una SIM (incluida una eSIM) eliges en cuáles se escriben; en un teléfono con una sola SIM se usa esa tarjeta automáticamente
+* Copias de seguridad locales programadas a la hora que elijas — diarias, semanales el día de la semana que elijas, o mensuales el día del mes que elijas (si el mes tiene menos días que ese día, se ejecuta el último día del mes) — sin necesidad de conexión a internet
 * Archivos LCB de un solo fichero con exportaciones canónicas en JSON, VCF, CSV y formato normalizado
 * Cifrado opcional protegido por contraseña con AES-256-GCM (respaldado por el Android Keystore)
 * La restauración consolida correctamente cada contacto de origen, sin fusionar a personas distintas que comparten el mismo nombre
-* Exportaciones manuales en CSV, VCF y formato compatible con Excel
-* Retención controlada por el usuario para los archivos de copia de seguridad automática
+* Exportaciones manuales en CSV y VCF; el archivo CSV se abre en Excel y en otros programas de hojas de cálculo
+* Retención por antigüedad — conserva las copias más recientes de cada día, semana y mes con las cantidades que elijas (por ejemplo 7 diarias, 4 semanales, 3 mensuales), para que el pasado reciente siga bien respaldado y el historial más antiguo se reduzca — o simplemente conserva los últimos N conjuntos
 
 Libre Contacts Backup es gratuito y de código abierto. Si te resulta útil, puedes apoyar su desarrollo — las opciones de donación están en la sección Donate del README del proyecto: https://librecontactsbackup.ashkanrafiee.com/#donate

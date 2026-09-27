@@ -2,12 +2,12 @@ Libre Contacts Backup, özel ve önce yerel odaklı kişi yedeklemeleri için ye
 
 Özellikler:
 * Kişi grupları da dahil olmak üzere tam Contact → RawContact → Data hiyerarşisini koruyan kayıpsız yedekleme
-* SIM kart telefon rehberi her yedeklemeye dahil edilir; geri yüklemede SIM kişileri SIM karta, cihaz adres defterine veya her ikisine birden geri yazılabilir
-* İnternet bağlantısı gerekmeden, seçtiğiniz saatte çalışan zamanlanmış günlük yerel yedeklemeler
+* SIM kart telefon rehberi her yedeklemeye dahil edilir; geri yüklemede SIM kişileri SIM karta, cihaz adres defterine veya her ikisine birden geri yazılabilir — ve birden fazla SIM kartı olan (eSIM dahil) telefonlarda yazılacak kartları siz seçersiniz; tek SIM kartlı telefonlarda o kart otomatik olarak kullanılır
+* İnternet bağlantısı gerekmeden, seçtiğiniz saatte çalışan zamanlanmış yerel yedeklemeler — günlük, seçtiğiniz haftanın gününde haftalık veya seçtiğiniz ayın gününde aylık (ay bu günden daha kısaysa yedekleme ayın son gününde çalışır)
 * Standart JSON, VCF, CSV ve normalleştirilmiş dışa aktarımları içeren tek dosyalık LCB arşivleri
 * Android Keystore destekli, isteğe bağlı AES-256-GCM parola korumalı şifreleme
 * Geri yükleme, aynı ada sahip farklı kişileri birleştirmeden her kaynak kişiyi doğru şekilde bir araya getirir
-* Manuel CSV, VCF ve Excel uyumlu dışa aktarımlar
-* Otomatik yedekleme arşivleri için kullanıcı denetimli saklama süresi
+* Manuel CSV ve VCF dışa aktarımları; CSV dosyası Excel ve diğer elektronik tablo uygulamalarında açılır
+* Yaşa göre saklama — son yedekleri gün, hafta ve ay bazında sizin seçtiğiniz adetlerle koruyun (örneğin 7 günlük, 4 haftalık, 3 aylık), böylece yakın geçmiş sıkı yedeklenirken daha eski geçmiş seyreltilir — ya da yalnızca son N kümenizi tutun
 
 Libre Contacts Backup ücretsiz ve açık kaynaklıdır. İşinize yarıyorsa, geliştirilmesini destekleyebilirsiniz — bağış seçenekleri proje README'sinin Donate bölümünde yer alır: https://librecontactsbackup.ashkanrafiee.com/#donate
