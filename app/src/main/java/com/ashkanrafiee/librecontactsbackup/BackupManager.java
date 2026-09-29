@@ -37,6 +37,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
@@ -123,7 +124,33 @@ public final class BackupManager {
         }
     }
 
-    public static BackupOutcome runBackup(Context c, boolean notify) {
+    // Only one backup in flight at a time: the archive display name is derived
+    // from the current minute, retention trims against the folder's live
+    // children, and the outcome is written to prefs, so two overlapping runs
+    // (a scheduled run colliding with a manual one, or two alarms after the
+    // process was killed and restarted) would step on each other. Manual runs
+    // are also guarded by MainActivity.backupRunning; this flag is the
+    // process-wide backstop covering every entry point.
+    private static final AtomicBoolean runInFlight = new AtomicBoolean(false);
+
+    public static BackupOutcome runBackup(Context c, boolean notify) { return runBackup(c, notify, false); }
+
+    /**
+     * @param boundedSimRead bounds the SIM phonebook step to a few seconds —
+     *   used by scheduled runs, which live in a short alarm window. A manual
+     *   "Back up now" keeps the unbounded SIM read so nothing is silently
+     *   dropped when the user is waiting for the result.
+     */
+    public static BackupOutcome runBackup(Context c, boolean notify, boolean boundedSimRead) {
+        if (!runInFlight.compareAndSet(false, true)) {
+            Log.w("LibreContactsBackup", "Skipping a backup run because another one is already in progress");
+            return new BackupOutcome(false, c.getString(R.string.backup_already_running));
+        }
+        try { return doRunBackup(c, notify, boundedSimRead); }
+        finally { runInFlight.set(false); }
+    }
+
+    private static BackupOutcome doRunBackup(Context c, boolean notify, boolean boundedSimRead) {
         try {
             if (folder(c).isEmpty()) {
                 String message = c.getString(R.string.error_choose_folder_first);
@@ -138,7 +165,9 @@ public final class BackupManager {
             // carries the SIM contacts as a separate, additive part. A device
             // with no SIM or a non-exposed provider simply yields zero entries.
             try {
-                SimContactsReader.Result sim = readSimContactsBounded(c.getContentResolver());
+                SimContactsReader.Result sim = boundedSimRead
+                        ? readSimContactsBounded(c.getContentResolver())
+                        : SimContactsReader.readSimContacts(c.getContentResolver());
                 for (SimContact simContact : sim.contacts) snapshot.addSimContact(simContact);
             } catch (Exception e) {
                 Log.w("LibreContactsBackup", "SIM phonebook capture failed; continuing without it", e);
@@ -148,7 +177,11 @@ public final class BackupManager {
             String stamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(new Date());
             boolean encrypted = prefs(c).getBoolean("encrypted", false);
             String password = encrypted ? loadEncryptionPassword(c) : null;
-            if (encrypted && (password == null || password.isEmpty())) return new BackupOutcome(false, c.getString(R.string.error_set_password_first));
+            if (encrypted && (password == null || password.isEmpty())) {
+                String message = c.getString(R.string.error_set_password_first);
+                recordLastRun(c, false, message);
+                return new BackupOutcome(false, message);
+            }
 
             ByteArrayOutputStream zipOutput = new ByteArrayOutputStream();
             BackupArchiveWriter.writeArchive(c, snapshot, zipOutput);
@@ -189,15 +222,26 @@ public final class BackupManager {
     // execution window, so the SIM step is kept best-effort and time-bounded:
     // if it does not answer in time, the backup proceeds with the device
     // contacts only rather than being killed before it writes anything.
-    private static final ExecutorService SIM_READER = Executors.newSingleThreadExecutor();
+    // The pool is cached (so one hung read can never poison future runs) and
+    // daemon-threaded (so a hung provider read cannot keep the process alive).
+    private static final ExecutorService SIM_READER = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "lcb-sim-read");
+        t.setDaemon(true);
+        return t;
+    });
     private static final long SIM_READ_TIMEOUT_MS = 10_000;
 
     private static SimContactsReader.Result readSimContactsBounded(ContentResolver resolver) {
         Future<SimContactsReader.Result> future = SIM_READER.submit(() -> SimContactsReader.readSimContacts(resolver));
         try {
             return future.get(SIM_READ_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            future.cancel(true);
+            Log.w("LibreContactsBackup", "SIM phonebook read did not finish within " + SIM_READ_TIMEOUT_MS + "ms; continuing without SIM contacts");
+            return new SimContactsReader.Result(false);
         } catch (Exception e) {
-            Log.w("LibreContactsBackup", "SIM phonebook read did not finish within " + SIM_READ_TIMEOUT_MS + "ms; continuing without SIM contacts", e);
+            future.cancel(true);
+            Log.w("LibreContactsBackup", "SIM phonebook read failed; continuing without SIM contacts", e);
             return new SimContactsReader.Result(false);
         }
     }
@@ -230,7 +274,7 @@ public final class BackupManager {
             return;
         }
 
-        BackupOutcome outcome = runBackup(c, false);
+        BackupOutcome outcome = runBackup(c, false, true);
         MainActivity.showScheduledNotification(c, outcome.message, outcome.success);
     }
 
@@ -240,10 +284,11 @@ public final class BackupManager {
         // last thing the process does before it is killed, so the status must be
         // on disk before the process can be torn down — apply()'s async flush can
         // be lost in exactly that window.
-        prefs(c).edit().putLong("lastRun", System.currentTimeMillis())
+        boolean written = prefs(c).edit().putLong("lastRun", System.currentTimeMillis())
                 .putBoolean("lastRunSuccess", success)
                 .putString("lastRunMessage", message == null ? "" : message)
                 .commit();
+        if (!written) Log.w("LibreContactsBackup", "Failed to persist the last run outcome");
     }
 
     /** Whether the picked folder still answers its own root document. */
@@ -251,9 +296,9 @@ public final class BackupManager {
         try {
             Uri tree = Uri.parse(folder);
             Uri document = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree));
-            try (Cursor ignored = c.getContentResolver().query(document,
+            try (Cursor cursor = c.getContentResolver().query(document,
                     new String[]{DocumentsContract.Document.COLUMN_DISPLAY_NAME}, null, null, null)) {
-                return true;
+                return cursor != null && cursor.moveToFirst();
             }
         } catch (Exception e) { return false; }
     }
@@ -512,9 +557,10 @@ public final class BackupManager {
         if (file == null) throw new IOException(c.getString(R.string.error_cannot_create_backup_file));
         try (OutputStream out = c.getContentResolver().openOutputStream(file)) { out.write(bytes); }
         catch (Exception writeError) {
-            // Remove the half-written document so an interrupted write never
-            // leaves a truncated .lcb behind — a partial backup is worse than
-            // no backup: it is untrustworthy but looks like one.
+            // Remove the half-written document so an in-process write failure
+            // never leaves a truncated .lcb behind that looks like a real
+            // backup. (A process killed mid-write is covered by the archive
+            // checksums, which refuse to restore such a file.)
             try { DocumentsContract.deleteDocument(c.getContentResolver(), file); } catch (Exception ignored) { }
             throw writeError;
         }
