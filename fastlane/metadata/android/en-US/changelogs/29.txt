@@ -1,0 +1,6 @@
+Fixed:
+- Automatic backups can no longer be cancelled silently by an interrupted or overlapping run. If a backup is stopped partway through (slow phone, Doze, or the system reclaiming resources), the next scheduled backup still happens at the usual time
+- A slow-to-read SIM card phonebook can no longer delay or derail an automatic backup
+- After a device reboot, the automatic schedule restores itself on the first app launch
+Changed:
+- When an automatic backup is skipped or fails, the reason now also shows on the main screen — not only in a notification that is easy to miss
