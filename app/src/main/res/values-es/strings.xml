@@ -8,6 +8,8 @@
     <string name="status_ready">Listo para una nueva copia de seguridad</string>
     <string name="status_backing_up">Haciendo copia de seguridad…</string>
     <string name="status_last_backup">Última copia %1$s</string>
+    <string name="status_last_backup_outcome">Última ejecución %1$s · %2$s</string>
+    <string name="backup_already_running">Ya hay una copia de seguridad en curso.</string>
     <string name="hero_tagline_full">Privado, local y listo cuando tú lo estés.</string>
     <string name="hero_tagline_compact">Privado y local.</string>
     <string name="backup_now">Hacer copia ahora</string>

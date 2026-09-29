@@ -8,6 +8,8 @@
     <string name="status_ready">已准备好进行新的备份</string>
     <string name="status_backing_up">正在备份…</string>
     <string name="status_last_backup">上次备份于 %1$s</string>
+    <string name="status_last_backup_outcome">上次运行 %1$s · %2$s</string>
+    <string name="backup_already_running">备份已在运行。</string>
     <string name="hero_tagline_full">私密、本地保存，随时可用。</string>
     <string name="hero_tagline_compact">私密且本地保存。</string>
     <string name="backup_now">立即备份</string>

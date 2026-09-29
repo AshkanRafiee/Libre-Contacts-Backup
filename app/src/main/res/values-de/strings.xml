@@ -8,6 +8,8 @@
     <string name="status_ready">Bereit für eine neue Sicherung</string>
     <string name="status_backing_up">Sicherung läuft…</string>
     <string name="status_last_backup">Letzte Sicherung %1$s</string>
+    <string name="status_last_backup_outcome">Letzter Lauf %1$s · %2$s</string>
+    <string name="backup_already_running">Eine Sicherung läuft bereits.</string>
     <string name="hero_tagline_full">Privat, lokal und einsatzbereit, wann immer du willst.</string>
     <string name="hero_tagline_compact">Privat &amp; lokal.</string>
     <string name="backup_now">Jetzt sichern</string>

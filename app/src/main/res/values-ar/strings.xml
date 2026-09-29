@@ -8,6 +8,8 @@
     <string name="status_ready">جاهز لنسخة احتياطية جديدة</string>
     <string name="status_backing_up">جارٍ إنشاء نسخة احتياطية…</string>
     <string name="status_last_backup">آخر نسخة احتياطية %1$s</string>
+    <string name="status_last_backup_outcome">آخر تشغيل %1$s · %2$s</string>
+    <string name="backup_already_running">يتم إجراء نسخة احتياطية بالفعل.</string>
     <string name="hero_tagline_full">خاصة ومحلية، وجاهزة متى كنت مستعدًا.</string>
     <string name="hero_tagline_compact">خاصة ومحلية.</string>
     <string name="backup_now">إنشاء نسخة احتياطية الآن</string>

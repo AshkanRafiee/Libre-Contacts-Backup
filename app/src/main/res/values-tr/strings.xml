@@ -8,6 +8,8 @@
     <string name="status_ready">Yeni bir yedekleme için hazır</string>
     <string name="status_backing_up">Yedekleniyor…</string>
     <string name="status_last_backup">Son yedekleme %1$s</string>
+    <string name="status_last_backup_outcome">Son çalışma %1$s · %2$s</string>
+    <string name="backup_already_running">Bir yedekleme zaten çalışıyor.</string>
     <string name="hero_tagline_full">Özel, yerel ve sen hazır olduğunda hazır.</string>
     <string name="hero_tagline_compact">Özel ve yerel.</string>
     <string name="backup_now">Şimdi yedekle</string>

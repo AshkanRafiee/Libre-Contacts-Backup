@@ -8,6 +8,8 @@
     <string name="status_ready">Prêt pour une nouvelle sauvegarde</string>
     <string name="status_backing_up">Sauvegarde en cours…</string>
     <string name="status_last_backup">Dernière sauvegarde %1$s</string>
+    <string name="status_last_backup_outcome">Dernière exécution %1$s · %2$s</string>
+    <string name="backup_already_running">Une sauvegarde est déjà en cours.</string>
     <string name="hero_tagline_full">Privé, local, et prêt quand vous l\'êtes.</string>
     <string name="hero_tagline_compact">Privé et local.</string>
     <string name="backup_now">Sauvegarder maintenant</string>
