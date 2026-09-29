@@ -8,6 +8,7 @@
     <string name="status_ready">آماده برای پشتیبان‌گیری جدید</string>
     <string name="status_backing_up">در حال پشتیبان‌گیری…</string>
     <string name="status_last_backup">آخرین پشتیبان %1$s</string>
+    <string name="status_last_backup_outcome">آخرین اجرا %1$s · %2$s</string>
     <string name="hero_tagline_full">خصوصی، محلی، و هر وقت آماده باشید، آماده است.</string>
     <string name="hero_tagline_compact">خصوصی و محلی.</string>
     <string name="backup_now">هم‌اکنون پشتیبان‌گیری کن</string>

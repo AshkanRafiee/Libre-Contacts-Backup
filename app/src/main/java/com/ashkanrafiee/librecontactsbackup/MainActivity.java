@@ -234,8 +234,17 @@ public class MainActivity extends Activity {
 
     void load() {
         folderValue.setText(BackupManager.folderLabel(this));
-        long last = BackupManager.prefs(this).getLong("last", 0);
-        if (last > 0) status.setText(getString(R.string.status_last_backup, new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(last))));
+        SharedPreferences p = BackupManager.prefs(this);
+        long last = p.getLong("last", 0);
+        long lastRun = p.getLong("lastRun", 0);
+        boolean lastSuccess = p.getBoolean("lastRunSuccess", true);
+        if (lastRun > 0 && !lastSuccess) {
+            status.setText(getString(R.string.status_last_backup_outcome,
+                    new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(lastRun)),
+                    p.getString("lastRunMessage", "")));
+        } else if (last > 0) {
+            status.setText(getString(R.string.status_last_backup, new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(last))));
+        }
         scheduleValue.setText(AlarmScheduler.displayLabel(this));
         keepValue.setText(retentionLabel(this));
         long restored = BackupManager.prefs(this).getLong("lastRestore", 0); int restoredCount = BackupManager.prefs(this).getInt("lastRestoreCount", 0);
@@ -280,7 +289,7 @@ public class MainActivity extends Activity {
             }
         }).start();
     }
-    @Override protected void onResume() { super.onResume(); resumed = new WeakReference<>(this); }
+    @Override protected void onResume() { super.onResume(); resumed = new WeakReference<>(this); AlarmScheduler.scheduleNext(this); }
     @Override protected void onPause() { super.onPause(); if (resumed.get() == this) resumed = new WeakReference<>(null); }
     void scheduleDialog() {
         LinearLayout titleBox = new LinearLayout(this); titleBox.setOrientation(LinearLayout.VERTICAL); titleBox.setPadding(dp(24), dp(20), dp(24), 0);

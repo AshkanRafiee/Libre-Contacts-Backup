@@ -9,6 +9,7 @@
     <string name="status_ready">Ready for a fresh backup</string>
     <string name="status_backing_up">Backing up…</string>
     <string name="status_last_backup">Last backup %1$s</string>
+    <string name="status_last_backup_outcome">Last run %1$s · %2$s</string>
     <string name="hero_tagline_full">Private, local, and ready when you are.</string>
     <string name="hero_tagline_compact">Private &amp; local.</string>
     <string name="backup_now">Back up now</string>
