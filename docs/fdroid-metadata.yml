@@ -16,9 +16,9 @@ Binaries:
   https://github.com/AshkanRafiee/Libre-Contacts-Backup/releases/download/v%v/Libre-Contacts-Backup-v%v.apk
 
 Builds:
-  - versionName: 2.3.4
-    versionCode: 23
-    commit: 6ee3f7580d395858df9447831a379b7489a15241
+  - versionName: 2.7.1
+    versionCode: 29
+    commit: 0d2120c8326e1556bd602b92c3d7ced12a492dcd
     subdir: app
     gradle:
       - yes
@@ -27,5 +27,5 @@ AllowedAPKSigningKeys: e90d878e33ab6f41dd841b4209311ec3fa816aeea7ca75687354e2840
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
-CurrentVersion: 2.7.0
-CurrentVersionCode: 28
+CurrentVersion: 2.7.1
+CurrentVersionCode: 29
