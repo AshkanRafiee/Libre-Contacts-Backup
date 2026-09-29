@@ -409,7 +409,11 @@ public class LosslessBackupTest {
         java.util.Map<String, byte[]> entryBytes = new java.util.HashMap<>();
         ZipEntry entry;
         while ((entry = zis.getNextEntry()) != null) {
-            entryBytes.put(entry.getName(), zis.readAllBytes());
+            ByteArrayOutputStream entryOut = new ByteArrayOutputStream();
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = zis.read(buffer)) > 0) entryOut.write(buffer, 0, read);
+            entryBytes.put(entry.getName(), entryOut.toByteArray());
             zis.closeEntry();
         }
         zis.close();
