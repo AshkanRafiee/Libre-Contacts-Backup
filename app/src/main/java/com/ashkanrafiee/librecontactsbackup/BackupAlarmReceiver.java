@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.PowerManager;
+import android.util.Log;
 
 /**
  * Delivers automatic backups on the schedule armed by {@link AlarmScheduler}.
@@ -23,21 +24,27 @@ public class BackupAlarmReceiver extends BroadcastReceiver {
         Context context = LocaleHelper.wrap(rawContext);
         if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction()) || Intent.ACTION_MY_PACKAGE_REPLACED.equals(intent.getAction())) { AlarmScheduler.scheduleNext(context); return; }
         PendingResult pending = goAsync();
-        PowerManager.WakeLock wakeLock = acquire(context);
+        PowerManager.WakeLock wakeLock = null;
+        try { wakeLock = acquire(context); }
+        catch (RuntimeException e) { Log.w("LibreContactsBackup", "Could not acquire wake lock for the scheduled backup", e); }
+        final PowerManager.WakeLock lock = wakeLock;
         new Thread(() -> {
             try {
                 BackupManager.executeScheduledRun(context);
             } finally {
-                releaseQuietly(wakeLock);
+                releaseQuietly(lock);
                 pending.finish();
             }
         }).start();
     }
 
+    // The lock is reference-counted (the default): if a second alarm delivery
+    // arrives while the first is still running, each delivery holds its own
+    // reference and releases it on completion, so the first run to finish can
+    // never cut the second run's wake lock short.
     private static PowerManager.WakeLock acquire(Context context) {
         PowerManager.WakeLock wakeLock = ((PowerManager) context.getSystemService(Context.POWER_SERVICE))
                 .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, context.getPackageName() + ":scheduled_backup");
-        wakeLock.setReferenceCounted(false);
         wakeLock.acquire(WAKE_LOCK_TIMEOUT_MS);
         return wakeLock;
     }
