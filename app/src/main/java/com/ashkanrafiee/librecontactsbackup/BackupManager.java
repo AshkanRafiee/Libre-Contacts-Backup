@@ -1,6 +1,8 @@
 package com.ashkanrafiee.librecontactsbackup;
 
+import android.Manifest;
 import android.content.*;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract;
@@ -34,6 +36,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.*;
 import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
@@ -122,7 +125,11 @@ public final class BackupManager {
 
     public static BackupOutcome runBackup(Context c, boolean notify) {
         try {
-            if (folder(c).isEmpty()) return new BackupOutcome(false, c.getString(R.string.error_choose_folder_first));
+            if (folder(c).isEmpty()) {
+                String message = c.getString(R.string.error_choose_folder_first);
+                recordLastRun(c, false, message);
+                return new BackupOutcome(false, message);
+            }
             Uri tree = Uri.parse(folder(c));
 
             // Step 1: Read lossless snapshot from provider
@@ -131,7 +138,7 @@ public final class BackupManager {
             // carries the SIM contacts as a separate, additive part. A device
             // with no SIM or a non-exposed provider simply yields zero entries.
             try {
-                SimContactsReader.Result sim = SimContactsReader.readSimContacts(c.getContentResolver());
+                SimContactsReader.Result sim = readSimContactsBounded(c.getContentResolver());
                 for (SimContact simContact : sim.contacts) snapshot.addSimContact(simContact);
             } catch (Exception e) {
                 Log.w("LibreContactsBackup", "SIM phonebook capture failed; continuing without it", e);
@@ -166,11 +173,89 @@ public final class BackupManager {
                 message += " · " + simPart;
             }
             if (notify) MainActivity.notice(c, c.getString(R.string.notice_backup_complete_title), message);
+            recordLastRun(c, true, message);
             return new BackupOutcome(true, message);
         } catch (Exception e) {
+            String message = c.getString(R.string.backup_failed_prefix, e.getMessage());
+            recordLastRun(c, false, message);
             if (notify) MainActivity.notice(c, c.getString(R.string.notice_backup_failed_title), e.getMessage());
-            return new BackupOutcome(false, c.getString(R.string.backup_failed_prefix, e.getMessage()));
+            return new BackupOutcome(false, message);
         }
+    }
+
+    // SIM phonebook reads can block for a long time inside some OEM providers
+    // (an ICC/RIL round-trip that can take tens of seconds or hang outright).
+    // A scheduled backup runs inside an alarm broadcast with only a short
+    // execution window, so the SIM step is kept best-effort and time-bounded:
+    // if it does not answer in time, the backup proceeds with the device
+    // contacts only rather than being killed before it writes anything.
+    private static final ExecutorService SIM_READER = Executors.newSingleThreadExecutor();
+    private static final long SIM_READ_TIMEOUT_MS = 10_000;
+
+    private static SimContactsReader.Result readSimContactsBounded(ContentResolver resolver) {
+        Future<SimContactsReader.Result> future = SIM_READER.submit(() -> SimContactsReader.readSimContacts(resolver));
+        try {
+            return future.get(SIM_READ_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            Log.w("LibreContactsBackup", "SIM phonebook read did not finish within " + SIM_READ_TIMEOUT_MS + "ms; continuing without SIM contacts", e);
+            return new SimContactsReader.Result(false);
+        }
+    }
+
+    /**
+     * Runs the whole scheduled backup pipeline on the caller's thread.
+     *
+     * The next occurrence is re-armed <em>first</em>, so a run that is later
+     * killed by the system (broadcast timeout, low-memory, OEM aggressor)
+     * cannot take the schedule down with it — the freshly installed alarm
+     * still fires again next time. Then the folder and permission are
+     * re-checked (called from the receiver's background thread, since the
+     * folder-accessibility query may block on the DocumentsProvider) and the
+     * outcome is recorded and surfaced in a notification.
+     */
+    public static void executeScheduledRun(Context c) {
+        AlarmScheduler.scheduleNext(c);
+
+        List<String> issues = new ArrayList<>();
+        List<String> actions = new ArrayList<>();
+        String folder = folder(c);
+        if (folder.isEmpty()) { issues.add(c.getString(R.string.issue_folder_not_configured)); actions.add("folder_missing"); }
+        else if (!isFolderAccessible(c, folder)) { issues.add(c.getString(R.string.issue_folder_not_accessible)); actions.add("folder_revoked"); }
+        if (c.checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { issues.add(c.getString(R.string.issue_permission_not_granted)); actions.add("permission_missing"); }
+
+        if (!issues.isEmpty()) {
+            String message = c.getString(R.string.scheduled_backup_skipped, String.join(", ", issues));
+            recordLastRun(c, false, message);
+            MainActivity.showScheduledNotification(c, message, false, String.join(",", actions));
+            return;
+        }
+
+        BackupOutcome outcome = runBackup(c, false);
+        MainActivity.showScheduledNotification(c, outcome.message, outcome.success);
+    }
+
+    /** Records the outcome of the most recent run so the app can surface it to the user. */
+    private static void recordLastRun(Context c, boolean success, String message) {
+        // Committed synchronously (not apply()): a scheduled run is usually the
+        // last thing the process does before it is killed, so the status must be
+        // on disk before the process can be torn down — apply()'s async flush can
+        // be lost in exactly that window.
+        prefs(c).edit().putLong("lastRun", System.currentTimeMillis())
+                .putBoolean("lastRunSuccess", success)
+                .putString("lastRunMessage", message == null ? "" : message)
+                .commit();
+    }
+
+    /** Whether the picked folder still answers its own root document. */
+    private static boolean isFolderAccessible(Context c, String folder) {
+        try {
+            Uri tree = Uri.parse(folder);
+            Uri document = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree));
+            try (Cursor ignored = c.getContentResolver().query(document,
+                    new String[]{DocumentsContract.Document.COLUMN_DISPLAY_NAME}, null, null, null)) {
+                return true;
+            }
+        } catch (Exception e) { return false; }
     }
 
     private static String savedContactsMessage(Context c, int contactCount) {
@@ -426,6 +511,13 @@ public final class BackupManager {
         Uri file = DocumentsContract.createDocument(c.getContentResolver(), parent, "application/octet-stream", name);
         if (file == null) throw new IOException(c.getString(R.string.error_cannot_create_backup_file));
         try (OutputStream out = c.getContentResolver().openOutputStream(file)) { out.write(bytes); }
+        catch (Exception writeError) {
+            // Remove the half-written document so an interrupted write never
+            // leaves a truncated .lcb behind — a partial backup is worse than
+            // no backup: it is untrustworthy but looks like one.
+            try { DocumentsContract.deleteDocument(c.getContentResolver(), file); } catch (Exception ignored) { }
+            throw writeError;
+        }
     }
 
     private static byte[] readAll(InputStream input) throws IOException {

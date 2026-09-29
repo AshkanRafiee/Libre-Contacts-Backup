@@ -41,7 +41,7 @@ public final class SimContactsReader {
         /** True when a SIM phonebook provider could be queried at all (even if empty). */
         public final boolean providerAvailable;
 
-        Result(boolean providerAvailable) {
+        public Result(boolean providerAvailable) {
             this.providerAvailable = providerAvailable;
         }
     }
