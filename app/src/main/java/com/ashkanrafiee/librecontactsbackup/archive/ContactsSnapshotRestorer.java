@@ -1321,10 +1321,18 @@ public final class ContactsSnapshotRestorer {
             boolean ok = false;
             try {
                 if (targetSubId >= 0) {
-                    try {
-                        ok = writeOneToModernSim(resolver, sim, targetSubId);
-                    } catch (Exception e) {
-                        Log.w(TAG, "SIM write to card " + targetSubId + " failed", e);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        try {
+                            ok = writeOneToModernSim(resolver, sim, targetSubId);
+                        } catch (Exception e) {
+                            Log.w(TAG, "SIM write to card " + targetSubId + " failed", e);
+                        }
+                    } else {
+                        // Redirecting to one specific card is only possible on
+                        // the modern provider (API 31+); the legacy icc/adn
+                        // has no per-card write. Leaving the entry unwritten
+                        // lets the caller rescue it to the device instead.
+                        Log.w(TAG, "Cannot redirect a SIM entry: card targeting requires Android 12+");
                     }
                 } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     try {

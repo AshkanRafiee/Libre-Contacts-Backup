@@ -76,6 +76,11 @@ public final class SimContactsReader {
      * user a target-card choice.
      */
     public static List<Integer> activeAdnSubscriptionIds(ContentResolver resolver) {
+        // The per-subscription enumeration only exists on the modern SIM
+        // phonebook provider, which is API 31+; on older Android the
+        // SimPhonebookContract classes are absent, so touching them here would
+        // crash the process with NoClassDefFoundError mid-restore.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return Collections.emptyList();
         try {
             int[] subs = adnSubscriptionIds(resolver);
             List<Integer> out = new ArrayList<>(subs.length);
