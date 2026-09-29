@@ -11,6 +11,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -21,29 +24,47 @@ import static org.junit.Assert.assertTrue;
  * deterministic, hermetic failure path (no folder configured), which needs no
  * SAF permission or contact data: a scheduled run that cannot complete must
  * never pass without leaving a trace again.
+ *
+ * Every preference this test reads or writes (the folder plus the last-run
+ * outcome keys) is snapshotted before and restored after, so the suite leaves
+ * the device exactly as it found it. The restore also uses commit() — like a
+ * real backup run, the recorded outcome must survive a process kill, and
+ * waiting for the write keeps the next test from racing an apply() flush.
  */
 @RunWith(AndroidJUnit4.class)
 public class ScheduledBackupStatusTest {
 
+    private static final String[] TOUCHED_KEYS = {"folder", "lastRun", "lastRunSuccess", "lastRunMessage"};
+
     private Context target;
     private SharedPreferences prefs;
-    private String savedFolder;
+    private final Map<String, Object> savedValues = new HashMap<>();
 
     @Before public void setUp() {
         target = InstrumentationRegistry.getInstrumentation().getTargetContext();
         prefs = BackupManager.prefs(target);
-        savedFolder = prefs.getString("folder", "");
-        prefs.edit()
-                .remove("folder")
-                .remove("lastRun")
-                .remove("lastRunSuccess")
-                .remove("lastRunMessage")
-                .remove("last")
-                .apply();
+        SharedPreferences.Editor clear = prefs.edit();
+        for (String key : TOUCHED_KEYS) {
+            if (prefs.contains(key)) savedValues.put(key, prefs.getAll().get(key));
+            clear.remove(key);
+        }
+        assertTrue("Preparing the test must not lose the device state", clear.commit());
     }
 
     @After public void tearDown() {
-        prefs.edit().putString("folder", savedFolder).apply();
+        SharedPreferences.Editor restore = prefs.edit();
+        for (String key : TOUCHED_KEYS) {
+            if (savedValues.containsKey(key)) {
+                Object value = savedValues.get(key);
+                if (value instanceof Boolean) restore.putBoolean(key, (Boolean) value);
+                else if (value instanceof Long) restore.putLong(key, (Long) value);
+                else restore.putString(key, (String) value);
+            } else {
+                restore.remove(key);
+            }
+        }
+        assertTrue("The device state must be restored even on failure", restore.commit());
+        savedValues.clear();
     }
 
     @Test public void runBackupWithoutFolderFailsLoudlyAndIsRecorded() {
@@ -60,8 +81,7 @@ public class ScheduledBackupStatusTest {
         assertTrue("A skipped scheduled run must be recorded", prefs.getLong("lastRun", 0) > 0);
         assertFalse("A skipped run must not be marked successful", prefs.getBoolean("lastRunSuccess", true));
         String message = prefs.getString("lastRunMessage", "");
-        String template = target.getString(R.string.scheduled_backup_skipped);
-        String prefix = template.substring(0, template.indexOf("%1$s"));
-        assertTrue("The skip reason must be surfaced to the user", message.startsWith(prefix));
+        assertTrue("The skip reason must contain the not-configured issue",
+                message.contains(target.getString(R.string.issue_folder_not_configured)));
     }
 }
