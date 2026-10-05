@@ -1,0 +1,4 @@
+Fixed:
+- Contact photos now back up and restore in full quality instead of coming back blurry. Photos are kept exactly as stored on your device (up to 8 MB per photo; a larger photo falls back to its standard thumbnail)
+Changed:
+- The manual export section now notes that CSV and VCF are simplified copies for sharing with other apps, and that the automatic backup is what restores everything
