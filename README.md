@@ -28,9 +28,11 @@ Each backup is a single timestamped `.lcb` archive containing:
 | File | Purpose |
 |------|---------|
 | `android-contacts.json` | Canonical lossless snapshot — what restore reads from |
-| `contacts.vcf` | Standard vCard for other apps, with your groups carried as vCard categories |
+| `contacts.vcf` | Standard vCard 3.0 for other apps, with your groups carried as vCard categories |
 | `contacts.json` / `contacts.csv` | Human-readable exports |
 | `manifest.json` | Checksums and format version |
+
+Contact photos are saved in full quality, exactly as stored on your device (up to 8 MB per photo; a larger photo falls back to its standard thumbnail).
 
 On restore, contacts that originally belonged together (e.g. synced from Google *and* stored locally) are recreated as separate raw contacts, each keeping its own original source, and linked back together as one contact — without ever merging two different people who just happen to share a name.
 
