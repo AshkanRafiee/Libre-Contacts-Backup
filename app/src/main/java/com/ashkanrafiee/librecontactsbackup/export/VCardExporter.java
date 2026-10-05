@@ -47,9 +47,26 @@ public final class VCardExporter {
         boolean hasName = false;
         List<String> categories = new ArrayList<>();
         for (RawContactSnapshot rc : contact.rawContacts) {
+            boolean exportedHdPhotoForRaw = false;
             for (DataRowSnapshot row : rc.dataRows) {
                 String mime = row.mimeType;
                 if (mime == null) continue;
+
+                if ("vnd.android.cursor.item/photo".equals(mime)) {
+                    // Full-resolution bytes when captured (issue #8); the
+                    // provider thumbnail in DATA15 is only the fallback.
+                    // One PHOTO per raw contact: emitting the same HD bytes
+                    // once per photo row would duplicate megabytes per card.
+                    if (rc.displayPhoto != null && rc.displayPhoto.length > 0) {
+                        if (!exportedHdPhotoForRaw) {
+                            exportPhotoBytes(sb, rc.displayPhoto);
+                            exportedHdPhotoForRaw = true;
+                        }
+                        continue;
+                    }
+                    exportPhoto(sb, row);
+                    continue;
+                }
 
                 switch (mime) {
                     case "vnd.android.cursor.item/name":
@@ -89,9 +106,6 @@ public final class VCardExporter {
                     case "vnd.android.cursor.item/relation":
                         exportRelation(sb, row);
                         break;
-                    case "vnd.android.cursor.item/photo":
-                        exportPhoto(sb, row);
-                        break;
                     case "vnd.android.cursor.item/sip-address":
                         exportSip(sb, row);
                         break;
@@ -102,6 +116,15 @@ public final class VCardExporter {
                         exportRawAsExtension(sb, row);
                         break;
                 }
+            }
+            // A raw contact can carry a display photo without a photo Data
+            // row (provider edge case); don't drop its only photo.
+            if (rc.displayPhoto != null && rc.displayPhoto.length > 0 && !exportedHdPhotoForRaw) {
+                boolean hasPhotoRow = false;
+                for (DataRowSnapshot r : rc.dataRows) {
+                    if ("vnd.android.cursor.item/photo".equals(r.mimeType)) { hasPhotoRow = true; break; }
+                }
+                if (!hasPhotoRow) exportPhotoBytes(sb, rc.displayPhoto);
             }
         }
 
@@ -278,15 +301,21 @@ public final class VCardExporter {
 
     private static void exportPhoto(StringBuilder sb, DataRowSnapshot row) {
         if (row.data15 == null || row.data15.length == 0) return;
+        exportPhotoBytes(sb, row.data15);
+    }
+
+    /** Writes raw photo bytes verbatim with no recompression or conversion. */
+    private static void exportPhotoBytes(StringBuilder sb, byte[] photoBytes) {
+        if (photoBytes == null || photoBytes.length == 0) return;
         String type = "JPEG";
-        if (row.data15.length >= 3) {
-            if ((row.data15[0] & 0xFF) == 0x89 && (row.data15[1] & 0xFF) == 0x50 && (row.data15[2] & 0xFF) == 0x4E) {
+        if (photoBytes.length >= 3) {
+            if ((photoBytes[0] & 0xFF) == 0x89 && (photoBytes[1] & 0xFF) == 0x50 && (photoBytes[2] & 0xFF) == 0x4E) {
                 type = "PNG";
             }
         }
         sb.append("PHOTO;ENCODING=b;TYPE=");
         sb.append(type).append(":");
-        sb.append(android.util.Base64.encodeToString(row.data15, android.util.Base64.NO_WRAP)).append("\r\n");
+        sb.append(android.util.Base64.encodeToString(photoBytes, android.util.Base64.NO_WRAP)).append("\r\n");
     }
 
     private static void exportSip(StringBuilder sb, DataRowSnapshot row) {

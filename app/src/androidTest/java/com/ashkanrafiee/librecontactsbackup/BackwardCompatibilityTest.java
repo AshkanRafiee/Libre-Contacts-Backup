@@ -1,8 +1,10 @@
 package com.ashkanrafiee.librecontactsbackup;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -135,5 +137,43 @@ public class BackwardCompatibilityTest {
         assertTrue(root.has("contacts"));
         assertTrue(root.has("groups"));
         assertTrue(root.has("simContacts"));
+    }
+
+    @Test
+    public void preDisplayPhotoArchive_parsesWithNullDisplayPhoto() throws Exception {
+        // android-contacts.json written before displayPhoto capture has no
+        // "displayPhoto" key; it must parse with displayPhoto == null.
+        AndroidContactsSnapshot original = buildAddressBookSnapshot();
+        String json = NormalizedJsonExporter.exportCanonical(original);
+        JSONObject root = new JSONObject(json);
+        org.json.JSONArray contactsArr = root.getJSONArray("contacts");
+        for (int i = 0; i < contactsArr.length(); i++) {
+            org.json.JSONArray rawArr = contactsArr.getJSONObject(i).getJSONArray("rawContacts");
+            for (int j = 0; j < rawArr.length(); j++) {
+                assertFalse("Old archive must not carry the new key",
+                        rawArr.getJSONObject(j).has("displayPhoto"));
+            }
+        }
+
+        AndroidContactsSnapshot reimported = NormalizedJsonExporter.importCanonical(json);
+
+        assertEquals(1, reimported.getContactCount());
+        assertNull("Missing key must parse to null, not empty bytes",
+                reimported.contacts.get(0).rawContacts.get(0).displayPhoto);
+    }
+
+    @Test
+    public void displayPhoto_roundTripsThroughCanonicalJson() throws Exception {
+        byte[] fullRes = new byte[]{(byte) 0xFF, (byte) 0xD8, 0x10, 0x20, 0x30};
+
+        AndroidContactsSnapshot snapshot = buildAddressBookSnapshot();
+        snapshot.contacts.get(0).rawContacts.get(0).displayPhoto = fullRes;
+
+        String json = NormalizedJsonExporter.exportCanonical(snapshot);
+        AndroidContactsSnapshot reimported = NormalizedJsonExporter.importCanonical(json);
+
+        assertNotNull(reimported.contacts.get(0).rawContacts.get(0).displayPhoto);
+        assertArrayEquals(fullRes,
+                reimported.contacts.get(0).rawContacts.get(0).displayPhoto);
     }
 }

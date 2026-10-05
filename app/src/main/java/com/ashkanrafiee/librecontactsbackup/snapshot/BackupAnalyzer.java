@@ -29,11 +29,13 @@ public final class BackupAnalyzer {
                 if (rc.accountName != null && !rc.accountName.isEmpty()) {
                     accountLinkedRawContacts++;
                 }
+                boolean hasPhotoRow = false;
                 for (AndroidContactSnapshot.DataRowSnapshot row : rc.dataRows) {
                     String mime = row.mimeType;
                     if (mime == null) continue;
                     if (MIME_PHOTO.equals(mime)) {
                         increment(analysis, RestoreCategory.PHOTOS);
+                        hasPhotoRow = true;
                     } else if (MIME_GROUP_MEMBERSHIP.equals(mime)) {
                         // Counted via distinct Groups below, not per-membership-row.
                     } else if (ContactsSnapshotRestorer.CORE_CONTACT_MIME_TYPES.contains(mime)) {
@@ -41,6 +43,11 @@ public final class BackupAnalyzer {
                     } else {
                         increment(analysis, RestoreCategory.ADDITIONAL_DATA);
                     }
+                }
+                // Full-resolution photo without a thumbnail row (provider edge
+                // case): still a photo for the restore-selection count.
+                if (!hasPhotoRow && rc.displayPhoto != null && rc.displayPhoto.length > 0) {
+                    increment(analysis, RestoreCategory.PHOTOS);
                 }
             }
         }

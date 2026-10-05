@@ -1,10 +1,16 @@
 package com.ashkanrafiee.librecontactsbackup.snapshot;
 
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
+import android.net.Uri;
 import android.provider.ContactsContract;
+import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -21,6 +27,17 @@ import java.util.Map;
  * Design principle: "Capture the provider row first; interpret it second."
  */
 public final class ContactsSnapshotReader {
+
+    private static final String TAG = "ContactsSnapshotReader";
+
+    /**
+     * Largest full-resolution contact photo kept per raw contact.
+     * Photos are stored byte-for-byte with no recompression or format
+     * conversion; anything larger is skipped (thumbnail is still kept)
+     * so one huge image can't exhaust memory or balloon the backup.
+     * Documented in README.md — keep the two in sync.
+     */
+    static final long MAX_DISPLAY_PHOTO_BYTES = 8L * 1024 * 1024;
 
     private static final String[] CONTACT_PROJECTION = {
             ContactsContract.Contacts._ID,
@@ -107,6 +124,7 @@ public final class ContactsSnapshotReader {
         readContacts(resolver, contactMap);
         readRawContacts(resolver, contactMap, rawContactMap);
         readDataRows(resolver, rawContactMap, contactMap);
+        readDisplayPhotos(resolver, rawContactMap);
         readGroups(resolver, snapshot);
 
         // A Contact whose only RawContact(s) were soft-deleted (or any other
@@ -344,6 +362,72 @@ public final class ContactsSnapshotReader {
         // Try to read optional metadata columns (IS_READ_ONLY, TIMES_USED)
         // via a separate query. These columns may not exist on all API levels.
         readOptionalMetadata(resolver, rawContactMap);
+    }
+
+    /**
+     * Reads the full-resolution display photo for each raw contact.
+     *
+     * The photo Data row ({@code DATA15}) only carries the provider's
+     * thumbnail, so a backup built from it alone restores blurry avatars
+     * (issue #8). The original lives file-backed behind
+     * {@code RawContacts.DisplayPhoto} and is captured here byte-for-byte
+     * with no decoding or recompression.
+     *
+     * Best-effort per raw contact: a missing photo is normal, an
+     * over-cap photo is skipped (thumbnail still kept), and any I/O
+     * failure leaves that contact's thumbnail-only snapshot intact.
+     */
+    private static void readDisplayPhotos(ContentResolver resolver,
+                                          LinkedHashMap<Long, AndroidContactSnapshot.RawContactSnapshot> rawContactMap) {
+        for (Map.Entry<Long, AndroidContactSnapshot.RawContactSnapshot> entry : rawContactMap.entrySet()) {
+            long rawContactId = entry.getKey();
+            Uri rawUri = ContentUris.withAppendedId(ContactsContract.RawContacts.CONTENT_URI, rawContactId);
+            Uri displayUri = Uri.withAppendedPath(rawUri, ContactsContract.RawContacts.DisplayPhoto.CONTENT_DIRECTORY);
+            AssetFileDescriptor fd = null;
+            try {
+                fd = resolver.openAssetFileDescriptor(displayUri, "r");
+                if (fd == null) continue;
+                long declared = fd.getLength();
+                if (declared > MAX_DISPLAY_PHOTO_BYTES) {
+                    Log.w(TAG, "Skipping oversized display photo for one raw contact (declared bytes over cap)");
+                    continue;
+                }
+                InputStream in = fd.createInputStream();
+                if (in == null) continue;
+                try {
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    byte[] tmp = new byte[8192];
+                    int n;
+                    long total = 0;
+                    boolean overCap = false;
+                    while ((n = in.read(tmp)) > 0) {
+                        total += n;
+                        if (total > MAX_DISPLAY_PHOTO_BYTES) {
+                            overCap = true;
+                            break;
+                        }
+                        out.write(tmp, 0, n);
+                    }
+                    if (overCap || total == 0) {
+                        if (overCap) {
+                            Log.w(TAG, "Skipping oversized display photo for one raw contact (streamed bytes over cap)");
+                        }
+                        continue;
+                    }
+                    entry.getValue().displayPhoto = out.toByteArray();
+                } finally {
+                    try { in.close(); } catch (Exception ignored) {}
+                }
+            } catch (java.io.FileNotFoundException e) {
+                // Normal: this raw contact simply has no display photo.
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to read display photo for one raw contact; keeping thumbnail", e);
+            } finally {
+                if (fd != null) {
+                    try { fd.close(); } catch (Exception ignored) {}
+                }
+            }
+        }
     }
 
     /**

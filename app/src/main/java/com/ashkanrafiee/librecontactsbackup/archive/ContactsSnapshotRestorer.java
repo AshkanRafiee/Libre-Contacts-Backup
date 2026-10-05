@@ -2,8 +2,10 @@ package com.ashkanrafiee.librecontactsbackup.archive;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -439,8 +441,9 @@ public final class ContactsSnapshotRestorer {
             boolean preserveAccounts = isOtherType
                     ? options.includes(RestoreCategory.ADDITIONAL_DATA)
                     : options.includes(RestoreCategory.ACCOUNT_INFO);
+            boolean photosSelected = options.includes(RestoreCategory.PHOTOS);
 
-            Long newRawContactId = insertOneRawContact(resolver, rawContact, rows, preserveAccounts, groupIdMapping, result);
+            Long newRawContactId = insertOneRawContact(resolver, rawContact, rows, preserveAccounts, photosSelected, groupIdMapping, result);
             if (newRawContactId != null) {
                 createdRawContactIds.add(newRawContactId);
             }
@@ -521,6 +524,7 @@ public final class ContactsSnapshotRestorer {
                                              RawContactSnapshot rawContact,
                                              ArrayList<DataRowSnapshot> rows,
                                              boolean preserveAccounts,
+                                             boolean photosSelected,
                                              Map<Long, Long> groupIdMapping,
                                              RestoreResult result) throws Exception {
 
@@ -581,6 +585,11 @@ public final class ContactsSnapshotRestorer {
                     result.binaryItemsRestored++;
                 }
             }
+            if (newRawContactId != null && photosSelected) {
+                // Thumbnail row above keeps compatibility; the full-resolution
+                // bytes overwrite the display photo so avatars restore sharp.
+                writeDisplayPhoto(resolver, newRawContactId, pickDisplayPhotoBytes(rawContact, insertedRows));
+            }
             return newRawContactId;
         } catch (Exception e) {
             Log.e(TAG, "  Batch insert FAILED", e);
@@ -637,7 +646,11 @@ public final class ContactsSnapshotRestorer {
                     // unmappable group membership) were already counted once
                     // during the first pass, before the batch was even attempted.
                     Log.d(TAG, "  Fallback data rows: " + restored + " restored, " + failed + " failed");
-                    return Long.parseLong(rawId);
+                    long newId = Long.parseLong(rawId);
+                    if (photosSelected) {
+                        writeDisplayPhoto(resolver, newId, pickDisplayPhotoBytes(rawContact, insertedRows));
+                    }
+                    return newId;
                 } else {
                     result.dataRowsFailed += insertedRows.size();
                     return null;
@@ -647,6 +660,56 @@ public final class ContactsSnapshotRestorer {
                 result.addFailedRow("raw_contact", null, ex.getMessage());
                 result.dataRowsFailed += rows.size();
                 return null;
+            }
+        }
+    }
+
+    /**
+     * Full-resolution bytes to write as the display photo: the captured
+     * {@code displayPhoto} when present, else the largest photo-row blob
+     * (covers legacy VCF-only snapshots that predate the field). Returns
+     * null when there is nothing to write. Never recompresses or converts.
+     */
+    private static byte[] pickDisplayPhotoBytes(RawContactSnapshot rawContact,
+                                                ArrayList<DataRowSnapshot> insertedRows) {
+        if (rawContact.displayPhoto != null && rawContact.displayPhoto.length > 0) {
+            return rawContact.displayPhoto;
+        }
+        byte[] best = null;
+        for (DataRowSnapshot row : insertedRows) {
+            if (!MIME_PHOTO.equals(row.mimeType)) continue;
+            if (row.data15 == null || row.data15.length == 0) continue;
+            if (best == null || row.data15.length > best.length) best = row.data15;
+        }
+        return best;
+    }
+
+    /**
+     * Overwrites the display photo for an already-inserted raw contact.
+     * Best-effort: the thumbnail row from the batch insert stays in place,
+     * so a failure here only loses sharpness, never the photo itself.
+     */
+    private static void writeDisplayPhoto(ContentResolver resolver, long rawContactId, byte[] bytes) {
+        if (bytes == null || bytes.length == 0) return;
+        Uri rawUri = ContentUris.withAppendedId(ContactsContract.RawContacts.CONTENT_URI, rawContactId);
+        Uri displayUri = Uri.withAppendedPath(rawUri, ContactsContract.RawContacts.DisplayPhoto.CONTENT_DIRECTORY);
+        AssetFileDescriptor fd = null;
+        try {
+            fd = resolver.openAssetFileDescriptor(displayUri, "w");
+            if (fd == null) return;
+            java.io.OutputStream out = fd.createOutputStream();
+            if (out == null) return;
+            try {
+                out.write(bytes);
+                out.flush();
+            } finally {
+                try { out.close(); } catch (Exception ignored) {}
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Display photo write failed for one raw contact; thumbnail retained", e);
+        } finally {
+            if (fd != null) {
+                try { fd.close(); } catch (Exception ignored) {}
             }
         }
     }

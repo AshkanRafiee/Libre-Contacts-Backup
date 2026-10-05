@@ -447,4 +447,60 @@ public class VCardImportExportTest {
         assertEquals("A contact with no groups must not gain any on the way back", 0, reimported.getGroups().size());
         assertEquals(0, rowsOfType(reimported, MIME_GROUP_MEMBERSHIP).size());
     }
+
+    @Test
+    public void displayPhotoIsPreferredOverThumbnailInExport() {
+        // Issue #8: the provider thumbnail in DATA15 must not win over the
+        // full-resolution display photo captured alongside it.
+        byte[] thumbnail = new byte[]{(byte) 0xFF, (byte) 0xD8, 0x01, 0x02};
+        byte[] fullRes = new byte[]{(byte) 0xFF, (byte) 0xD8, 0x10, 0x20, 0x30, 0x40};
+
+        AndroidContactsSnapshot snapshot = new AndroidContactsSnapshot();
+        AndroidContactSnapshot contact = new AndroidContactSnapshot(1, "Photo Person");
+        RawContactSnapshot rc = new RawContactSnapshot(1);
+        DataRowSnapshot name = new DataRowSnapshot("vnd.android.cursor.item/name");
+        name.data1 = "Photo Person";
+        rc.addDataRow(name);
+        DataRowSnapshot photo = new DataRowSnapshot("vnd.android.cursor.item/photo");
+        photo.data15 = thumbnail;
+        rc.addDataRow(photo);
+        rc.displayPhoto = fullRes;
+        contact.addRawContact(rc);
+        snapshot.addContact(contact);
+
+        String vcf = VCardExporter.exportVcf(snapshot);
+        String fullB64 = android.util.Base64.encodeToString(fullRes, android.util.Base64.NO_WRAP);
+        String thumbB64 = android.util.Base64.encodeToString(thumbnail, android.util.Base64.NO_WRAP);
+
+        assertTrue("Export must carry the full-resolution photo bytes", vcf.contains(fullB64));
+        assertFalse("Export must not carry the thumbnail when full-resolution is available",
+                vcf.contains(thumbB64));
+        assertEquals("One PHOTO per raw contact, not one per photo row",
+                1, occurrences(vcf, "PHOTO;"));
+    }
+
+    @Test
+    public void thumbnailIsUsedWhenNoDisplayPhotoCaptured() {
+        // Backward compatibility: snapshots predating displayPhoto capture
+        // (and contacts whose photo exceeded the cap) still export DATA15.
+        byte[] thumbnail = new byte[]{(byte) 0xFF, (byte) 0xD8, 0x01, 0x02};
+
+        AndroidContactsSnapshot snapshot = new AndroidContactsSnapshot();
+        AndroidContactSnapshot contact = new AndroidContactSnapshot(1, "Thumb Person");
+        RawContactSnapshot rc = new RawContactSnapshot(1);
+        DataRowSnapshot name = new DataRowSnapshot("vnd.android.cursor.item/name");
+        name.data1 = "Thumb Person";
+        rc.addDataRow(name);
+        DataRowSnapshot photo = new DataRowSnapshot("vnd.android.cursor.item/photo");
+        photo.data15 = thumbnail;
+        rc.addDataRow(photo);
+        contact.addRawContact(rc);
+        snapshot.addContact(contact);
+
+        String vcf = VCardExporter.exportVcf(snapshot);
+        String thumbB64 = android.util.Base64.encodeToString(thumbnail, android.util.Base64.NO_WRAP);
+
+        assertTrue("Thumbnail must still export when no display photo was captured",
+                vcf.contains("PHOTO;ENCODING=b;TYPE=JPEG:" + thumbB64));
+    }
 }

@@ -82,6 +82,14 @@ public final class AndroidContactSnapshot {
         public int timesContacted;
         public String customRingtone;
         public int sendToVoicemail;
+        /**
+         * Full-resolution display photo bytes for this RawContact, as stored
+         * behind {@code RawContacts.DisplayPhoto}. May be null when the
+         * contact has no photo or the photo exceeds the capture cap.
+         * The thumbnail in the photo Data row ({@code DATA15}) is always
+         * kept as well for backward compatibility.
+         */
+        public byte[] displayPhoto;
         public final ArrayList<DataRowSnapshot> dataRows = new ArrayList<>();
 
         public RawContactSnapshot() {}
@@ -106,6 +114,9 @@ public final class AndroidContactSnapshot {
             obj.put("timesContacted", timesContacted);
             obj.put("customRingtone", customRingtone != null ? customRingtone : "");
             obj.put("sendToVoicemail", sendToVoicemail);
+            if (displayPhoto != null && displayPhoto.length > 0) {
+                obj.put("displayPhoto", android.util.Base64.encodeToString(displayPhoto, android.util.Base64.NO_WRAP));
+            }
             JSONArray arr = new JSONArray();
             for (DataRowSnapshot row : dataRows) arr.put(row.toJson());
             obj.put("dataRows", arr);
@@ -124,6 +135,16 @@ public final class AndroidContactSnapshot {
             rc.timesContacted = obj.optInt("timesContacted", 0);
             rc.customRingtone = nullIfEmpty(obj.optString("customRingtone", null));
             rc.sendToVoicemail = obj.optInt("sendToVoicemail", 0);
+            if (obj.has("displayPhoto")) {
+                try {
+                    String b64 = obj.optString("displayPhoto", null);
+                    if (b64 != null && !b64.isEmpty()) {
+                        rc.displayPhoto = android.util.Base64.decode(b64, android.util.Base64.NO_WRAP);
+                    }
+                } catch (Exception ignored) {
+                    rc.displayPhoto = null;
+                }
+            }
             JSONArray arr = obj.optJSONArray("dataRows");
             if (arr != null) {
                 for (int i = 0; i < arr.length(); i++) {
