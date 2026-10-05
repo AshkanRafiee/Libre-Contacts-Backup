@@ -35,8 +35,8 @@
     <string name="footer_language">Language</string>
 
     <!-- Export section -->
-    <string name="export_note_full">Manual copies are not encrypted and are never removed by retention.</string>
-    <string name="export_note_compact">Manual copies: unencrypted, not retained.</string>
+    <string name="export_note_full">Manual copies are not encrypted and are never removed by retention. CSV and VCF are simplified copies for sharing with other apps — for a full restore, use the automatic backup.</string>
+    <string name="export_note_compact">Manual copies: unencrypted, not retained. CSV/VCF are simplified copies for sharing.</string>
     <string name="export_csv">CSV</string>
     <string name="export_vcf">VCF</string>
 

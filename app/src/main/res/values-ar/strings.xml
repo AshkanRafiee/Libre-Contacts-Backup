@@ -31,8 +31,8 @@
     <string name="language_system_default">لغة النظام</string>
     <string name="footer_language">اللغة</string>
 
-    <string name="export_note_full">النسخ اليدوية غير مشفّرة ولا تُحذف أبدًا بواسطة سياسة الاحتفاظ.</string>
-    <string name="export_note_compact">النسخ اليدوية: غير مشفّرة، ولا يُحتفَظ بها.</string>
+    <string name="export_note_full">النسخ اليدوية غير مشفّرة ولا تُحذف أبدًا بواسطة سياسة الاحتفاظ. ملفات CSV وVCF نسخ مبسّطة للمشاركة مع التطبيقات الأخرى — للاستعادة الكاملة استخدم النسخ الاحتياطي التلقائي.</string>
+    <string name="export_note_compact">النسخ اليدوية: غير مشفّرة، ولا يُحتفَظ بها. CSV/VCF نسخ مبسّطة للمشاركة.</string>
     <string name="export_csv">CSV</string>
     <string name="export_vcf">VCF</string>
 

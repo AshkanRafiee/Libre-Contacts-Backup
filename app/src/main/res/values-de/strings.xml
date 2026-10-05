@@ -31,8 +31,8 @@
     <string name="language_system_default">Systemsprache</string>
     <string name="footer_language">Sprache</string>
 
-    <string name="export_note_full">Manuelle Kopien sind nicht verschlüsselt und werden nie durch die Aufbewahrungsregel gelöscht.</string>
-    <string name="export_note_compact">Manuelle Kopien: unverschlüsselt, werden nicht aufbewahrt.</string>
+    <string name="export_note_full">Manuelle Kopien sind nicht verschlüsselt und werden nie durch die Aufbewahrungsregel gelöscht. CSV und VCF sind vereinfachte Kopien zum Teilen mit anderen Apps — für eine vollständige Wiederherstellung nutze die automatische Sicherung.</string>
+    <string name="export_note_compact">Manuelle Kopien: unverschlüsselt, werden nicht aufbewahrt. CSV/VCF sind vereinfachte Kopien zum Teilen.</string>
     <string name="export_csv">CSV</string>
     <string name="export_vcf">VCF</string>
 

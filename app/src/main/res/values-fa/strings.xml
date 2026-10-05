@@ -31,8 +31,8 @@
     <string name="language_system_default">پیش‌فرض سیستم</string>
     <string name="footer_language">زبان</string>
 
-    <string name="export_note_full">نسخه‌های دستی رمزگذاری نمی‌شوند و هرگز توسط سیاست نگه‌داری حذف نمی‌شوند.</string>
-    <string name="export_note_compact">نسخه‌های دستی: بدون رمزگذاری، نگه‌داری نمی‌شوند.</string>
+    <string name="export_note_full">نسخه‌های دستی رمزگذاری نمی‌شوند و هرگز توسط سیاست نگه‌داری حذف نمی‌شوند. CSV و VCF نسخه‌های ساده‌شده برای اشتراک‌گذاری با برنامه‌های دیگر هستند — برای بازیابی کامل، از پشتیبان‌گیری خودکار استفاده کنید.</string>
+    <string name="export_note_compact">نسخه‌های دستی: بدون رمزگذاری، نگه‌داری نمی‌شوند. CSV/VCF نسخه‌های ساده‌شده برای اشتراک‌گذاری هستند.</string>
     <string name="export_csv">CSV</string>
     <string name="export_vcf">VCF</string>
 

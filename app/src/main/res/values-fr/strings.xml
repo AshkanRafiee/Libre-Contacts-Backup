@@ -31,8 +31,8 @@
     <string name="language_system_default">Langue du système</string>
     <string name="footer_language">Langue</string>
 
-    <string name="export_note_full">Les copies manuelles ne sont pas chiffrées et ne sont jamais supprimées par la rétention.</string>
-    <string name="export_note_compact">Copies manuelles : non chiffrées, non conservées.</string>
+    <string name="export_note_full">Les copies manuelles ne sont pas chiffrées et ne sont jamais supprimées par la rétention. Les fichiers CSV et VCF sont des copies simplifiées pour partager avec d\'autres apps — pour une restauration complète, utilisez la sauvegarde automatique.</string>
+    <string name="export_note_compact">Copies manuelles : non chiffrées, non conservées. CSV/VCF : copies simplifiées pour partager.</string>
     <string name="export_csv">CSV</string>
     <string name="export_vcf">VCF</string>
 
