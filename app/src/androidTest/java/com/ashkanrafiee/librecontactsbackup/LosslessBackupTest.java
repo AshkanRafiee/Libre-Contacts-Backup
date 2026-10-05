@@ -482,4 +482,187 @@ public class LosslessBackupTest {
         assertTrue("Summary should contain raw contacts read", summary.contains("7"));
         assertTrue("Summary should contain data rows read", summary.contains("25"));
     }
+
+    /**
+     * Inserts a photo Data row. Large valid photos make the provider store
+     * the photo file-backed (with a thumbnail in DATA15) instead of inline,
+     * which is exactly the shape real camera photos have on device.
+     */
+    private void insertPhotoRow(String rawContactId, byte[] bytes) throws Exception {
+        ContentProviderOperation.Builder b = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
+                .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE)
+                .withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, bytes);
+        resolver.applyBatch(ContactsContract.AUTHORITY,
+                new ArrayList<>(java.util.Collections.singletonList(b.build())));
+    }
+
+    /**
+     * Reads a raw contact's display-photo file straight from the provider
+     * (null when the provider kept the photo inline as a thumbnail only).
+     */
+    private static byte[] readDisplayPhotoFile(ContentResolver r, long rawContactId) {
+        android.net.Uri rawUri = android.content.ContentUris.withAppendedId(
+                ContactsContract.RawContacts.CONTENT_URI, rawContactId);
+        android.net.Uri displayUri = android.net.Uri.withAppendedPath(
+                rawUri, ContactsContract.RawContacts.DisplayPhoto.CONTENT_DIRECTORY);
+        android.content.res.AssetFileDescriptor fd = null;
+        try {
+            fd = r.openAssetFileDescriptor(displayUri, "r");
+            if (fd == null) return null;
+            java.io.InputStream in = fd.createInputStream();
+            if (in == null) return null;
+            try {
+                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+                byte[] tmp = new byte[8192];
+                int n;
+                while ((n = in.read(tmp)) > 0) out.write(tmp, 0, n);
+                byte[] bytes = out.toByteArray();
+                return bytes.length == 0 ? null : bytes;
+            } finally {
+                in.close();
+            }
+        } catch (Exception ignored) {
+            return null;
+        } finally {
+            if (fd != null) {
+                try { fd.close(); } catch (Exception ignored) {}
+            }
+        }
+    }
+
+    /**
+     * Builds a realistically large, valid JPEG in memory (deterministic
+     * noise, so it does not compress down to thumbnail size), without any
+     * test resources.
+     */
+    private static byte[] largePhotoBytes() {
+        int width = 800, height = 600;
+        android.graphics.Bitmap bmp = android.graphics.Bitmap.createBitmap(
+                width, height, android.graphics.Bitmap.Config.ARGB_8888);
+        int[] pixels = new int[width * height];
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int h = (x * 73856093) ^ (y * 19349663);
+                h ^= h >> 13;
+                pixels[y * width + x] = 0xFF000000
+                        | ((h & 0xFF) << 16)
+                        | (((h >> 5) & 0xFF) << 8)
+                        | ((h >> 11) & 0xFF);
+            }
+        }
+        bmp.setPixels(pixels, 0, width, 0, 0, width, height);
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 95, out);
+        bmp.recycle();
+        return out.toByteArray();
+    }
+
+    private static AndroidContactSnapshot.RawContactSnapshot findRawContact(
+            AndroidContactsSnapshot snapshot, long rawContactId) {
+        for (AndroidContactSnapshot c : snapshot.contacts) {
+            for (AndroidContactSnapshot.RawContactSnapshot rc : c.rawContacts) {
+                if (rc.rawContactId == rawContactId) return rc;
+            }
+        }
+        return null;
+    }
+
+    private static AndroidContactSnapshot.RawContactSnapshot findRawContactByName(
+            AndroidContactsSnapshot snapshot, String displayName) {
+        for (AndroidContactSnapshot c : snapshot.contacts) {
+            if (!displayName.equals(c.displayName)) continue;
+            for (AndroidContactSnapshot.RawContactSnapshot rc : c.rawContacts) {
+                if (rc.displayPhoto != null && rc.displayPhoto.length > 0) return rc;
+            }
+            if (!c.rawContacts.isEmpty()) return c.rawContacts.get(0);
+        }
+        return null;
+    }
+
+    // ============================================================
+    // TEST 11: Full-resolution display photo captured and restored
+    //
+    // A large valid photo inserted through the photo Data row is what real
+    // camera photos look like on device: the provider keeps the full bytes
+    // file-backed and regenerates a small thumbnail in DATA15. The backup
+    // must capture the full bytes (not the thumbnail) and restore them.
+    // ============================================================
+    @Test
+    public void testDisplayPhotoFullQualityRoundTrip() throws Exception {
+        String rawId = createNamedContact("Photo HD Test", "Photo", "HD", null, null, null);
+        byte[] bigPhoto = largePhotoBytes();
+        assertTrue("Fixture must be a realistically large photo, got " + bigPhoto.length,
+                bigPhoto.length > 50_000);
+        insertPhotoRow(rawId, bigPhoto);
+
+        android.content.Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        AndroidContactsSnapshot snapshot = ContactsSnapshotReader.read(ctx);
+
+        AndroidContactSnapshot.RawContactSnapshot captured =
+                findRawContact(snapshot, Long.parseLong(rawId));
+        assertNotNull("Snapshot must have captured the raw contact", captured);
+        assertNotNull("Snapshot must have captured the full-resolution photo", captured.displayPhoto);
+        assertTrue("Captured photo must be full quality, got " + captured.displayPhoto.length,
+                captured.displayPhoto.length > 50_000);
+        assertArrayEquals("Captured photo must match the provider's display file",
+                readDisplayPhotoFile(resolver, Long.parseLong(rawId)), captured.displayPhoto);
+        for (AndroidContactSnapshot.DataRowSnapshot row : captured.dataRows) {
+            if ("vnd.android.cursor.item/photo".equals(row.mimeType) && row.data15 != null) {
+                assertTrue("Display photo must be full quality, not the thumbnail",
+                        captured.displayPhoto.length > row.data15.length * 4);
+            }
+        }
+        byte[] hdPhoto = captured.displayPhoto;
+
+        // Canonical JSON and VCF must both carry full quality.
+        String json = NormalizedJsonExporter.exportCanonical(snapshot);
+        AndroidContactsSnapshot reimported = NormalizedJsonExporter.importCanonical(json);
+        AndroidContactSnapshot.RawContactSnapshot viaJson =
+                findRawContact(reimported, Long.parseLong(rawId));
+        assertNotNull(viaJson);
+        assertArrayEquals(hdPhoto, viaJson.displayPhoto);
+
+        String vcf = com.ashkanrafiee.librecontactsbackup.export.VCardExporter.exportVcf(snapshot);
+        String hdB64 = android.util.Base64.encodeToString(hdPhoto, android.util.Base64.NO_WRAP);
+        assertTrue("VCF export must carry the full-resolution photo", vcf.contains(hdB64));
+
+        // Restore onto a wiped provider: the photo must come back sharp.
+        // (Look the restored contact up by the provider-computed display
+        // name from the snapshot: the provider composes it from the name
+        // parts and it need not equal the DISPLAY_NAME we inserted.)
+        String contactName = null;
+        for (AndroidContactSnapshot c : snapshot.contacts) {
+            if (c.rawContacts.contains(captured)) { contactName = c.displayName; break; }
+        }
+        assertNotNull(contactName);
+        cleanupContacts();
+        RestoreResult result = ContactsSnapshotRestorer.restoreExact(ctx, snapshot, null);
+        assertTrue("Restore should have created the contact", result.contactsCreated >= 1);
+        assertEquals("No photo should have been downgraded to a thumbnail",
+                0, result.photosDowngradedToThumbnail);
+
+        AndroidContactsSnapshot restored = ContactsSnapshotReader.read(ctx);
+        AndroidContactSnapshot.RawContactSnapshot restoredRc =
+                findRawContactByName(restored, contactName);
+        assertNotNull("Restored contact must exist", restoredRc);
+        assertNotNull("Restored contact must have its full-resolution photo", restoredRc.displayPhoto);
+        assertTrue("Restored photo must still be full quality, got " + restoredRc.displayPhoto.length,
+                restoredRc.displayPhoto.length > 50_000);
+        // The provider re-encodes photos on every insert, so restored bytes
+        // need not match bit-for-bit; what must survive is the image itself:
+        // same pixel dimensions as the backed-up photo (not a thumbnail's).
+        android.graphics.BitmapFactory.Options bounds = new android.graphics.BitmapFactory.Options();
+        bounds.inJustDecodeBounds = true;
+        android.graphics.BitmapFactory.decodeByteArray(hdPhoto, 0, hdPhoto.length, bounds);
+        int expectedWidth = bounds.outWidth;
+        int expectedHeight = bounds.outHeight;
+        android.graphics.BitmapFactory.decodeByteArray(
+                restoredRc.displayPhoto, 0, restoredRc.displayPhoto.length, bounds);
+        assertTrue("Backed-up photo must decode", expectedWidth > 0 && expectedHeight > 0);
+        assertEquals("Restored photo width must match the backed-up photo",
+                expectedWidth, bounds.outWidth);
+        assertEquals("Restored photo height must match the backed-up photo",
+                expectedHeight, bounds.outHeight);
+    }
 }
