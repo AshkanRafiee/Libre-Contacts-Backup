@@ -59,6 +59,12 @@ public final class RestoreResult {
     public int dataRowsFailed;
     public int groupMembershipsUnrestored;
 
+    // Full-resolution photos that could not be written to the target
+    // provider (too large for a single write there) and were restored as
+    // thumbnails instead. The full bytes remain in the backup and a later
+    // restore on a more capable device recovers them.
+    public int photosDowngradedToThumbnail;
+
     // SIM card entries carried in the backup, and where this restore put them.
     public int simContactsRead;
     public int simContactsRestoredDevice;
@@ -120,6 +126,9 @@ public final class RestoreResult {
         }
         if (groupMembershipsUnrestored > 0) {
             sb.append("Group memberships not restored: ").append(groupMembershipsUnrestored).append("\n");
+        }
+        if (photosDowngradedToThumbnail > 0) {
+            sb.append("Photos restored as thumbnails (full quality kept in backup): ").append(photosDowngradedToThumbnail).append("\n");
         }
         if (simContactsRead > 0) {
             sb.append("SIM contacts: ").append(simContactsRead).append("\n");

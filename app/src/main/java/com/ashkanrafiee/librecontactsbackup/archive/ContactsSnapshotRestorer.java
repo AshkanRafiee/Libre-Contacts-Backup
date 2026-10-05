@@ -87,6 +87,15 @@ public final class ContactsSnapshotRestorer {
     private static final String MIME_PHOTO = "vnd.android.cursor.item/photo";
 
     /**
+     * Largest photo written through a provider insert. A single binder
+     * transaction is limited to ~1MB shared across the whole batch, so full
+     * photos up to this size ride the normal insert (the provider file-backs
+     * large photos and thumbnails them itself); larger ones are attempted
+     * through the streaming display-photo file instead.
+     */
+    static final long BINDER_SAFE_PHOTO_BYTES = 700L * 1024;
+
+    /**
      * MIME types handled explicitly below (everything the app has deliberate
      * semantic mapping for), excluding photo and group_membership which have
      * their own {@link RestoreCategory}. Anything not in this set is treated
@@ -244,6 +253,10 @@ public final class ContactsSnapshotRestorer {
 
         if (result.groupMembershipsUnrestored > 0) {
             result.addWarning(result.groupMembershipsUnrestored + " group memberships could not be restored");
+        }
+        if (result.photosDowngradedToThumbnail > 0) {
+            result.addWarning(result.photosDowngradedToThumbnail + " photo(s) restored as thumbnails"
+                    + " (too large to write in full on this device; full quality kept in the backup)");
         }
         if (result.skippedByUserChoice > 0) {
             result.addWarning(result.skippedByUserChoice + " data row(s) not restored because their category "
@@ -518,6 +531,11 @@ public final class ContactsSnapshotRestorer {
      * batch fails. {@code preserveAccounts} governs whether this RawContact's
      * own original account/type/source-id are kept or dropped to local.
      *
+     * Photos restore in full: when a full-resolution photo was captured and
+     * fits a provider insert, its bytes replace the thumbnail in the photo
+     * row (the provider file-backs large photos and thumbnails them itself);
+     * larger ones fall back to the streaming display-photo file after insert.
+     *
      * @return the new RawContact's ID, or null if it could not be created at all.
      */
     private static Long insertOneRawContact(ContentResolver resolver,
@@ -533,6 +551,13 @@ public final class ContactsSnapshotRestorer {
 
         ops.add(newRawContactInsertOp(rawContact, preserveAccounts).build());
 
+        byte[] fullPhoto = photosSelected ? pickDisplayPhotoBytes(rawContact, rows) : null;
+        // Binder-safe photos ride the normal insert; anything larger would
+        // risk TransactionTooLarge for the whole batch, so the thumbnail row
+        // goes in and the full bytes follow via the streaming file below.
+        byte[] photoOverride = fullPhoto != null && fullPhoto.length <= BINDER_SAFE_PHOTO_BYTES
+                ? fullPhoto : null;
+
         // These are properties of the row itself (unmappable group, or
         // unmappable in general) — true regardless of whether the batch
         // insert mechanism below succeeds or falls back, so they're
@@ -542,7 +567,8 @@ public final class ContactsSnapshotRestorer {
         ArrayList<DataRowSnapshot> insertedRows = new ArrayList<>();
         for (DataRowSnapshot row : rows) {
             try {
-                ContentProviderOperation.Builder dataBuilder = buildDataInsertBuilder(row, groupIdMapping);
+                ContentProviderOperation.Builder dataBuilder =
+                        buildDataInsertBuilder(row, groupIdMapping, photoOverride);
                 if (dataBuilder != null) {
                     dataBuilder.withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0);
                     ops.add(dataBuilder.build());
@@ -586,9 +612,15 @@ public final class ContactsSnapshotRestorer {
                 }
             }
             if (newRawContactId != null && photosSelected) {
-                // Thumbnail row above keeps compatibility; the full-resolution
-                // bytes overwrite the display photo so avatars restore sharp.
-                writeDisplayPhoto(resolver, newRawContactId, pickDisplayPhotoBytes(rawContact, insertedRows));
+                // Full bytes already rode the insert when binder-safe;
+                // otherwise stream them now (thumbnail row keeps compat).
+                // Only for captured display photos: anything else in fullPhoto
+                // is a thumbnail already inserted above.
+                if (rawContact.displayPhoto != null && rawContact.displayPhoto.length > 0
+                        && photoOverride == null
+                        && !writeDisplayPhoto(resolver, newRawContactId, rawContact.displayPhoto)) {
+                    result.photosDowngradedToThumbnail++;
+                }
             }
             return newRawContactId;
         } catch (Exception e) {
@@ -622,7 +654,8 @@ public final class ContactsSnapshotRestorer {
                     // that a *different* row is now buildable.
                     for (DataRowSnapshot row : insertedRows) {
                         try {
-                            ContentProviderOperation.Builder dataBuilder = buildDataInsertBuilder(row, groupIdMapping);
+                            ContentProviderOperation.Builder dataBuilder =
+                                    buildDataInsertBuilder(row, groupIdMapping, photoOverride);
                             dataBuilder.withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId);
                             resolver.applyBatch(ContactsContract.AUTHORITY,
                                     new ArrayList<>(java.util.Collections.singletonList(dataBuilder.build())));
@@ -647,8 +680,10 @@ public final class ContactsSnapshotRestorer {
                     // during the first pass, before the batch was even attempted.
                     Log.d(TAG, "  Fallback data rows: " + restored + " restored, " + failed + " failed");
                     long newId = Long.parseLong(rawId);
-                    if (photosSelected) {
-                        writeDisplayPhoto(resolver, newId, pickDisplayPhotoBytes(rawContact, insertedRows));
+                    if (photosSelected && rawContact.displayPhoto != null
+                            && rawContact.displayPhoto.length > 0 && photoOverride == null
+                            && !writeDisplayPhoto(resolver, newId, rawContact.displayPhoto)) {
+                        result.photosDowngradedToThumbnail++;
                     }
                     return newId;
                 } else {
@@ -667,7 +702,7 @@ public final class ContactsSnapshotRestorer {
     /**
      * Full-resolution bytes to write as the display photo: the captured
      * {@code displayPhoto} when present, else the largest photo-row blob
-     * (covers legacy VCF-only snapshots that predate the field). Returns
+     * (covers snapshots written before the field existed). Returns
      * null when there is nothing to write. Never recompresses or converts.
      */
     private static byte[] pickDisplayPhotoBytes(RawContactSnapshot rawContact,
@@ -688,17 +723,21 @@ public final class ContactsSnapshotRestorer {
      * Overwrites the display photo for an already-inserted raw contact.
      * Best-effort: the thumbnail row from the batch insert stays in place,
      * so a failure here only loses sharpness, never the photo itself.
+     * Some providers cannot create a display-photo file that does not exist
+     * yet; the caller reports a false return as a thumbnail downgrade.
+     *
+     * @return true when the full bytes were written.
      */
-    private static void writeDisplayPhoto(ContentResolver resolver, long rawContactId, byte[] bytes) {
-        if (bytes == null || bytes.length == 0) return;
+    private static boolean writeDisplayPhoto(ContentResolver resolver, long rawContactId, byte[] bytes) {
+        if (bytes == null || bytes.length == 0) return true;
         Uri rawUri = ContentUris.withAppendedId(ContactsContract.RawContacts.CONTENT_URI, rawContactId);
         Uri displayUri = Uri.withAppendedPath(rawUri, ContactsContract.RawContacts.DisplayPhoto.CONTENT_DIRECTORY);
         AssetFileDescriptor fd = null;
         try {
             fd = resolver.openAssetFileDescriptor(displayUri, "w");
-            if (fd == null) return;
+            if (fd == null) return false;
             java.io.OutputStream out = fd.createOutputStream();
-            if (out == null) return;
+            if (out == null) return false;
             try {
                 out.write(bytes);
                 out.flush();
@@ -707,11 +746,13 @@ public final class ContactsSnapshotRestorer {
             }
         } catch (Exception e) {
             Log.w(TAG, "Display photo write failed for one raw contact; thumbnail retained", e);
+            return false;
         } finally {
             if (fd != null) {
                 try { fd.close(); } catch (Exception ignored) {}
             }
         }
+        return true;
     }
 
     /**
@@ -986,11 +1027,15 @@ public final class ContactsSnapshotRestorer {
     /**
      * Builds a ContentProviderOperation.Builder to insert a data row.
      * Maps snapshot fields to the appropriate ContactsContract columns.
-     * Returns null if the row cannot be mapped (e.g. an unmappable group
-     * membership) — callers are responsible for accounting for the loss.
+     * {@code photoOverride} replaces the thumbnail bytes of a photo row
+     * with captured full-resolution bytes when non-null (and is ignored
+     * for every other MIME type). Returns null if the row cannot be mapped
+     * (e.g. an unmappable group membership) — callers are responsible for
+     * accounting for the loss.
      */
     private static ContentProviderOperation.Builder buildDataInsertBuilder(DataRowSnapshot row,
-                                                                             Map<Long, Long> groupIdMapping) throws Exception {
+                                                                              Map<Long, Long> groupIdMapping,
+                                                                              byte[] photoOverride) throws Exception {
         ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI);
         builder.withValue(ContactsContract.Data.MIMETYPE, row.mimeType);
 
@@ -1126,8 +1171,11 @@ public final class ContactsSnapshotRestorer {
                 break;
 
             case "vnd.android.cursor.item/photo":
-                if (row.data15 != null && row.data15.length > 0) {
-                    builder.withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, row.data15);
+                // Full-resolution bytes when provided (binder-safe, chosen by
+                // the caller); otherwise the thumbnail row as captured.
+                byte[] photoBytes = photoOverride != null ? photoOverride : row.data15;
+                if (photoBytes != null && photoBytes.length > 0) {
+                    builder.withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, photoBytes);
                 }
                 applyRemainingGenericFields(builder, row, 15);
                 break;
