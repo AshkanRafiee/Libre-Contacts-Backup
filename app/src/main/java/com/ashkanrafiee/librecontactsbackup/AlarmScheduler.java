@@ -40,6 +40,13 @@ public final class AlarmScheduler {
         if(!prefs.getBoolean("scheduleEnabled", false)){install(c,0);return;}
         install(c,nextRun(prefs).getTimeInMillis());
     }
+    /** Next scheduled run in millis, or 0 when the schedule is off. Pure prefs read, no alarm change. */
+    public static long nextRunMillis(Context c){
+        migrateLegacyPref(c);
+        SharedPreferences prefs = prefs(c);
+        if(!prefs.getBoolean("scheduleEnabled", false)) return 0;
+        return nextRun(prefs).getTimeInMillis();
+    }
     // Before localization, "schedule" stored the displayed English text itself
     // ("Off" or "Daily at HH:mm") and doubled as the on/off flag. Displaying a
     // translated label from that same stored string would either show stale

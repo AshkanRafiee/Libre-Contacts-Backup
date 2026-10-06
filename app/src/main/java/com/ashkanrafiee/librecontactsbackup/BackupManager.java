@@ -278,6 +278,14 @@ public final class BackupManager {
         MainActivity.showScheduledNotification(c, outcome.message, outcome.success);
     }
 
+    /** Records that an alarm delivery reached the app, before any slow work runs.
+     *  Committed synchronously so a kill later in the run still leaves proof
+     *  that the alarm was delivered. Never overwrites the outcome keys. */
+    public static void recordScheduleAttempt(Context c) {
+        boolean written = prefs(c).edit().putLong("lastAttempt", System.currentTimeMillis()).commit();
+        if (!written) Log.w("LibreContactsBackup", "Failed to persist the scheduled attempt");
+    }
+
     /** Records the outcome of the most recent run so the app can surface it to the user. */
     private static void recordLastRun(Context c, boolean success, String message) {
         // Committed synchronously (not apply()): a scheduled run is usually the
