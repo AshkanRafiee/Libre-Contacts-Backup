@@ -232,20 +232,36 @@ public class MainActivity extends Activity {
 
     Button button(String value, int color) { Button b = new Button(this); b.setText(value); b.setTextColor(resColor(R.color.text_primary)); b.setTextSize(14); b.setAllCaps(false); b.setMinHeight(0); b.setMinimumHeight(0); b.setPadding(0, 0, 0, 0); b.setBackgroundResource(color == mint ? R.drawable.btn_mint : R.drawable.btn_surface); b.setElevation(0); b.setStateListAnimator(null); b.setOutlineProvider(null); return b; }
 
+    boolean isBackgroundRestricted() {
+        if (Build.VERSION.SDK_INT < 28) return false;
+        try {
+            ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            return manager != null && manager.isBackgroundRestricted();
+        } catch (Exception ignored) { return false; }
+    }
+
     void load() {
         folderValue.setText(BackupManager.folderLabel(this));
         SharedPreferences p = BackupManager.prefs(this);
         long last = p.getLong("last", 0);
         long lastRun = p.getLong("lastRun", 0);
+        long lastAttempt = p.getLong("lastAttempt", 0);
         boolean lastSuccess = p.getBoolean("lastRunSuccess", true);
+        boolean enabled = p.getBoolean("scheduleEnabled", false);
         if (lastRun > 0 && !lastSuccess) {
             status.setText(getString(R.string.status_last_backup_outcome,
                     new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(lastRun)),
                     p.getString("lastRunMessage", "")));
+        } else if (enabled && lastAttempt > 0 && lastAttempt > last && lastAttempt > lastRun) {
+            status.setText(getString(R.string.status_last_backup_outcome,
+                    new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(lastAttempt)),
+                    getString(R.string.status_no_result_yet)));
         } else if (last > 0) {
             status.setText(getString(R.string.status_last_backup, new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(last))));
         }
-        scheduleValue.setText(AlarmScheduler.displayLabel(this));
+        String scheduleLabel = AlarmScheduler.displayLabel(this);
+        if (enabled && isBackgroundRestricted()) scheduleLabel += " · " + getString(R.string.schedule_restricted);
+        scheduleValue.setText(scheduleLabel);
         keepValue.setText(retentionLabel(this));
         long restored = BackupManager.prefs(this).getLong("lastRestore", 0); int restoredCount = BackupManager.prefs(this).getInt("lastRestoreCount", 0);
         if (restored > 0) {
@@ -294,7 +310,13 @@ public class MainActivity extends Activity {
     void scheduleDialog() {
         LinearLayout titleBox = new LinearLayout(this); titleBox.setOrientation(LinearLayout.VERTICAL); titleBox.setPadding(dp(24), dp(20), dp(24), 0);
         titleBox.addView(label(getString(R.string.dialog_schedule_title), 18, resColor(R.color.text_primary)));
-        TextView current = label(getString(R.string.dialog_schedule_current, AlarmScheduler.displayLabel(this)), 12, muted); current.setPadding(0, dp(6), 0, 0); titleBox.addView(current);
+        String currentLabel = AlarmScheduler.displayLabel(this);
+        long next = AlarmScheduler.nextRunMillis(this);
+        if (next > 0) currentLabel += "\n" + getString(R.string.schedule_next,
+                new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(next)));
+        if (BackupManager.prefs(this).getBoolean("scheduleEnabled", false) && isBackgroundRestricted())
+            currentLabel += "\n" + getString(R.string.schedule_restricted);
+        TextView current = label(getString(R.string.dialog_schedule_current, currentLabel), 12, muted); current.setPadding(0, dp(6), 0, 0); titleBox.addView(current);
         new AlertDialog.Builder(this).setCustomTitle(titleBox).setItems(new String[]{getString(R.string.schedule_option_off), getString(R.string.schedule_option_daily), getString(R.string.schedule_option_weekly), getString(R.string.schedule_option_monthly)}, (dialog, which) -> {
             if (which == 0) { AlarmScheduler.setEnabled(this, false); scheduleValue.setText(AlarmScheduler.displayLabel(this)); AlarmScheduler.scheduleNext(this); return; }
             if (BackupManager.folder(this).isEmpty()) { pendingScheduleMode = which; chooseFolder(); return; }

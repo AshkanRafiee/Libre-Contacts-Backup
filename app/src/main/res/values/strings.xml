@@ -216,6 +216,9 @@
     <string name="issue_folder_not_configured">backup folder not configured</string>
     <string name="issue_folder_not_accessible">backup folder is no longer accessible</string>
     <string name="issue_permission_not_granted">contacts permission not granted</string>
+    <string name="status_no_result_yet">no result yet</string>
+    <string name="schedule_next">Next %1$s</string>
+    <string name="schedule_restricted">Restricted — allow background activity</string>
 
     <!-- Plurals -->
     <plurals name="contacts_count">

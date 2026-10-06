@@ -34,7 +34,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(AndroidJUnit4.class)
 public class ScheduledBackupStatusTest {
 
-    private static final String[] TOUCHED_KEYS = {"folder", "lastRun", "lastRunSuccess", "lastRunMessage"};
+    private static final String[] TOUCHED_KEYS = {"folder", "lastRun", "lastRunSuccess", "lastRunMessage", "lastAttempt", "scheduleEnabled", "scheduleMode", "hour", "minute", "schedule"};
 
     private Context target;
     private SharedPreferences prefs;
@@ -58,6 +58,7 @@ public class ScheduledBackupStatusTest {
                 Object value = savedValues.get(key);
                 if (value instanceof Boolean) restore.putBoolean(key, (Boolean) value);
                 else if (value instanceof Long) restore.putLong(key, (Long) value);
+                else if (value instanceof Integer) restore.putInt(key, (Integer) value);
                 else restore.putString(key, (String) value);
             } else {
                 restore.remove(key);
@@ -83,5 +84,20 @@ public class ScheduledBackupStatusTest {
         String message = prefs.getString("lastRunMessage", "");
         assertTrue("The skip reason must contain the not-configured issue",
                 message.contains(target.getString(R.string.issue_folder_not_configured)));
+    }
+
+    @Test public void scheduleAttemptIsRecordedWithoutOverwritingOutcome() {
+        BackupManager.recordScheduleAttempt(target);
+        assertTrue("An alarm delivery must leave an attempt marker", prefs.getLong("lastAttempt", 0) > 0);
+        assertFalse("An attempt alone must not look like an outcome", prefs.contains("lastRun"));
+    }
+
+    @Test public void nextRunIsFutureWhenScheduleEnabled() {
+        AlarmScheduler.setDaily(target, 8, 0);
+        long next = AlarmScheduler.nextRunMillis(target);
+        assertTrue("Next run must be in the future", next > System.currentTimeMillis());
+        AlarmScheduler.setEnabled(target, false);
+        AlarmScheduler.scheduleNext(target);
+        assertTrue("Disabled schedule must report no next run", AlarmScheduler.nextRunMillis(target) == 0);
     }
 }
