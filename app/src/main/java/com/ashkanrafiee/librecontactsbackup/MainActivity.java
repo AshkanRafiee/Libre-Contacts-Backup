@@ -146,7 +146,7 @@ public class MainActivity extends Activity {
         boolean nonEnglish = !"en".equals(getResources().getConfiguration().getLocales().get(0).getLanguage());
         dense = compact || nonEnglish;
         LinearLayout root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(v(12, 8)), dp(v(12, 8)), dp(20), dp(v(12, 8))); root.setBackgroundColor(background);
+        root.setPadding(dp(20), dp(v(14, 8)), dp(20), dp(v(14, 8))); root.setBackgroundColor(background);
         root.setOnApplyWindowInsetsListener((view, insets) -> { int top; int bottom; if (Build.VERSION.SDK_INT >= 30) { android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars()); top = bars.top; bottom = bars.bottom; } else { top = insets.getSystemWindowInsetTop(); bottom = insets.getSystemWindowInsetBottom(); } view.setPadding(dp(20), top + dp(v(14, 8)), dp(20), bottom + dp(v(14, 8))); return insets; });
         setContentView(root);
         ScrollView scroll = new ScrollView(this); scroll.setClipToPadding(false); scroll.setFillViewport(true); scroll.setVerticalScrollBarEnabled(false);
