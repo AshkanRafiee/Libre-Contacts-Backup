@@ -1,0 +1,5 @@
+Fixed:
+- If the phone stops an automatic backup partway through, the next scheduled backup still runs at the usual time
+- The schedule now adjusts itself after clock or time-zone changes
+- If the system restricts background activity, the schedule screen says so
+- The schedule screen now shows when the next backup is due, and the main screen calls out a run that started but never reported back
