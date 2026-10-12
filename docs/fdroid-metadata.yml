@@ -18,7 +18,7 @@ Binaries:
 Builds:
   - versionName: 2.7.4
     versionCode: 32
-    commit: 503c2a594f1d7b5578b827b63dd3b94c8f7c35d0
+    commit: 6d66d99f2c50ceec3c0e30fe1343038fc019c123
     subdir: app
     gradle:
       - yes
