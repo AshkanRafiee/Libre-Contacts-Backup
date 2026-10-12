@@ -261,6 +261,7 @@ public class MainActivity extends Activity {
         }
         String scheduleLabel = AlarmScheduler.displayLabel(this);
         if (enabled && isBackgroundRestricted()) scheduleLabel += " · " + getString(R.string.schedule_restricted);
+        else if (enabled && !BatteryHelper.isExempt(this)) scheduleLabel += " · " + getString(R.string.schedule_battery);
         scheduleValue.setText(scheduleLabel);
         keepValue.setText(retentionLabel(this));
         long restored = BackupManager.prefs(this).getLong("lastRestore", 0); int restoredCount = BackupManager.prefs(this).getInt("lastRestoreCount", 0);
@@ -305,7 +306,7 @@ public class MainActivity extends Activity {
             }
         }).start();
     }
-    @Override protected void onResume() { super.onResume(); resumed = new WeakReference<>(this); AlarmScheduler.scheduleNext(this); }
+    @Override protected void onResume() { super.onResume(); resumed = new WeakReference<>(this); AlarmScheduler.scheduleNext(this); load(); }
     @Override protected void onPause() { super.onPause(); if (resumed.get() == this) resumed = new WeakReference<>(null); }
     void scheduleDialog() {
         LinearLayout titleBox = new LinearLayout(this); titleBox.setOrientation(LinearLayout.VERTICAL); titleBox.setPadding(dp(24), dp(20), dp(24), 0);
@@ -316,13 +317,23 @@ public class MainActivity extends Activity {
                 new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(next)));
         if (BackupManager.prefs(this).getBoolean("scheduleEnabled", false) && isBackgroundRestricted())
             currentLabel += "\n" + getString(R.string.schedule_restricted);
+        else if (BackupManager.prefs(this).getBoolean("scheduleEnabled", false) && !BatteryHelper.isExempt(this))
+            currentLabel += "\n" + getString(R.string.schedule_battery);
         TextView current = label(getString(R.string.dialog_schedule_current, currentLabel), 12, muted); current.setPadding(0, dp(6), 0, 0); titleBox.addView(current);
-        new AlertDialog.Builder(this).setCustomTitle(titleBox).setItems(new String[]{getString(R.string.schedule_option_off), getString(R.string.schedule_option_daily), getString(R.string.schedule_option_weekly), getString(R.string.schedule_option_monthly)}, (dialog, which) -> {
+        AlertDialog.Builder scheduleBuilder = new AlertDialog.Builder(this).setCustomTitle(titleBox).setItems(new String[]{getString(R.string.schedule_option_off), getString(R.string.schedule_option_daily), getString(R.string.schedule_option_weekly), getString(R.string.schedule_option_monthly)}, (dialog, which) -> {
             if (which == 0) { AlarmScheduler.setEnabled(this, false); scheduleValue.setText(AlarmScheduler.displayLabel(this)); AlarmScheduler.scheduleNext(this); return; }
             if (BackupManager.folder(this).isEmpty()) { pendingScheduleMode = which; chooseFolder(); return; }
             if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) { pendingScheduleMode = which; requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 24); return; }
             beginSchedule(which);
-        }).show();
+        });
+        // The fix lives in a different system screen depending on the state:
+        // a user-set background restriction is lifted from App info, while
+        // battery optimization is lifted from the exemption prompt.
+        if (BackupManager.prefs(this).getBoolean("scheduleEnabled", false) && isBackgroundRestricted())
+            scheduleBuilder.setNeutralButton(getString(R.string.battery_open_settings), (dialog, which) -> BatteryHelper.openAppDetails(this));
+        else if (BackupManager.prefs(this).getBoolean("scheduleEnabled", false) && !BatteryHelper.isExempt(this) && BatteryHelper.canRequestExemption(this))
+            scheduleBuilder.setNeutralButton(getString(R.string.battery_action_allow), (dialog, which) -> BatteryHelper.openExemptionSettings(this));
+        scheduleBuilder.show();
     }
     void beginSchedule(int which) {
         if (which == 2) pickWeekday(); else if (which == 3) pickDayOfMonth(); else pickDailyTime();
@@ -343,13 +354,31 @@ public class MainActivity extends Activity {
         new AlertDialog.Builder(this).setCustomTitle(titleBox).setItems(days, (dialog, which) -> pickMonthlyTime(which + 1)).show();
     }
     void pickDailyTime() {
-        new TimePickerDialog(this, (view, hour, minute) -> { AlarmScheduler.setDaily(this, hour, minute); scheduleValue.setText(AlarmScheduler.displayLabel(this)); }, 9, 0, true).show();
+        new TimePickerDialog(this, (view, hour, minute) -> { AlarmScheduler.setDaily(this, hour, minute); scheduleValue.setText(AlarmScheduler.displayLabel(this)); maybeBatteryNudge(); }, 9, 0, true).show();
     }
     void pickWeeklyTime(int weekday) {
-        new TimePickerDialog(this, (view, hour, minute) -> { AlarmScheduler.setWeekly(this, weekday, hour, minute); scheduleValue.setText(AlarmScheduler.displayLabel(this)); }, 9, 0, true).show();
+        new TimePickerDialog(this, (view, hour, minute) -> { AlarmScheduler.setWeekly(this, weekday, hour, minute); scheduleValue.setText(AlarmScheduler.displayLabel(this)); maybeBatteryNudge(); }, 9, 0, true).show();
     }
     void pickMonthlyTime(int dayOfMonth) {
-        new TimePickerDialog(this, (view, hour, minute) -> { AlarmScheduler.setMonthly(this, dayOfMonth, hour, minute); scheduleValue.setText(AlarmScheduler.displayLabel(this)); }, 9, 0, true).show();
+        new TimePickerDialog(this, (view, hour, minute) -> { AlarmScheduler.setMonthly(this, dayOfMonth, hour, minute); scheduleValue.setText(AlarmScheduler.displayLabel(this)); maybeBatteryNudge(); }, 9, 0, true).show();
+    }
+    // One-time nudge right when the user asks for automatic backups — the
+    // moment the exemption actually matters. Shown at most once per install;
+    // the schedule row and dialog keep offering the fix afterwards.
+    void maybeBatteryNudge() {
+        try {
+            if (isBackgroundRestricted()) return;
+            if (BatteryHelper.isExempt(this) || !BatteryHelper.canRequestExemption(this)) return;
+            if (BackupManager.prefs(this).getBoolean("batteryNudgeShown", false)) return;
+            BackupManager.prefs(this).edit().putBoolean("batteryNudgeShown", true).apply();
+            new AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.battery_nudge_title))
+                    .setMessage(getString(R.string.battery_nudge_message))
+                    .setPositiveButton(getString(R.string.battery_action_allow), (dialog, which) -> BatteryHelper.openExemptionSettings(this))
+                    .setNegativeButton(getString(R.string.battery_action_later), null)
+                    .show();
+        } catch (Exception ignored) {
+        }
     }
     void retentionDialog() {
         RetentionPolicy current = BackupManager.retentionPolicy(this);
