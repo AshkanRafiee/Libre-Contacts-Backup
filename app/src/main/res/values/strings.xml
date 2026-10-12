@@ -222,7 +222,7 @@
     <string name="schedule_battery">Battery optimization on — backups may be missed</string>
     <string name="battery_nudge_title">Make scheduled backups reliable</string>
     <string name="battery_nudge_message">Battery optimization can delay or skip automatic backups. Turn it off for Libre Contacts Backup so they run on time.</string>
-    <string name="battery_action_allow">Turn off optimization</string>
+    <string name="battery_action_allow">Turn off battery optimization</string>
     <string name="battery_action_later">Not now</string>
     <string name="battery_open_settings">Open settings</string>
 
