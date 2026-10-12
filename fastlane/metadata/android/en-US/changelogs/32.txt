@@ -1,0 +1,3 @@
+Fixed:
+- Automatic backups are more reliable: when a schedule is set, the app now offers to turn off battery optimization so the system no longer delays or skips them
+- The schedule screen warns while battery optimization is on or background activity is restricted, with a button that opens the right settings page
