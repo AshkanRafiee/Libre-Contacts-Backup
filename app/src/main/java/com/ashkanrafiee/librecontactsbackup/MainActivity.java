@@ -38,7 +38,7 @@ import java.util.*;
 public class MainActivity extends Activity {
     static final int FOLDER = 10, FILE = 11, MANUAL_CSV = 30, MANUAL_VCF = 31;
     int mint, background, card, muted;
-    TextView status, folderValue, scheduleValue, keepValue, languageValue, restoreStatus;
+    TextView status, statusDetail, folderValue, scheduleValue, keepValue, languageValue, restoreStatus;
     Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat; boolean pendingBackup; int pendingScheduleMode; String pendingNotificationActions; boolean compact;
     /** Spacing-only tightening: true on small screens (like {@link #compact}) OR any non-English language. Never used for font sizes or control heights — see {@link #build()}. */
     boolean dense;
@@ -164,7 +164,8 @@ public class MainActivity extends Activity {
         FrameLayout heroTop = new FrameLayout(this);
         LinearLayout heroWords = new LinearLayout(this); heroWords.setOrientation(LinearLayout.VERTICAL);
         heroWords.addView(label(getString(R.string.hero_label), 10, mint));
-        status = label(getString(R.string.status_ready), 18, resColor(R.color.text_primary)); status.setMaxLines(2); status.setEllipsize(TextUtils.TruncateAt.END); status.setPadding(0, dp(5), 0, dp(2)); heroWords.addView(status);
+        status = label(getString(R.string.status_ready), 18, resColor(R.color.text_primary)); status.setMaxLines(1); status.setEllipsize(TextUtils.TruncateAt.END); status.setPadding(0, dp(5), 0, 0); heroWords.addView(status);
+        statusDetail = label("", 13, resColor(R.color.subtitle)); statusDetail.setMaxLines(3); statusDetail.setEllipsize(TextUtils.TruncateAt.END); statusDetail.setPadding(0, dp(2), 0, dp(2)); statusDetail.setVisibility(View.GONE); heroWords.addView(statusDetail);
         backupProgress = new ProgressBar(this);
         backupProgress.setIndeterminate(true);
         backupProgress.setVisibility(View.GONE);
@@ -240,6 +241,19 @@ public class MainActivity extends Activity {
         } catch (Exception ignored) { return false; }
     }
 
+    // Headline (18sp, single line) carries the date; the reason rides below
+    // in a smaller detail line so a long failure message is read instead of
+    // truncated. A null/empty detail hides the second line entirely.
+    void setStatus(String headline, String detail) {
+        status.setText(headline);
+        if (detail == null || detail.isEmpty()) {
+            statusDetail.setVisibility(View.GONE);
+        } else {
+            statusDetail.setText(detail);
+            statusDetail.setVisibility(View.VISIBLE);
+        }
+    }
+
     void load() {
         folderValue.setText(BackupManager.folderLabel(this));
         SharedPreferences p = BackupManager.prefs(this);
@@ -249,15 +263,17 @@ public class MainActivity extends Activity {
         boolean lastSuccess = p.getBoolean("lastRunSuccess", true);
         boolean enabled = p.getBoolean("scheduleEnabled", false);
         if (lastRun > 0 && !lastSuccess) {
-            status.setText(getString(R.string.status_last_backup_outcome,
-                    new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(lastRun)),
-                    p.getString("lastRunMessage", "")));
+            setStatus(getString(R.string.status_last_run,
+                    new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(lastRun))),
+                    p.getString("lastRunMessage", ""));
         } else if (enabled && lastAttempt > 0 && lastAttempt > last && lastAttempt > lastRun) {
-            status.setText(getString(R.string.status_last_backup_outcome,
-                    new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(lastAttempt)),
-                    getString(R.string.status_no_result_yet)));
+            setStatus(getString(R.string.status_last_run,
+                    new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(lastAttempt))),
+                    getString(R.string.status_no_result_yet));
         } else if (last > 0) {
-            status.setText(getString(R.string.status_last_backup, new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(last))));
+            setStatus(getString(R.string.status_last_backup, new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(last))), null);
+        } else {
+            setStatus(getString(R.string.status_ready), null);
         }
         String scheduleLabel = AlarmScheduler.displayLabel(this);
         if (enabled && isBackgroundRestricted()) scheduleLabel += " · " + getString(R.string.schedule_restricted);
@@ -282,7 +298,7 @@ public class MainActivity extends Activity {
         backupRunning = true;
         backupButton.setEnabled(false);
         backupProgress.setVisibility(View.VISIBLE);
-        status.setText(getString(R.string.status_backing_up));
+        setStatus(getString(R.string.status_backing_up), null);
         new Thread(() -> {
             BackupManager.BackupOutcome result = BackupManager.runBackup(this, true);
             // A rotation may have destroyed this instance and recreated a fresh
@@ -291,14 +307,14 @@ public class MainActivity extends Activity {
             MainActivity live = resumed.get();
             if (live != null && !live.isFinishing() && !live.isDestroyed()) {
                 live.runOnUiThread(() -> {
-                    live.status.setText(result.message);
+                    live.setStatus(result.message, null);
                     live.backupButton.setEnabled(true);
                     live.backupProgress.setVisibility(View.GONE);
                     backupRunning = false;
                 });
             } else {
                 runOnUiThread(() -> {
-                    status.setText(result.message);
+                    setStatus(result.message, null);
                     backupButton.setEnabled(true);
                     backupProgress.setVisibility(View.GONE);
                     backupRunning = false;
