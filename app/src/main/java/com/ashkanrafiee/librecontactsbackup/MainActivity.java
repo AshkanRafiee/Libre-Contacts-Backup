@@ -164,7 +164,7 @@ public class MainActivity extends Activity {
         FrameLayout heroTop = new FrameLayout(this);
         LinearLayout heroWords = new LinearLayout(this); heroWords.setOrientation(LinearLayout.VERTICAL);
         heroWords.addView(label(getString(R.string.hero_label), 10, mint));
-        status = label(getString(R.string.status_ready), 18, resColor(R.color.text_primary)); status.setMaxLines(1); status.setEllipsize(TextUtils.TruncateAt.END); status.setPadding(0, dp(5), 0, dp(2)); heroWords.addView(status);
+        status = label(getString(R.string.status_ready), 18, resColor(R.color.text_primary)); status.setMaxLines(2); status.setEllipsize(TextUtils.TruncateAt.END); status.setPadding(0, dp(5), 0, dp(2)); heroWords.addView(status);
         backupProgress = new ProgressBar(this);
         backupProgress.setIndeterminate(true);
         backupProgress.setVisibility(View.GONE);
