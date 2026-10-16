@@ -1,5 +1,5 @@
 package com.ashkanrafiee.librecontactsbackup;
-import android.app.*;import android.content.*;import android.os.Build;import java.text.DateFormatSymbols;import java.util.*;
+import android.app.*;import android.content.*;import android.content.pm.PackageManager;import android.os.Build;import android.provider.Settings;import java.text.DateFormatSymbols;import java.util.*;
 /** Schedules automatic backups at a daily, weekly, or monthly cadence — exactly one
  *  schedule is active at a time. The mode is stored in {@code scheduleMode} ("daily",
  *  "weekly", or "monthly"); a schedule enabled before this feature shipped has no
@@ -46,6 +46,53 @@ public final class AlarmScheduler {
         SharedPreferences prefs = prefs(c);
         if(!prefs.getBoolean("scheduleEnabled", false)) return 0;
         return nextRun(prefs).getTimeInMillis();
+    }
+    /**
+     * Whether the system will currently deliver our alarm exactly.
+     * Fail-open (true) below API 31 — where exact-alarm permission does not
+     * exist — and on any unexpected failure, so the UI never nags about an
+     * unknown state. Covers either permission (USE or SCHEDULE).
+     */
+    public static boolean canScheduleExact(Context c) {
+        if (Build.VERSION.SDK_INT < 31) return true;
+        try {
+            AlarmManager manager = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
+            return manager == null || manager.canScheduleExactAlarms();
+        } catch (Exception ignored) {
+            return true;
+        }
+    }
+    /**
+     * Whether the user-granted SCHEDULE_EXACT_ALARM specifically is held.
+     * Unlike {@link #canScheduleExact}, this is false when exact currently
+     * works only via the auto-granted USE_EXACT_ALARM — which is exactly the
+     * pre-migration state worth surfacing, so users grant SCHEDULE now and a
+     * later removal of USE changes nothing for them. Fail-open (true) below
+     * API 31 and on unexpected failure.
+     */
+    public static boolean hasSchedulePermission(Context c) {
+        if (Build.VERSION.SDK_INT < 31) return true;
+        try {
+            return c.checkSelfPermission(android.Manifest.permission.SCHEDULE_EXACT_ALARM)
+                    == PackageManager.PERMISSION_GRANTED;
+        } catch (Exception ignored) {
+            return true;
+        }
+    }
+    /** Intent for the system Alarms & reminders screen for this app. Never throws. */
+    public static Intent exactRequestIntent(Context c) {
+        return new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                android.net.Uri.parse("package:" + c.getPackageName()));
+    }
+    /** Opens the system Alarms & reminders screen for this app. Never throws. */
+    public static void openExactSettings(Context c) {
+        if (Build.VERSION.SDK_INT < 31) return;
+        try {
+            Intent intent = exactRequestIntent(c);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (intent.resolveActivity(c.getPackageManager()) != null) c.startActivity(intent);
+        } catch (Exception ignored) {
+        }
     }
     // Before localization, "schedule" stored the displayed English text itself
     // ("Off" or "Daily at HH:mm") and doubled as the on/off flag. Displaying a
