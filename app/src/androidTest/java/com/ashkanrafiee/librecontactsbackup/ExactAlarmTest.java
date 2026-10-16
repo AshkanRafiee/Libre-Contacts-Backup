@@ -19,11 +19,9 @@ import static org.junit.Assert.assertTrue;
  * Hermetic checks for {@link AlarmScheduler}'s exact-alarm helpers.
  *
  * Below API 31 exact-alarm permission does not exist, so both queries are
- * fail-open true. On 31+ the two queries can disagree: exact may work via the
- * auto-granted USE_EXACT_ALARM while the user-granted SCHEDULE_EXACT_ALARM is
- * still missing — that disagreement is the pre-migration state the UI
- * surfaces, so it is logged here for every run (read it with
- * {@code logcat -s ExactAlarmTest}).
+ * fail-open true. On 31+ the two queries can disagree while the system
+ * settles a grant change; the disagreement is logged here for every run
+ * (read it with {@code logcat -s ExactAlarmTest}).
  *
  * Opening the real Alarms & reminders screen is deliberately not exercised —
  * it would leave the test app for the Settings UI.

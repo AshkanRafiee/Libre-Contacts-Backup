@@ -51,7 +51,7 @@ public final class AlarmScheduler {
      * Whether the system will currently deliver our alarm exactly.
      * Fail-open (true) below API 31 — where exact-alarm permission does not
      * exist — and on any unexpected failure, so the UI never nags about an
-     * unknown state. Covers either permission (USE or SCHEDULE).
+     * unknown state.
      */
     public static boolean canScheduleExact(Context c) {
         if (Build.VERSION.SDK_INT < 31) return true;
@@ -63,12 +63,9 @@ public final class AlarmScheduler {
         }
     }
     /**
-     * Whether the user-granted SCHEDULE_EXACT_ALARM specifically is held.
-     * Unlike {@link #canScheduleExact}, this is false when exact currently
-     * works only via the auto-granted USE_EXACT_ALARM — which is exactly the
-     * pre-migration state worth surfacing, so users grant SCHEDULE now and a
-     * later removal of USE changes nothing for them. Fail-open (true) below
-     * API 31 and on unexpected failure.
+     * Whether the user-granted SCHEDULE_EXACT_ALARM is held: the exact
+     * permission this build declares. Below API 31 (no such permission) and
+     * on unexpected failure this is fail-open true.
      */
     public static boolean hasSchedulePermission(Context c) {
         if (Build.VERSION.SDK_INT < 31) return true;
