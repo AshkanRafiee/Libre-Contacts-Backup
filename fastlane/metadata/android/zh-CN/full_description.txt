@@ -9,5 +9,6 @@ Libre Contacts Backup 是一款原生、自由开源（FLOSS）的 Android 应�
 * 恢复时能正确合并每个来源联系人，不会把同名的不同联系人误合并
 * 支持手动导出为 CSV 和 VCF 格式，CSV 文件可在 Excel 及其他电子表格程序中打开
 * 按时间保留——按日、周、月保留你选择数量的最新备份（例如每日 7 份、每周 4 份、每月 3 份），让近期历史保持密集备份，较早的历史逐渐稀疏——或者只保留最近 N 组
+* 在显示菜单中选择应用语言以及系统、浅色或深色主题
 
 Libre Contacts Backup 免费且开源。如果它对你有帮助，你可以支持其开发——捐赠方式请见项目 README 的 Donate 部分：https://librecontactsbackup.ashkanrafiee.com/#donate

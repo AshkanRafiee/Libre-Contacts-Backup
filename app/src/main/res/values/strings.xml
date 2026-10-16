@@ -34,6 +34,13 @@
     <string name="setting_encryption_subtitle">Protect exported files with AES</string>
     <string name="language_system_default">System default</string>
     <string name="footer_language">Language</string>
+    <string name="display_menu">Display</string>
+    <string name="display_menu_hint">Choose language and appearance</string>
+    <string name="display_language">Language</string>
+    <string name="display_theme">Theme</string>
+    <string name="theme_system_default">System default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
 
     <!-- Export section -->
     <string name="export_note_full">Manual copies are not encrypted and are never removed by retention. CSV and VCF are simplified copies for sharing with other apps — for a full restore, use the automatic backup.</string>

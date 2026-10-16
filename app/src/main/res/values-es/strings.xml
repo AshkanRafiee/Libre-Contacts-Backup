@@ -30,6 +30,13 @@
     <string name="setting_encryption_subtitle">Proteger los archivos exportados con AES</string>
     <string name="language_system_default">Idioma del sistema</string>
     <string name="footer_language">Idioma</string>
+    <string name="display_menu">Pantalla</string>
+    <string name="display_menu_hint">Elige el idioma y la apariencia</string>
+    <string name="display_language">Idioma</string>
+    <string name="display_theme">Tema</string>
+    <string name="theme_system_default">Predeterminado del sistema</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Oscuro</string>
 
     <string name="export_note_full">Las copias manuales no están cifradas y nunca se eliminan por la política de retención. CSV y VCF son copias simplificadas para compartir con otras apps — para una restauración completa, usa la copia automática.</string>
     <string name="export_note_compact">Copias manuales: sin cifrar, no se conservan. CSV/VCF son copias simplificadas para compartir.</string>

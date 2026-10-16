@@ -30,6 +30,13 @@
     <string name="setting_encryption_subtitle">حماية الملفات المُصدَّرة باستخدام AES</string>
     <string name="language_system_default">لغة النظام</string>
     <string name="footer_language">اللغة</string>
+    <string name="display_menu">العرض</string>
+    <string name="display_menu_hint">اختر اللغة والمظهر</string>
+    <string name="display_language">اللغة</string>
+    <string name="display_theme">السمة</string>
+    <string name="theme_system_default">إعداد النظام الافتراضي</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_dark">داكن</string>
 
     <string name="export_note_full">النسخ اليدوية غير مشفّرة ولا تُحذف أبدًا بواسطة سياسة الاحتفاظ. ملفات CSV وVCF نسخ مبسّطة للمشاركة مع التطبيقات الأخرى — للاستعادة الكاملة استخدم النسخ الاحتياطي التلقائي.</string>
     <string name="export_note_compact">النسخ اليدوية: غير مشفّرة، ولا يُحتفَظ بها. CSV/VCF نسخ مبسّطة للمشاركة.</string>

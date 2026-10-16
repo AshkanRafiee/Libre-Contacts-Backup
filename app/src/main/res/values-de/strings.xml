@@ -30,6 +30,13 @@
     <string name="setting_encryption_subtitle">Exportierte Dateien mit AES schützen</string>
     <string name="language_system_default">Systemsprache</string>
     <string name="footer_language">Sprache</string>
+    <string name="display_menu">Anzeige</string>
+    <string name="display_menu_hint">Sprache und Erscheinungsbild wählen</string>
+    <string name="display_language">Sprache</string>
+    <string name="display_theme">Thema</string>
+    <string name="theme_system_default">Systemstandard</string>
+    <string name="theme_light">Hell</string>
+    <string name="theme_dark">Dunkel</string>
 
     <string name="export_note_full">Manuelle Kopien sind nicht verschlüsselt und werden nie durch die Aufbewahrungsregel gelöscht. CSV und VCF sind vereinfachte Kopien zum Teilen mit anderen Apps — für eine vollständige Wiederherstellung nutze die automatische Sicherung.</string>
     <string name="export_note_compact">Manuelle Kopien: unverschlüsselt, werden nicht aufbewahrt. CSV/VCF sind vereinfachte Kopien zum Teilen.</string>

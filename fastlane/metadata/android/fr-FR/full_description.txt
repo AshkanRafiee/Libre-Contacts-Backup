@@ -9,5 +9,6 @@ Fonctionnalités :
 * La restauration regroupe correctement chaque contact source, sans fusionner des personnes différentes qui partagent un même nom
 * Exports manuels aux formats CSV et VCF ; le fichier CSV s'ouvre dans Excel et dans les autres tableurs
 * Rétention par âge — conserver les sauvegardes les plus récentes par jour, semaine et mois selon les nombres que vous choisissez (par exemple 7 quotidiennes, 4 hebdomadaires, 3 mensuelles), pour que le passé récent reste densément sauvegardé et que l'historique plus ancien s'éclaircisse — ou simplement garder les N derniers ensembles
+* Choisissez la langue et le thème système, clair ou sombre dans le menu Affichage
 
 Libre Contacts Backup est gratuit et open source. S'il vous est utile, vous pouvez soutenir son développement — les options de don figurent dans la section Donate du README du projet : https://librecontactsbackup.ashkanrafiee.com/#donate

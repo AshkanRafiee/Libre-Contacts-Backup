@@ -30,6 +30,13 @@
     <string name="setting_encryption_subtitle">使用 AES 保护导出的文件</string>
     <string name="language_system_default">跟随系统</string>
     <string name="footer_language">语言</string>
+    <string name="display_menu">显示</string>
+    <string name="display_menu_hint">选择语言和外观</string>
+    <string name="display_language">语言</string>
+    <string name="display_theme">主题</string>
+    <string name="theme_system_default">跟随系统</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_dark">深色</string>
 
     <string name="export_note_full">手动导出的副本未加密，且不受保留策略影响，不会被自动删除。CSV 和 VCF 是用于与其他应用分享的简化副本——如需完整恢复，请使用自动备份。</string>
     <string name="export_note_compact">手动副本：未加密，不予保留。CSV/VCF 为用于分享的简化副本。</string>

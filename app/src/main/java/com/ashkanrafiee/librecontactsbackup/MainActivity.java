@@ -38,7 +38,7 @@ import java.util.*;
 public class MainActivity extends Activity {
     static final int FOLDER = 10, FILE = 11, MANUAL_CSV = 30, MANUAL_VCF = 31;
     int mint, background, card, muted;
-    TextView status, statusDetail, exactBanner, folderValue, scheduleValue, keepValue, languageValue, restoreStatus;
+    TextView status, statusDetail, exactBanner, folderValue, scheduleValue, keepValue, restoreStatus;
     Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat; boolean pendingBackup; int pendingScheduleMode; String pendingNotificationActions; boolean compact;
     /** Spacing-only tightening: true on small screens (like {@link #compact}) OR any non-English language. Never used for font sizes or control heights — see {@link #build()}. */
     boolean dense;
@@ -72,7 +72,7 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void attachBaseContext(Context base) {
-        super.attachBaseContext(LocaleHelper.wrap(base));
+        super.attachBaseContext(ThemeHelper.wrap(LocaleHelper.wrap(base)));
     }
 
     @Override public void onCreate(Bundle state) {
@@ -150,14 +150,17 @@ public class MainActivity extends Activity {
         root.setOnApplyWindowInsetsListener((view, insets) -> { int top; int bottom; if (Build.VERSION.SDK_INT >= 30) { android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars()); top = bars.top; bottom = bars.bottom; } else { top = insets.getSystemWindowInsetTop(); bottom = insets.getSystemWindowInsetBottom(); } view.setPadding(dp(20), top + dp(v(14, 8)), dp(20), bottom + dp(v(14, 8))); return insets; });
         setContentView(root);
         ScrollView scroll = new ScrollView(this); scroll.setClipToPadding(false); scroll.setFillViewport(true); scroll.setVerticalScrollBarEnabled(false);
-        LinearLayout body = new LinearLayout(this); body.setOrientation(LinearLayout.VERTICAL); scroll.addView(body, new ScrollView.LayoutParams(-1, -1));
+        LinearLayout body = new LinearLayout(this); body.setOrientation(LinearLayout.VERTICAL); scroll.addView(body, new ScrollView.LayoutParams(-1, -2));
         root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
 
         LinearLayout header = new LinearLayout(this); header.setGravity(Gravity.CENTER_VERTICAL);
-        TextView mark = label("L", compact ? 16 : 18, resColor(R.color.accent_ink)); mark.setGravity(Gravity.CENTER); mark.setTypeface(null, android.graphics.Typeface.BOLD); mark.setBackground(rounded(mint, 12)); header.addView(mark, new LinearLayout.LayoutParams(dp(v(38, 34)), dp(v(38, 34))));
+        LinearLayout brand = new LinearLayout(this); brand.setGravity(Gravity.CENTER_VERTICAL);
+        TextView mark = label("LCB", compact ? 14 : 15, resColor(R.color.accent_ink)); mark.setGravity(Gravity.CENTER); mark.setTypeface(null, android.graphics.Typeface.BOLD); mark.setBackground(rounded(mint, 12)); mark.setContentDescription(getString(R.string.app_name)); brand.addView(mark, new LinearLayout.LayoutParams(dp(v(48, 45)), dp(v(38, 34))));
         LinearLayout name = new LinearLayout(this); name.setOrientation(LinearLayout.VERTICAL);
-        name.addView(label(getString(R.string.app_name), compact ? 20 : 22, resColor(R.color.text_primary))); name.addView(label(getString(R.string.tagline_offline_encrypted), 12, muted));
-        LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(-2, -2); nameParams.setMarginStart(dp(10)); header.addView(name, nameParams); body.addView(header, margins(0, 0, 0, v(12, 10)));
+        name.addView(label(getString(R.string.app_name), compact ? 18 : 22, resColor(R.color.text_primary))); name.addView(label(getString(R.string.tagline_offline_encrypted), 12, muted));
+        LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(-2, -2); nameParams.setMarginStart(dp(10)); brand.addView(name, nameParams);
+        header.addView(brand, new LinearLayout.LayoutParams(-1, -2));
+        body.addView(header, margins(0, 0, 0, v(12, 10)));
 
         LinearLayout hero = new LinearLayout(this); hero.setOrientation(LinearLayout.VERTICAL); hero.setPadding(dp(v(14, 14)), dp(d(15, 14)), dp(v(14, 14)), dp(d(14, 14)));
         hero.setBackground(gradient(new int[]{resColor(R.color.hero_grad_start), resColor(R.color.hero_grad_end)}, 22));
@@ -202,7 +205,7 @@ public class MainActivity extends Activity {
         body.addView(setting(getString(R.string.setting_encryption_title), getString(R.string.setting_encryption_subtitle), null, true, v -> {}), margins(0, 0, 0, d(14, 16)));
 
         body.addView(label(getString(R.string.section_export), 10, muted), margins(0, 0, 0, 3));
-        body.addView(label(compact ? getString(R.string.export_note_compact) : getString(R.string.export_note_full), 11, resColor(R.color.amber)), margins(0, 0, 0, v(8, 5)));
+        body.addView(label(getString(R.string.export_note_compact), 11, resColor(R.color.amber)), margins(0, 0, 0, v(8, 5)));
         LinearLayout exports = new LinearLayout(this); exports.setOrientation(LinearLayout.HORIZONTAL);
         Button csv = button(getString(R.string.export_csv), resColor(R.color.button_surface)); Button vcf = button(getString(R.string.export_vcf), resColor(R.color.button_surface));
         csv.setOnClickListener(v -> manualExport("csv")); vcf.setOnClickListener(v -> manualExport("vcf"));
@@ -215,11 +218,11 @@ public class MainActivity extends Activity {
         LinearLayout footer = new LinearLayout(this); footer.setGravity(Gravity.CENTER);
         TextView about = label(getString(R.string.footer_about), 11, resColor(R.color.link)); about.setOnClickListener(v -> startActivity(new Intent(this, AboutActivity.class)));
         TextView footerSeparator = label("  ·  ", 11, resColor(R.color.text_tertiary));
-        languageValue = label(getString(R.string.footer_language), 11, resColor(R.color.link));
-        languageValue.setOnClickListener(v -> languageDialog());
-        footer.addView(about); footer.addView(footerSeparator); footer.addView(languageValue);
+        TextView display = label(getString(R.string.display_menu), 11, resColor(R.color.link));
+        display.setContentDescription(getString(R.string.display_menu)); display.setOnClickListener(v -> displayDialog());
+        footer.addView(about); footer.addView(footerSeparator); footer.addView(display);
         body.addView(footer, margins(0, d(12, 14), 0, 0));
-        Space breathingRoom = new Space(this); body.addView(breathingRoom, new LinearLayout.LayoutParams(1, 0, 1)); load();
+        Space breathingRoom = new Space(this); body.addView(breathingRoom, new LinearLayout.LayoutParams(1, dp(24))); load();
     }
 
     LinearLayout setting(String title, String subtitle, TextView value, boolean toggle, View.OnClickListener click) {
@@ -615,19 +618,71 @@ public class MainActivity extends Activity {
         TextView button = label(glyph, 22, resColor(R.color.accent_ink)); button.setGravity(Gravity.CENTER); button.setBackground(rounded(mint, 12));
         return button;
     }
-    void languageDialog() {
-        String[] tags = LocaleHelper.SUPPORTED;
-        String[] labels = new String[tags.length];
-        for (int i = 0; i < tags.length; i++) labels[i] = tags[i].isEmpty() ? getString(R.string.language_system_default) : LocaleHelper.displayName(tags[i]);
-        String current = LocaleHelper.currentTag(this);
-        int checkedIndex = 0;
-        for (int i = 0; i < tags.length; i++) if (tags[i].equals(current)) { checkedIndex = i; break; }
-        AlertDialog dialog = new AlertDialog.Builder(this).setTitle(getString(R.string.dialog_language_title)).setSingleChoiceItems(labels, checkedIndex, (dialogInterface, which) -> {
-            LocaleHelper.setLanguage(this, tags[which]);
-            dialogInterface.dismiss();
-            recreate();
-        }).create();
-        dialog.show();
+
+    /** Matches Balance's Display menu: one focused dialog with native dropdown spinners. */
+    void displayDialog() {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(26), dp(4), dp(14), 0);
+
+        String[] themeValues = {ThemeHelper.SYSTEM, ThemeHelper.DARK, ThemeHelper.LIGHT};
+        String[] themeLabels = {
+                getString(R.string.theme_system_default),
+                getString(R.string.theme_dark),
+                getString(R.string.theme_light)
+        };
+        Spinner themeSpinner = new Spinner(this);
+        ArrayAdapter<String> themeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, themeLabels);
+        themeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        themeSpinner.setAdapter(themeAdapter);
+        String currentTheme = ThemeHelper.currentTheme(this);
+        for (int i = 0; i < themeValues.length; i++) if (themeValues[i].equals(currentTheme)) { themeSpinner.setSelection(i); break; }
+        themeSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                String chosen = themeValues[Math.min(position, themeValues.length - 1)];
+                if (!chosen.equals(ThemeHelper.currentTheme(MainActivity.this))) {
+                    ThemeHelper.setTheme(MainActivity.this, chosen);
+                    recreate();
+                }
+            }
+            @Override public void onNothingSelected(android.widget.AdapterView<?> parent) { }
+        });
+
+        String[] languageTags = LocaleHelper.SUPPORTED;
+        String[] languageLabels = new String[languageTags.length];
+        for (int i = 0; i < languageTags.length; i++) languageLabels[i] = languageTags[i].isEmpty()
+                ? getString(R.string.language_system_default) : LocaleHelper.displayName(languageTags[i]);
+        Spinner languageSpinner = new Spinner(this);
+        ArrayAdapter<String> languageAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, languageLabels);
+        languageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        languageSpinner.setAdapter(languageAdapter);
+        String currentLanguage = LocaleHelper.currentTag(this);
+        for (int i = 0; i < languageTags.length; i++) if (languageTags[i].equals(currentLanguage)) { languageSpinner.setSelection(i); break; }
+        languageSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                String chosen = languageTags[Math.min(position, languageTags.length - 1)];
+                if (!chosen.equals(LocaleHelper.currentTag(MainActivity.this))) {
+                    LocaleHelper.setLanguage(MainActivity.this, chosen);
+                    recreate();
+                }
+            }
+            @Override public void onNothingSelected(android.widget.AdapterView<?> parent) { }
+        });
+
+        box.addView(label(getString(R.string.display_theme), 14, resColor(R.color.text_primary)));
+        box.addView(themeSpinner);
+        LinearLayout.LayoutParams languageLabelParams = new LinearLayout.LayoutParams(-1, -2);
+        languageLabelParams.topMargin = dp(18);
+        TextView languageLabel = label(getString(R.string.display_language), 14, resColor(R.color.text_primary));
+        box.addView(languageLabel, languageLabelParams);
+        box.addView(languageSpinner);
+
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.display_menu))
+                .setView(box)
+                .setPositiveButton(android.R.string.ok, null)
+                .setNegativeButton(getString(R.string.action_cancel), null)
+                .show();
     }
     @SuppressLint("WrongConstant") // data.getFlags() is masked to exactly the two accepted persistable flags below
     @Override protected void onActivityResult(int request, int result, Intent data) {

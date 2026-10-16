@@ -25,7 +25,7 @@ public class AboutActivity extends Activity {
     LinearLayout.LayoutParams margins(int l, int t, int r, int b) { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2); p.setMargins(dp(l), dp(t), dp(r), dp(b)); return p; }
 
     @Override protected void attachBaseContext(Context base) {
-        super.attachBaseContext(LocaleHelper.wrap(base));
+        super.attachBaseContext(ThemeHelper.wrap(LocaleHelper.wrap(base)));
     }
 
     @Override public void onCreate(Bundle state) {
