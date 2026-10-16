@@ -277,7 +277,9 @@ public class MainActivity extends Activity {
         }
         String scheduleLabel = AlarmScheduler.displayLabel(this);
         if (enabled && isBackgroundRestricted()) scheduleLabel += " · " + getString(R.string.schedule_restricted);
+        else if (enabled && !AlarmScheduler.canScheduleExact(this)) scheduleLabel += " · " + getString(R.string.schedule_exact_needed);
         else if (enabled && !BatteryHelper.isExempt(this)) scheduleLabel += " · " + getString(R.string.schedule_battery);
+        else if (enabled && !AlarmScheduler.hasSchedulePermission(this)) scheduleLabel += " · " + getString(R.string.schedule_exact_future);
         scheduleValue.setText(scheduleLabel);
         keepValue.setText(retentionLabel(this));
         long restored = BackupManager.prefs(this).getLong("lastRestore", 0); int restoredCount = BackupManager.prefs(this).getInt("lastRestoreCount", 0);
@@ -331,10 +333,15 @@ public class MainActivity extends Activity {
         long next = AlarmScheduler.nextRunMillis(this);
         if (next > 0) currentLabel += "\n" + getString(R.string.schedule_next,
                 new SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(new Date(next)));
-        if (BackupManager.prefs(this).getBoolean("scheduleEnabled", false) && isBackgroundRestricted())
+        boolean scheduleOn = BackupManager.prefs(this).getBoolean("scheduleEnabled", false);
+        if (scheduleOn && isBackgroundRestricted())
             currentLabel += "\n" + getString(R.string.schedule_restricted);
-        else if (BackupManager.prefs(this).getBoolean("scheduleEnabled", false) && !BatteryHelper.isExempt(this))
+        else if (scheduleOn && !AlarmScheduler.canScheduleExact(this))
+            currentLabel += "\n" + getString(R.string.schedule_exact_needed);
+        else if (scheduleOn && !BatteryHelper.isExempt(this))
             currentLabel += "\n" + getString(R.string.schedule_battery);
+        else if (scheduleOn && !AlarmScheduler.hasSchedulePermission(this))
+            currentLabel += "\n" + getString(R.string.schedule_exact_future);
         TextView current = label(getString(R.string.dialog_schedule_current, currentLabel), 12, muted); current.setPadding(0, dp(6), 0, 0); titleBox.addView(current);
         AlertDialog.Builder scheduleBuilder = new AlertDialog.Builder(this).setCustomTitle(titleBox).setItems(new String[]{getString(R.string.schedule_option_off), getString(R.string.schedule_option_daily), getString(R.string.schedule_option_weekly), getString(R.string.schedule_option_monthly)}, (dialog, which) -> {
             if (which == 0) { AlarmScheduler.setEnabled(this, false); scheduleValue.setText(AlarmScheduler.displayLabel(this)); AlarmScheduler.scheduleNext(this); return; }
@@ -343,12 +350,19 @@ public class MainActivity extends Activity {
             beginSchedule(which);
         });
         // The fix lives in a different system screen depending on the state:
-        // a user-set background restriction is lifted from App info, while
-        // battery optimization is lifted from the exemption prompt.
-        if (BackupManager.prefs(this).getBoolean("scheduleEnabled", false) && isBackgroundRestricted())
+        // a user-set background restriction is lifted from App info, battery
+        // optimization from the exemption prompt, and exact-alarm grants from
+        // the Alarms & reminders screen. Exact-missing comes first: without it
+        // alarms are inexact no matter what else is fixed.
+        boolean scheduleOn = BackupManager.prefs(this).getBoolean("scheduleEnabled", false);
+        if (scheduleOn && !AlarmScheduler.canScheduleExact(this))
+            scheduleBuilder.setNeutralButton(getString(R.string.exact_action_allow), (dialog, which) -> AlarmScheduler.openExactSettings(this));
+        else if (scheduleOn && isBackgroundRestricted())
             scheduleBuilder.setNeutralButton(getString(R.string.battery_open_settings), (dialog, which) -> BatteryHelper.openAppDetails(this));
-        else if (BackupManager.prefs(this).getBoolean("scheduleEnabled", false) && !BatteryHelper.isExempt(this) && BatteryHelper.canRequestExemption(this))
+        else if (scheduleOn && !BatteryHelper.isExempt(this) && BatteryHelper.canRequestExemption(this))
             scheduleBuilder.setNeutralButton(getString(R.string.battery_action_allow), (dialog, which) -> BatteryHelper.openExemptionSettings(this));
+        else if (scheduleOn && !AlarmScheduler.hasSchedulePermission(this))
+            scheduleBuilder.setNeutralButton(getString(R.string.exact_action_allow), (dialog, which) -> AlarmScheduler.openExactSettings(this));
         scheduleBuilder.show();
     }
     void beginSchedule(int which) {

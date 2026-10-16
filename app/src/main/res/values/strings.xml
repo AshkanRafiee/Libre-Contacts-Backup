@@ -221,6 +221,9 @@
     <string name="schedule_next">Next %1$s</string>
     <string name="schedule_restricted">Restricted — allow background activity</string>
     <string name="schedule_battery">Battery optimization on — backups may be missed</string>
+    <string name="schedule_exact_needed">Exact alarms off — backups may run late</string>
+    <string name="schedule_exact_future">Allow alarms &amp; reminders to keep exact timing</string>
+    <string name="exact_action_allow">Allow alarms &amp; reminders</string>
     <string name="battery_nudge_title">Make scheduled backups reliable</string>
     <string name="battery_nudge_message">Battery optimization can delay or skip automatic backups. Turn it off for Libre Contacts Backup so they run on time.</string>
     <string name="battery_action_allow">Turn off battery optimization</string>
