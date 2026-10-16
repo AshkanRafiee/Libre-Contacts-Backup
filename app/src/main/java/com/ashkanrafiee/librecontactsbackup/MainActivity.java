@@ -222,7 +222,7 @@ public class MainActivity extends Activity {
         display.setContentDescription(getString(R.string.display_menu)); display.setOnClickListener(v -> displayDialog());
         footer.addView(about); footer.addView(footerSeparator); footer.addView(display);
         body.addView(footer, margins(0, d(12, 14), 0, 0));
-        Space breathingRoom = new Space(this); body.addView(breathingRoom, new LinearLayout.LayoutParams(1, dp(24))); load();
+        load();
     }
 
     LinearLayout setting(String title, String subtitle, TextView value, boolean toggle, View.OnClickListener click) {
