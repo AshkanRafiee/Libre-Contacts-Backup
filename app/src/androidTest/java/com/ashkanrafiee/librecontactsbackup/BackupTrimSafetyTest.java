@@ -58,4 +58,11 @@ public class BackupTrimSafetyTest {
         assertFalse(BackupManager.isRetentionCandidate("librecontacts_2026-09-13_lcb"));
         assertFalse(BackupManager.isRetentionCandidate(null));
     }
+
+    @Test public void collisionSuffixedBasesStayTimestamped() {
+        assertTrue(BackupManager.isTimestamped("librecontacts_2026-09-13_10-00-00-1"));
+        assertTrue(BackupManager.isRetentionCandidate("librecontacts_2026-09-13_10-00-00-1.lcb"));
+        assertTrue(BackupManager.isRetentionCandidate("librecontacts_2026-09-13_10-00-00-12.lcb.enc"));
+        assertFalse(BackupManager.isRetentionCandidate("librecontacts_notes-1.lcb"));
+    }
 }
