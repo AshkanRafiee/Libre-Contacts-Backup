@@ -144,7 +144,12 @@ public final class BackupManager {
     public static BackupOutcome runBackup(Context c, boolean notify, boolean boundedSimRead) {
         if (!runInFlight.compareAndSet(false, true)) {
             Log.w("LibreContactsBackup", "Skipping a backup run because another one is already in progress");
-            return new BackupOutcome(false, c.getString(R.string.backup_already_running));
+            String busy = c.getString(R.string.backup_already_running);
+            // Recorded so a scheduled run colliding with a manual one leaves
+            // proof instead of silence; the still-running first run overwrites
+            // this with its own outcome when it finishes.
+            recordLastRun(c, false, busy);
+            return new BackupOutcome(false, busy);
         }
         try { return doRunBackup(c, notify, boundedSimRead); }
         finally { runInFlight.set(false); }
@@ -188,12 +193,17 @@ public final class BackupManager {
             byte[] archive = zipOutput.toByteArray();
             if (encrypted) archive = encryptArchive(archive, password);
 
-            saveToFolder(c, tree, "librecontacts_" + stamp + (encrypted ? ".lcb.enc" : ".lcb"), archive);
+            String fileSuffix = encrypted ? ".lcb.enc" : ".lcb";
+            String fileBase = findUniqueBase(c, tree, "librecontacts_" + stamp);
+            saveToFolder(c, tree, fileBase + fileSuffix, archive);
             // The backup itself is already safely written at this point — a
             // failure trimming old backups afterward must not turn a
             // successful backup into a reported failure.
+            // The just-written set is always kept: if the system clock moved
+            // backward its stamp can look older than existing backups, and a
+            // pure newest-N decision would otherwise delete it immediately.
             try {
-                trim(c, tree);
+                trim(c, tree, fileBase);
             } catch (Exception e) {
                 Log.w("LibreContactsBackup", "Failed to trim old backups", e);
             }
@@ -603,6 +613,10 @@ public final class BackupManager {
     }
 
     private static void trim(Context c, Uri tree) throws Exception {
+        trim(c, tree, null);
+    }
+
+    private static void trim(Context c, Uri tree, String keepExtra) throws Exception {
         Uri children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree));
         LinkedHashMap<String, ArrayList<Uri>> sets = new LinkedHashMap<>();
 
@@ -634,9 +648,40 @@ public final class BackupManager {
             if (at != null) stored.add(new StoredBackup(name, at));
         }
         Set<String> keep = RetentionDecider.decide(stored, retentionPolicy(c), LocalDateTime.now());
+        if (keepExtra != null) keep.add(keepExtra);
         for (String name : names) {
             if (keep.contains(name)) continue;
             for (Uri file : sets.get(name)) DocumentsContract.deleteDocument(c.getContentResolver(), file);
+        }
+    }
+
+    // Second-resolution stamps collide when two runs share a second (manual +
+    // scheduled, or a retry). SAF allows duplicate display names, which would
+    // then count as one retention set. Suffix only on collision ("-1", "-2"),
+    // so normal names never change. Fail-open: a listing failure returns the
+    // plain base rather than blocking the backup.
+    static String findUniqueBase(Context c, Uri tree, String stampBase) {
+        try {
+            Uri children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree));
+            java.util.HashSet<String> taken = new java.util.HashSet<>();
+            try (Cursor q = c.getContentResolver().query(children,
+                    new String[]{DocumentsContract.Document.COLUMN_DISPLAY_NAME}, null, null, null)) {
+                if (q != null) {
+                    while (q.moveToNext()) {
+                        String name = q.getString(0);
+                        if (name == null) continue;
+                        taken.add(stripArchiveSuffixes(name));
+                    }
+                }
+            }
+            for (int n = 0; n < 100; n++) {
+                String candidate = n == 0 ? stampBase : stampBase + "-" + n;
+                if (!taken.contains(candidate)) return candidate;
+            }
+            return stampBase + "-" + System.currentTimeMillis();
+        } catch (Exception e) {
+            Log.w("LibreContactsBackup", "Could not list backup folder for unique name; using plain stamp", e);
+            return stampBase;
         }
     }
 
@@ -660,22 +705,34 @@ public final class BackupManager {
     }
 
     static boolean isTimestamped(String baseName) {
+        return timestampPart(baseName) != null;
+    }
+
+    // Timestamp embedded in a base name, ignoring an optional "-N" collision
+    // suffix from findUniqueBase. Null when no valid stamp is present, so
+    // user files like "librecontacts_notes" never qualify.
+    static LocalDateTime timestampPart(String baseName) {
+        if (baseName == null || !baseName.startsWith("librecontacts_")) return null;
+        String rest = baseName.substring("librecontacts_".length());
         try {
-            LocalDateTime.parse(baseName.substring("librecontacts_".length()), TIMESTAMP_FORMAT);
-            return true;
+            return LocalDateTime.parse(rest, TIMESTAMP_FORMAT);
         } catch (Exception ignored) {
-            return false;
         }
+        int dash = rest.lastIndexOf('-');
+        if (dash > 0 && rest.substring(dash + 1).matches("\\d+")) {
+            try {
+                return LocalDateTime.parse(rest.substring(0, dash), TIMESTAMP_FORMAT);
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
     }
 
     private static Map<String, LocalDateTime> parseTimestamps(List<String> names) {
         Map<String, LocalDateTime> parsed = new HashMap<>();
         for (String name : names) {
-            try {
-                parsed.put(name, LocalDateTime.parse(name.substring("librecontacts_".length()), TIMESTAMP_FORMAT));
-            } catch (Exception ignored) {
-                // Unparseable base name — treated as not a backup by the caller.
-            }
+            LocalDateTime at = timestampPart(name);
+            if (at != null) parsed.put(name, at);
         }
         return parsed;
     }
