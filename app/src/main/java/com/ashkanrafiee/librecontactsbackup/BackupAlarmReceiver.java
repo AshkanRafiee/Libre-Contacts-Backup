@@ -26,7 +26,8 @@ public class BackupAlarmReceiver extends BroadcastReceiver {
         Context context = LocaleHelper.wrap(rawContext);
         String action = intent != null ? intent.getAction() : null;
         if (Intent.ACTION_BOOT_COMPLETED.equals(action) || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)
-                || Intent.ACTION_TIME_CHANGED.equals(action) || Intent.ACTION_TIMEZONE_CHANGED.equals(action)) { AlarmScheduler.scheduleNext(context); return; }
+                || Intent.ACTION_TIME_CHANGED.equals(action) || Intent.ACTION_TIMEZONE_CHANGED.equals(action)
+                || android.app.AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED.equals(action)) { AlarmScheduler.scheduleNext(context); return; }
         // Re-arm first, on this thread: the worker may never get to run.
         try { AlarmScheduler.scheduleNext(context); }
         catch (Exception e) { Log.w("LibreContactsBackup", "Early schedule re-arm failed; worker will retry", e); }
