@@ -1,0 +1,4 @@
+Fixed:
+- Scheduled backups now ask for permission to run at the exact time you set (Android 12 and above); when it is missing, the main screen and a notification say so and open the right settings page
+- The main screen now shows why a scheduled backup was skipped or failed instead of cutting the message off
+- Two backups made within the same second no longer share a name, and a just-finished backup is always kept
