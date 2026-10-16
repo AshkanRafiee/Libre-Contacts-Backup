@@ -39,7 +39,7 @@
     <string name="theme_dark">Sombre</string>
 
     <string name="export_note_full">Les copies manuelles ne sont pas chiffrées et ne sont jamais supprimées par la rétention. Les fichiers CSV et VCF sont des copies simplifiées pour partager avec d\'autres apps — pour une restauration complète, utilisez la sauvegarde automatique.</string>
-    <string name="export_note_compact">Copies manuelles : non chiffrées, non conservées. CSV/VCF : copies simplifiées pour partager.</string>
+    <string name="export_note_compact">Copies manuelles : non chiffrées, non conservées. CSV/VCF : copies simplifiées.</string>
     <string name="export_csv">CSV</string>
     <string name="export_vcf">VCF</string>
 

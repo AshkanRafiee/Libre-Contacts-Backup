@@ -39,7 +39,7 @@
     <string name="theme_dark">Koyu</string>
 
     <string name="export_note_full">Manuel kopyalar şifrelenmez ve saklama süresi tarafından asla silinmez. CSV ve VCF, diğer uygulamalarla paylaşmak için basitleştirilmiş kopyalardır — tam geri yükleme için otomatik yedeklemeyi kullanın.</string>
-    <string name="export_note_compact">Manuel kopyalar: şifresiz, saklanmaz. CSV/VCF paylaşım için basitleştirilmiş kopyalardır.</string>
+    <string name="export_note_compact">Manuel kopyalar: şifresiz, saklanmaz. CSV/VCF basitleştirilmiş kopyalardır.</string>
     <string name="export_csv">CSV</string>
     <string name="export_vcf">VCF</string>
 
