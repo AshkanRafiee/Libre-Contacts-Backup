@@ -354,7 +354,6 @@ public class MainActivity extends Activity {
         // optimization from the exemption prompt, and exact-alarm grants from
         // the Alarms & reminders screen. Exact-missing comes first: without it
         // alarms are inexact no matter what else is fixed.
-        boolean scheduleOn = BackupManager.prefs(this).getBoolean("scheduleEnabled", false);
         if (scheduleOn && !AlarmScheduler.canScheduleExact(this))
             scheduleBuilder.setNeutralButton(getString(R.string.exact_action_allow), (dialog, which) -> AlarmScheduler.openExactSettings(this));
         else if (scheduleOn && isBackgroundRestricted())
