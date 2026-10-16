@@ -69,4 +69,17 @@ public class ExactAlarmTest {
         }
         assertTrue(resolvable || !resolvable);
     }
+
+    @Test public void exactNotificationNeverThrows() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        MainActivity.showExactAlarmNotification(context);
+        // Leave no trace in the shade on the test device.
+        try {
+            android.app.NotificationManager manager =
+                    (android.app.NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (manager != null) manager.cancel(92);
+        } catch (Exception ignored) {
+        }
+        assertTrue(true);
+    }
 }

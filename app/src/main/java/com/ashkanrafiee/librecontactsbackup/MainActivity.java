@@ -38,7 +38,7 @@ import java.util.*;
 public class MainActivity extends Activity {
     static final int FOLDER = 10, FILE = 11, MANUAL_CSV = 30, MANUAL_VCF = 31;
     int mint, background, card, muted;
-    TextView status, statusDetail, folderValue, scheduleValue, keepValue, languageValue, restoreStatus;
+    TextView status, statusDetail, exactBanner, folderValue, scheduleValue, keepValue, languageValue, restoreStatus;
     Switch encryptionSwitch; Dialog restoreProgress; TextView restoreProgressText; String pendingManualFormat; boolean pendingBackup; int pendingScheduleMode; String pendingNotificationActions; boolean compact;
     /** Spacing-only tightening: true on small screens (like {@link #compact}) OR any non-English language. Never used for font sizes or control heights — see {@link #build()}. */
     boolean dense;
@@ -181,6 +181,17 @@ public class MainActivity extends Activity {
         backupButton = backup;
         LinearLayout.LayoutParams actionParams = new LinearLayout.LayoutParams(-1, dp(v(48, 44))); actionParams.setMargins(0, dp(v(12, 10)), 0, 0); hero.addView(backup, actionParams); body.addView(hero, margins(0, 0, 0, d(16, 18)));
 
+        // Visible at open with zero taps whenever the schedule is on but exact
+        // alarms are not granted: backups still run, just late. Tapping it
+        // opens the system Alarms & reminders screen directly. Hidden
+        // otherwise (see load()), so it never nags about an irrelevant state.
+        exactBanner = label("", 12, resColor(R.color.amber));
+        exactBanner.setBackground(rounded(card, 15));
+        exactBanner.setPadding(dp(14), dp(d(12, 10)), dp(14), dp(d(12, 10)));
+        exactBanner.setOnClickListener(v -> AlarmScheduler.openExactSettings(this));
+        exactBanner.setVisibility(View.GONE);
+        body.addView(exactBanner, margins(0, 0, 0, v(8, 5)));
+
         body.addView(label(getString(R.string.section_pocket), 10, muted), margins(0, 0, 0, v(8, 5)));
         folderValue = label(BackupManager.folderLabel(this), 13, resColor(R.color.link));
         body.addView(setting(getString(R.string.setting_folder_title), getString(R.string.setting_folder_subtitle), folderValue, false, v -> chooseFolder()), margins(0, 0, 0, v(8, 5)));
@@ -281,6 +292,13 @@ public class MainActivity extends Activity {
         else if (enabled && !BatteryHelper.isExempt(this)) scheduleLabel += " · " + getString(R.string.schedule_battery);
         scheduleValue.setText(scheduleLabel);
         keepValue.setText(retentionLabel(this));
+        boolean exactMissing = enabled && !AlarmScheduler.canScheduleExact(this);
+        if (exactMissing) {
+            exactBanner.setText(getString(R.string.schedule_exact_needed) + ". " + getString(R.string.exact_action_allow) + ".");
+            exactBanner.setVisibility(View.VISIBLE);
+        } else {
+            exactBanner.setVisibility(View.GONE);
+        }
         long restored = BackupManager.prefs(this).getLong("lastRestore", 0); int restoredCount = BackupManager.prefs(this).getInt("lastRestoreCount", 0);
         if (restored > 0) {
             restoreStatus.setVisibility(View.VISIBLE);
@@ -323,8 +341,25 @@ public class MainActivity extends Activity {
             }
         }).start();
     }
-    @Override protected void onResume() { super.onResume(); resumed = new WeakReference<>(this); AlarmScheduler.scheduleNext(this); load(); }
+    @Override protected void onResume() { super.onResume(); resumed = new WeakReference<>(this); AlarmScheduler.scheduleNext(this); load(); maybeExactAlarmNotice(); }
     @Override protected void onPause() { super.onPause(); if (resumed.get() == this) resumed = new WeakReference<>(null); }
+    // One notification per missing-episode: posted the first time an open
+    // finds the schedule on with exact ungranted, then silent until granted
+    // (which clears the flag) so it informs without spamming every launch.
+    // The banner above persists regardless, so dismissing the notification
+    // without granting never hides the in-app state.
+    void maybeExactAlarmNotice() {
+        SharedPreferences p = BackupManager.prefs(this);
+        boolean enabled = p.getBoolean("scheduleEnabled", false);
+        if (enabled && !AlarmScheduler.canScheduleExact(this)) {
+            if (!p.getBoolean("exactMissingNotified", false)) {
+                p.edit().putBoolean("exactMissingNotified", true).apply();
+                showExactAlarmNotification(this);
+            }
+        } else if (p.getBoolean("exactMissingNotified", false)) {
+            p.edit().remove("exactMissingNotified").apply();
+        }
+    }
     void scheduleDialog() {
         LinearLayout titleBox = new LinearLayout(this); titleBox.setOrientation(LinearLayout.VERTICAL); titleBox.setPadding(dp(24), dp(20), dp(24), 0);
         titleBox.addView(label(getString(R.string.dialog_schedule_title), 18, resColor(R.color.text_primary)));
@@ -1044,6 +1079,22 @@ public class MainActivity extends Activity {
         } catch (Exception error) { Log.e("LibreContactsBackup", "Unable to show scheduled backup notification", error); }
     }
     public static void showScheduledNotification(Context context, String result, boolean success) { showScheduledNotification(context, result, success, null); }
+    /**
+     * Tells the user exact alarms are missing and must be granted for on-time
+     * backups. Tapping it opens the system Alarms & reminders screen for this
+     * app directly (a content intent, not a trampoline). Never throws.
+     */
+    public static void showExactAlarmNotification(Context context) {
+        try {
+            final String channelId = "scheduled_backups";
+            NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(new NotificationChannel(channelId, context.getString(R.string.notification_channel_scheduled_backups), NotificationManager.IMPORTANCE_DEFAULT));
+            PendingIntent pending = PendingIntent.getActivity(context, 92, AlarmScheduler.exactRequestIntent(context), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            Notification.Builder builder = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(context, channelId) : new Notification.Builder(context);
+            builder.setSmallIcon(android.R.drawable.stat_notify_sync).setContentTitle(context.getString(R.string.notification_backup_needs_attention_title)).setContentText(context.getString(R.string.schedule_exact_needed)).setAutoCancel(true).setContentIntent(pending).setCategory(Notification.CATEGORY_REMINDER);
+            manager.notify(92, builder.build());
+        } catch (Exception error) { Log.e("LibreContactsBackup", "Unable to show exact-alarm notification", error); }
+    }
 
     static final class ContactOrbit extends View {
         final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
