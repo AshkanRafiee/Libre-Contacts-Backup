@@ -1,17 +1,17 @@
 # Libre Contacts Backup
 
-A free, open-source, native Android app that backs up your contacts — fully offline, fully local, fully yours.
+A free, open-source, native Android app that backs up your contacts — local-first, private, and fully yours.
 
 - **Libre & open source** — GPL-3.0, no proprietary bits, buildable from source, [available on F-Droid](https://f-droid.org/en/packages/com.ashkanrafiee.librecontactsbackup/).
 - **Private by design** — no account, no cloud, no analytics, no network permission at all. Contacts are only read when a backup runs. See the [privacy policy](PRIVACY.md) for the full boundary.
-- **Local by design** — backups are written to a folder you choose on your own device (or SD card); nothing is ever uploaded anywhere.
+- **Local by design** — backups are written to a folder you choose on your own device (or SD card); the app never uploads them automatically. You control any export, report sharing, or cloud-backed storage you choose.
 - **Scheduled backups** — daily, weekly, or monthly at a time you choose, running automatically in the background, entirely on-device (on Android 12 and above, allow alarms & reminders when asked so they run exactly on time).
 - **Retention by age** — keep the newest backups per day, week, and month with counts you choose (e.g. 7 daily + 4 weekly + 3 monthly), so backups of increasing age stay available while old ones thin out; or keep it simple and just keep the last N sets.
 - **As close to lossless as the Contacts Provider allows** — preserves the full Contact → RawContact → Data hierarchy (every readable field, every account, every custom type), not a lossy flattened copy.
 - **SIM card phonebook included** — every backup also captures the contacts stored on your SIM card; on restore, you choose whether they are written back to the SIM card, into the device address book, or both — and on phones with more than one SIM (including an eSIM), which of the available cards to write them to.
 - **Optional encryption** — AES-256-GCM with a key derived from your password (PBKDF2, 600,000 iterations); the password itself is stored on-device behind an Android Keystore key so scheduled backups can run unattended.
 - **Personalized display** — choose the app language and system, light, or dark theme from the Display menu in the footer.
-- **Help when needed** — create a problem report from About and choose whether to include anonymized technical diagnostics before sharing it with your email app.
+- **Help when needed** — create a problem report from About and choose whether to include anonymized technical diagnostics before sharing it with an email or sharing app.
 
 ## Download
 
@@ -60,8 +60,8 @@ Instrumented tests run against a connected device/emulator with `adb`. Build the
 
 ```bash
 ./gradlew assembleDebug assembleDebugAndroidTest
-adb install -t -g app/build/outputs/apk/debug/app-debug.apk
-adb install -t -g app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb install -r -t -g app/build/outputs/apk/debug/app-debug.apk
+adb install -r -t -g app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 adb shell am instrument -w \
   com.ashkanrafiee.librecontactsbackup.test/androidx.test.runner.AndroidJUnitRunner
 ```

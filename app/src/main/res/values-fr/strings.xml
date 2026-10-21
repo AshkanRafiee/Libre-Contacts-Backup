@@ -199,7 +199,7 @@
     <string name="about_no_browser">Aucun navigateur disponible</string>
     <string name="about_report_issue_label">Signaler un problème</string>
     <string name="report_issue_title">Signaler un problème</string>
-    <string name="report_issue_consent_message">Voulez-vous ajouter des diagnostics techniques anonymisés à la fin de l’e-mail ? Ils contiennent des détails sur l’application et Android ainsi que l’état des fonctionnalités, mais jamais de données de contacts, numéros, adresses e-mail, mots de passe, sauvegardes ou chemins de stockage. Le texte de votre e-mail ne sera partagé qu’après votre choix. Vous pouvez signaler le problème sans diagnostic.</string>
+    <string name="report_issue_consent_message">Voulez-vous ajouter des diagnostics techniques anonymisés à la fin du rapport ? Ils contiennent des détails sur l’application et Android ainsi que l’état des fonctionnalités, mais jamais de données de contacts, numéros, adresses e-mail, mots de passe, sauvegardes ou chemins de stockage. Le texte du rapport ne sera partagé qu’après le choix d’une application d’e-mail ou de partage. Vous pouvez signaler le problème sans diagnostic.</string>
     <string name="report_issue_with_diagnostics">Joindre les diagnostics</string>
     <string name="report_issue_without_diagnostics">Sans diagnostic</string>
     <string name="report_issue_subject">Rapport de problème Libre Contacts Backup</string>

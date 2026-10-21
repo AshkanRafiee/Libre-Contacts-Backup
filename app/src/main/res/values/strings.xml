@@ -217,7 +217,7 @@
     <string name="about_no_browser">No browser available</string>
     <string name="about_report_issue_label">Report a problem</string>
     <string name="report_issue_title">Report a problem</string>
-    <string name="report_issue_consent_message">Would you like to add anonymized technical diagnostics at the end of the email? They contain app and Android details and feature state, but never contact data, phone numbers, email addresses, passwords, backup files, or storage paths. Your email text is shared only after you choose an app. You can report without diagnostics.</string>
+    <string name="report_issue_consent_message">Would you like to add anonymized technical diagnostics at the end of the report? They contain app and Android details and feature state, but never contact data, phone numbers, email addresses, passwords, backup files, or storage paths. The report text is shared only after you choose an email or sharing app. You can report without diagnostics.</string>
     <string name="report_issue_with_diagnostics">Include diagnostics</string>
     <string name="report_issue_without_diagnostics">Without diagnostics</string>
     <string name="report_issue_subject">Libre Contacts Backup problem report</string>

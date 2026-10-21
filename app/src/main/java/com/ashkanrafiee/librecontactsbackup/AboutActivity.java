@@ -84,15 +84,25 @@ public class AboutActivity extends Activity {
     }
     private void shareReport(boolean includeDiagnostics) {
         Intent share = buildShareIntent(includeDiagnostics);
+        Intent email = buildEmailIntent(includeDiagnostics);
         try {
-            startActivity(Intent.createChooser(share, getString(R.string.report_issue_share_title)));
-        } catch (Exception shareError) {
-            try {
-                startActivity(buildEmailIntent(includeDiagnostics));
-            } catch (Exception emailError) {
-                Toast.makeText(this, getString(R.string.report_issue_no_app), Toast.LENGTH_LONG).show();
+            if (share.resolveActivity(getPackageManager()) != null) {
+                startActivity(Intent.createChooser(share, getString(R.string.report_issue_share_title)));
+                return;
             }
+            if (email.resolveActivity(getPackageManager()) != null) {
+                startActivity(email);
+                return;
+            }
+        } catch (Exception ignored) {
+            try {
+                if (email.resolveActivity(getPackageManager()) != null) {
+                    startActivity(email);
+                    return;
+                }
+            } catch (Exception ignoredEmail) { }
         }
+        Toast.makeText(this, getString(R.string.report_issue_no_app), Toast.LENGTH_LONG).show();
     }
     Intent buildShareIntent(boolean includeDiagnostics) {
         return new Intent(Intent.ACTION_SEND).setType("text/plain")

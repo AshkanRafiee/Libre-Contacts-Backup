@@ -199,7 +199,7 @@
     <string name="about_no_browser">没有可用的浏览器</string>
     <string name="about_report_issue_label">报告问题</string>
     <string name="report_issue_title">报告问题</string>
-    <string name="report_issue_consent_message">要在邮件末尾添加匿名技术诊断信息吗？其中包含应用和 Android 详情以及功能状态，但绝不包含联系人数据、电话号码、电子邮件地址、密码、备份文件或存储路径。只有在您选择应用后，您的邮件内容才会被分享。您也可以不添加诊断信息。</string>
+    <string name="report_issue_consent_message">要在报告末尾添加匿名技术诊断信息吗？其中包含应用和 Android 详情以及功能状态，但绝不包含联系人数据、电话号码、电子邮件地址、密码、备份文件或存储路径。只有在您选择邮件或分享应用后，报告内容才会被分享。您也可以不添加诊断信息。</string>
     <string name="report_issue_with_diagnostics">附加诊断信息</string>
     <string name="report_issue_without_diagnostics">不附加诊断</string>
     <string name="report_issue_subject">Libre Contacts Backup 问题报告</string>

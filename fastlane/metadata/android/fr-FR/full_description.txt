@@ -1,4 +1,4 @@
-Libre Contacts Backup est une application Android native et libre (FLOSS) pour des sauvegardes de contacts privées et axées sur le local. Aucun compte, aucun cloud, aucun pistage — vos contacts ne quittent jamais votre appareil, sauf si vous déplacez vous-même le fichier de sauvegarde.
+Libre Contacts Backup est une application Android native et libre (FLOSS) pour des sauvegardes de contacts privées et axées sur le local. Aucun compte, aucun pistage et aucun envoi automatique — vos contacts restent sur votre appareil, sauf si vous déplacez vous-même un fichier de sauvegarde, exportez des données ou partagez un rapport.
 
 Fonctionnalités :
 * Sauvegarde sans perte préservant toute la hiérarchie Contact → RawContact → Data, y compris les groupes de contacts
@@ -10,6 +10,6 @@ Fonctionnalités :
 * Exports manuels aux formats CSV et VCF ; le fichier CSV s'ouvre dans Excel et dans les autres tableurs
 * Rétention par âge — conserver les sauvegardes les plus récentes par jour, semaine et mois selon les nombres que vous choisissez (par exemple 7 quotidiennes, 4 hebdomadaires, 3 mensuelles), pour que le passé récent reste densément sauvegardé et que l'historique plus ancien s'éclaircisse — ou simplement garder les N derniers ensembles
 * Choisissez la langue et le thème système, clair ou sombre dans le menu Affichage
-* Créez un rapport de problème depuis À propos et choisissez d’inclure ou non des diagnostics techniques anonymisés avant de le partager avec votre application d’e-mail
+* Créez un rapport de problème depuis À propos et choisissez d’inclure ou non des diagnostics techniques anonymisés avant de le partager avec une application d’e-mail ou de partage
 
 Libre Contacts Backup est gratuit et open source. S'il vous est utile, vous pouvez soutenir son développement — les options de don figurent dans la section Donate du README du projet : https://librecontactsbackup.ashkanrafiee.com/#donate

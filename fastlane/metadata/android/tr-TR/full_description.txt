@@ -1,4 +1,4 @@
-Libre Contacts Backup, özel ve önce yerel odaklı kişi yedeklemeleri için yerel ve özgür (FLOSS) bir Android uygulamasıdır. Hesap yok, bulut yok, izleme yok — yedekleme dosyasını kendiniz taşımadığınız sürece kişileriniz cihazınızdan asla ayrılmaz.
+Libre Contacts Backup, özel ve önce yerel odaklı kişi yedeklemeleri için yerel ve özgür (FLOSS) bir Android uygulamasıdır. Hesap yok, izleme yok ve otomatik yükleme yok — bir yedekleme dosyasını taşımayı, verileri dışa aktarmayı veya rapor paylaşmayı seçmediğiniz sürece kişileriniz cihazınızda kalır.
 
 Özellikler:
 * Kişi grupları da dahil olmak üzere tam Contact → RawContact → Data hiyerarşisini koruyan kayıpsız yedekleme
@@ -10,6 +10,6 @@ Libre Contacts Backup, özel ve önce yerel odaklı kişi yedeklemeleri için ye
 * Manuel CSV ve VCF dışa aktarımları; CSV dosyası Excel ve diğer elektronik tablo uygulamalarında açılır
 * Yaşa göre saklama — son yedekleri gün, hafta ve ay bazında sizin seçtiğiniz adetlerle koruyun (örneğin 7 günlük, 4 haftalık, 3 aylık), böylece yakın geçmiş sıkı yedeklenirken daha eski geçmiş seyreltilir — ya da yalnızca son N kümenizi tutun
 * Uygulama dilini ve sistem, açık veya koyu temayı Görünüm menüsünden seçin
-* Hakkında bölümünden sorun bildirimi oluşturun ve e-posta uygulamanızla paylaşmadan önce anonimleştirilmiş teknik tanılamaların eklenip eklenmeyeceğini seçin
+* Hakkında bölümünden sorun bildirimi oluşturun ve e-posta veya paylaşım uygulamanızla paylaşmadan önce anonimleştirilmiş teknik tanılamaların eklenip eklenmeyeceğini seçin
 
 Libre Contacts Backup ücretsiz ve açık kaynaklıdır. İşinize yarıyorsa, geliştirilmesini destekleyebilirsiniz — bağış seçenekleri proje README'sinin Donate bölümünde yer alır: https://librecontactsbackup.ashkanrafiee.com/#donate

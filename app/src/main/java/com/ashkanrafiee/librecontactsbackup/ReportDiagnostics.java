@@ -2,6 +2,7 @@ package com.ashkanrafiee.librecontactsbackup;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Build;
 
 import java.util.Locale;
@@ -13,7 +14,7 @@ final class ReportDiagnostics {
     static String create(Context context) {
         StringBuilder report = new StringBuilder();
         report.append("Libre Contacts Backup diagnostic report\n");
-        report.append("report_format=1\n");
+        report.append("report_format=2\n");
         report.append("app_version=").append(safe(appVersion(context))).append('\n');
         report.append("android_version=").append(safe(Build.VERSION.RELEASE)).append('\n');
         report.append("android_api=").append(Build.VERSION.SDK_INT).append('\n');
@@ -24,9 +25,13 @@ final class ReportDiagnostics {
         report.append("language=").append(safe(Locale.getDefault().toLanguageTag())).append('\n');
         report.append("contacts_scope=full_provider\n");
         report.append("sim_contacts_scope=best_effort\n");
-        report.append("contacts_permission=")
+        report.append("contacts_read_permission=")
                 .append(context.checkSelfPermission(Manifest.permission.READ_CONTACTS)
-                        == android.content.pm.PackageManager.PERMISSION_GRANTED)
+                        == PackageManager.PERMISSION_GRANTED)
+                .append('\n');
+        report.append("contacts_write_permission=")
+                .append(context.checkSelfPermission(Manifest.permission.WRITE_CONTACTS)
+                        == PackageManager.PERMISSION_GRANTED)
                 .append('\n');
         report.append("folder_configured=").append(!BackupManager.folder(context).isEmpty()).append('\n');
         report.append("encrypted_backups=")

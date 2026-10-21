@@ -199,7 +199,7 @@
     <string name="about_no_browser">مرورگری در دسترس نیست</string>
     <string name="about_report_issue_label">گزارش مشکل</string>
     <string name="report_issue_title">گزارش مشکل</string>
-    <string name="report_issue_consent_message">آیا می‌خواهید گزارش فنی ناشناس در پایان ایمیل اضافه شود؟ این گزارش شامل جزئیات برنامه و Android و وضعیت قابلیت‌هاست، اما هرگز شامل داده‌های مخاطبین، شماره‌های تلفن، نشانی‌های ایمیل، گذرواژه‌ها، فایل‌های پشتیبان یا مسیرهای ذخیره‌سازی نیست. متن ایمیل شما فقط پس از انتخاب برنامه به اشتراک گذاشته می‌شود. می‌توانید بدون گزارش فنی هم گزارش دهید.</string>
+    <string name="report_issue_consent_message">آیا می‌خواهید گزارش فنی ناشناس در پایان گزارش اضافه شود؟ این گزارش شامل جزئیات برنامه و Android و وضعیت قابلیت‌هاست، اما هرگز شامل داده‌های مخاطبین، شماره‌های تلفن، نشانی‌های ایمیل، گذرواژه‌ها، فایل‌های پشتیبان یا مسیرهای ذخیره‌سازی نیست. متن گزارش شما فقط پس از انتخاب برنامهٔ ایمیل یا اشتراک‌گذاری به اشتراک گذاشته می‌شود. می‌توانید بدون گزارش فنی هم گزارش دهید.</string>
     <string name="report_issue_with_diagnostics">پیوست گزارش فنی</string>
     <string name="report_issue_without_diagnostics">بدون گزارش فنی</string>
     <string name="report_issue_subject">گزارش مشکل Libre Contacts Backup</string>

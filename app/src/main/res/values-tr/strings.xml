@@ -199,7 +199,7 @@
     <string name="about_no_browser">Kullanılabilir tarayıcı yok</string>
     <string name="about_report_issue_label">Sorun bildir</string>
     <string name="report_issue_title">Sorun bildir</string>
-    <string name="report_issue_consent_message">Anonimleştirilmiş teknik tanılamaları e-postanın sonuna eklemek ister misiniz? Uygulama ve Android ayrıntıları ile özellik durumunu içerir; ancak kişi verilerini, telefon numaralarını, e-posta adreslerini, parolaları, yedekleri veya depolama yollarını asla içermez. E-posta metniniz yalnızca bir uygulama seçtikten sonra paylaşılır. Tanılama olmadan da bildirim yapabilirsiniz.</string>
+    <string name="report_issue_consent_message">Anonimleştirilmiş teknik tanılamaları raporun sonuna eklemek ister misiniz? Uygulama ve Android ayrıntıları ile özellik durumunu içerir; ancak kişi verilerini, telefon numaralarını, e-posta adreslerini, parolaları, yedekleri veya depolama yollarını asla içermez. Rapor metni yalnızca bir e-posta veya paylaşım uygulaması seçtikten sonra paylaşılır. Tanılama olmadan da bildirim yapabilirsiniz.</string>
     <string name="report_issue_with_diagnostics">Tanılamaları ekle</string>
     <string name="report_issue_without_diagnostics">Tanılama olmadan</string>
     <string name="report_issue_subject">Libre Contacts Backup sorun bildirimi</string>

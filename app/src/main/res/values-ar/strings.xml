@@ -199,7 +199,7 @@
     <string name="about_no_browser">لا يوجد متصفح متاح</string>
     <string name="about_report_issue_label">الإبلاغ عن مشكلة</string>
     <string name="report_issue_title">الإبلاغ عن مشكلة</string>
-    <string name="report_issue_consent_message">هل تريد إضافة تشخيصات تقنية مجهّلة في نهاية البريد؟ تتضمن تفاصيل التطبيق وAndroid وحالة الميزات، ولا تتضمن أبدًا بيانات جهات الاتصال أو أرقام الهاتف أو عناوين البريد الإلكتروني أو كلمات المرور أو ملفات النسخ الاحتياطية أو مسارات التخزين. لن تتم مشاركة نص بريدك إلا بعد اختيار تطبيق. يمكنك الإبلاغ دون تشخيصات.</string>
+    <string name="report_issue_consent_message">هل تريد إضافة تشخيصات تقنية مجهّلة في نهاية التقرير؟ تتضمن تفاصيل التطبيق وAndroid وحالة الميزات، ولا تتضمن أبدًا بيانات جهات الاتصال أو أرقام الهاتف أو عناوين البريد الإلكتروني أو كلمات المرور أو ملفات النسخ الاحتياطية أو مسارات التخزين. لن تتم مشاركة نص التقرير إلا بعد اختيار تطبيق بريد أو مشاركة. يمكنك الإبلاغ دون تشخيصات.</string>
     <string name="report_issue_with_diagnostics">إرفاق التشخيصات</string>
     <string name="report_issue_without_diagnostics">دون تشخيصات</string>
     <string name="report_issue_subject">تقرير مشكلة في Libre Contacts Backup</string>

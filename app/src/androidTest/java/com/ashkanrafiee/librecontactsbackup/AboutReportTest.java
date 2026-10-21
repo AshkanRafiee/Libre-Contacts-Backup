@@ -59,7 +59,20 @@ public class AboutReportTest {
                 String body = activity.buildShareIntent(true).getStringExtra(Intent.EXTRA_TEXT);
                 assertTrue(body.startsWith(activity.getString(R.string.report_issue_body)));
                 assertTrue(body.contains("--- Anonymized diagnostics ---"));
-                assertTrue(body.contains("report_format=1"));
+                assertTrue(body.contains("report_format=2"));
+            });
+        }
+    }
+
+    @Test public void email_fallback_uses_the_same_report_content() {
+        try (ActivityScenario<AboutActivity> scenario = ActivityScenario.launch(AboutActivity.class)) {
+            scenario.onActivity(activity -> {
+                Intent email = activity.buildEmailIntent(false);
+                assertEquals(Intent.ACTION_SENDTO, email.getAction());
+                assertEquals("mailto", email.getData().getScheme());
+                assertEquals(AboutActivity.CONTACT_EMAIL, email.getData().getSchemeSpecificPart());
+                assertEquals(activity.getString(R.string.report_issue_body),
+                        email.getStringExtra(Intent.EXTRA_TEXT));
             });
         }
     }

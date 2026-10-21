@@ -199,7 +199,7 @@
     <string name="about_no_browser">Kein Browser verfügbar</string>
     <string name="about_report_issue_label">Problem melden</string>
     <string name="report_issue_title">Problem melden</string>
-    <string name="report_issue_consent_message">Möchtest du anonymisierte technische Diagnosedaten am Ende der E-Mail hinzufügen? Sie enthalten App- und Android-Details sowie den Funktionsstatus, aber niemals Kontaktdaten, Telefonnummern, E-Mail-Adressen, Passwörter, Backups oder Speicherpfade. Dein E-Mail-Text wird erst nach deiner Auswahl geteilt. Du kannst auch ohne Diagnosedaten melden.</string>
+    <string name="report_issue_consent_message">Möchtest du anonymisierte technische Diagnosedaten am Ende des Berichts hinzufügen? Sie enthalten App- und Android-Details sowie den Funktionsstatus, aber niemals Kontaktdaten, Telefonnummern, E-Mail-Adressen, Passwörter, Backups oder Speicherpfade. Der Berichtstext wird erst geteilt, wenn du eine E-Mail- oder Teilen-App auswählst. Du kannst auch ohne Diagnosedaten melden.</string>
     <string name="report_issue_with_diagnostics">Diagnose anhängen</string>
     <string name="report_issue_without_diagnostics">Ohne Diagnose</string>
     <string name="report_issue_subject">Problembericht zu Libre Contacts Backup</string>

@@ -20,7 +20,7 @@ public class ReportDiagnosticsTest {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         String report = ReportDiagnostics.create(context);
 
-        assertTrue(report.contains("report_format=1"));
+        assertTrue(report.contains("report_format=2"));
         assertTrue(report.contains("app_version="));
         assertTrue(report.contains("android_version="));
         assertTrue(report.contains("android_api="));
@@ -30,6 +30,8 @@ public class ReportDiagnosticsTest {
         assertTrue(report.contains("build_id="));
         assertTrue(report.contains("contacts_scope=full_provider"));
         assertTrue(report.contains("sim_contacts_scope=best_effort"));
+        assertTrue(report.contains("contacts_read_permission="));
+        assertTrue(report.contains("contacts_write_permission="));
         assertFalse(report.contains("content://"));
         assertFalse(report.contains("/data/"));
         assertFalse(report.contains("/storage/"));
@@ -42,7 +44,8 @@ public class ReportDiagnosticsTest {
         String[] fields = {
                 "report_format", "app_version", "android_version", "android_api", "device", "rom",
                 "build_number", "build_id", "language", "contacts_scope", "sim_contacts_scope",
-                "contacts_permission", "folder_configured", "encrypted_backups", "scheduled_backups",
+                "contacts_read_permission", "contacts_write_permission", "folder_configured",
+                "encrypted_backups", "scheduled_backups",
                 "retention_mode", "last_run_status"
         };
         for (String field : fields) expected.add(field);
@@ -79,7 +82,9 @@ public class ReportDiagnosticsTest {
         SharedPreferences prefs = BackupManager.prefs(context);
         String oldFolder = prefs.getString("folder", null);
         String oldMessage = prefs.getString("lastRunMessage", null);
+        boolean hadSuccess = prefs.contains("lastRunSuccess");
         boolean oldSuccess = prefs.getBoolean("lastRunSuccess", false);
+        boolean hadRun = prefs.contains("lastRun");
         long oldRun = prefs.getLong("lastRun", 0);
         try {
             prefs.edit().putString("folder", "content://contacts/private-folder")
@@ -95,15 +100,16 @@ public class ReportDiagnosticsTest {
             SharedPreferences.Editor restore = prefs.edit();
             if (oldFolder == null) restore.remove("folder"); else restore.putString("folder", oldFolder);
             if (oldMessage == null) restore.remove("lastRunMessage"); else restore.putString("lastRunMessage", oldMessage);
-            restore.putBoolean("lastRunSuccess", oldSuccess).putLong("lastRun", oldRun).commit();
+            if (hadSuccess) restore.putBoolean("lastRunSuccess", oldSuccess); else restore.remove("lastRunSuccess");
+            if (hadRun) restore.putLong("lastRun", oldRun); else restore.remove("lastRun");
+            restore.commit();
         }
     }
 
     @Test public void reportTemplate_hasFillInSections() {
         String body = InstrumentationRegistry.getInstrumentation().getTargetContext()
                 .getString(R.string.report_issue_body);
-        assertTrue(body.contains("Problem description:"));
-        assertTrue(body.contains("Steps to reproduce:"));
-        assertTrue(body.contains("Additional details:"));
+        assertTrue(body.contains("\n1.\n2.\n3."));
+        assertTrue(body.split("\n\n").length >= 4);
     }
 }
