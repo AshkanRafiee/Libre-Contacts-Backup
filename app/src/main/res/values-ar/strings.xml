@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Libre Contacts Backup</string>
-    <string name="tagline_offline_encrypted">دون اتصال ومشفّرة</string>
+    <string name="tagline_offline_private">دون اتصال وخاصة</string>
     <string name="contact_orbit_content_description">رسم توضيحي لشبكة جهات الاتصال</string>
 
     <string name="hero_label">جهات اتصالك</string>

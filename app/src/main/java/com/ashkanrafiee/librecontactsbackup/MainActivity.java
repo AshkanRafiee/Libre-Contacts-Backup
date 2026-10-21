@@ -157,7 +157,7 @@ public class MainActivity extends Activity {
         LinearLayout brand = new LinearLayout(this); brand.setGravity(Gravity.CENTER_VERTICAL);
         TextView mark = label("LCB", compact ? 14 : 15, resColor(R.color.accent_ink)); mark.setGravity(Gravity.CENTER); mark.setTypeface(null, android.graphics.Typeface.BOLD); mark.setBackground(rounded(mint, 12)); mark.setContentDescription(getString(R.string.app_name)); brand.addView(mark, new LinearLayout.LayoutParams(dp(v(48, 45)), dp(v(38, 34))));
         LinearLayout name = new LinearLayout(this); name.setOrientation(LinearLayout.VERTICAL);
-        name.addView(label(getString(R.string.app_name), compact ? 18 : 22, resColor(R.color.text_primary))); name.addView(label(getString(R.string.tagline_offline_encrypted), 12, muted));
+        name.addView(label(getString(R.string.app_name), compact ? 18 : 22, resColor(R.color.text_primary))); name.addView(label(getString(R.string.tagline_offline_private), 12, muted));
         LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(-2, -2); nameParams.setMarginStart(dp(10)); brand.addView(name, nameParams);
         header.addView(brand, new LinearLayout.LayoutParams(-1, -2));
         body.addView(header, margins(0, 0, 0, v(12, 10)));

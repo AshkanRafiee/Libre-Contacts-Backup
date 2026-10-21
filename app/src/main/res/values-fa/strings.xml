@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Libre Contacts Backup</string>
-    <string name="tagline_offline_encrypted">آفلاین و رمزگذاری‌شده</string>
+    <string name="tagline_offline_private">آفلاین و خصوصی</string>
     <string name="contact_orbit_content_description">تصویر شبکهٔ مخاطبین</string>
 
     <string name="hero_label">مخاطبین شما</string>

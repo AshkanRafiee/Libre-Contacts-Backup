@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Libre Contacts Backup</string>
-    <string name="tagline_offline_encrypted">Çevrimdışı ve şifreli</string>
+    <string name="tagline_offline_private">Çevrimdışı ve özel</string>
     <string name="contact_orbit_content_description">Kişi ağı görseli</string>
 
     <string name="hero_label">KİŞİLERİN</string>

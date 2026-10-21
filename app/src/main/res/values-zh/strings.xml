@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Libre Contacts Backup</string>
-    <string name="tagline_offline_encrypted">离线且加密</string>
+    <string name="tagline_offline_private">离线且注重隐私</string>
     <string name="contact_orbit_content_description">联系人网络插图</string>
 
     <string name="hero_label">你的联系人</string>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Libre Contacts Backup</string>
-    <string name="tagline_offline_encrypted">Hors ligne et chiffré</string>
+    <string name="tagline_offline_private">Hors ligne et privé</string>
     <string name="contact_orbit_content_description">Illustration du réseau de contacts</string>
 
     <string name="hero_label">VOS CONTACTS</string>
