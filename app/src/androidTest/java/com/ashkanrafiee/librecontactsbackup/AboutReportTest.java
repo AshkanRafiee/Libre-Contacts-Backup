@@ -3,6 +3,7 @@ package com.ashkanrafiee.librecontactsbackup;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.content.Intent;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -32,6 +33,33 @@ public class AboutReportTest {
                         activity.getString(R.string.about_report_issue_label));
                 assertNotNull("report action is missing", report);
                 assertTrue("report action is not clickable", report.hasOnClickListeners());
+            });
+        }
+    }
+
+    @Test public void report_intent_without_diagnostics_contains_only_template() {
+        try (ActivityScenario<AboutActivity> scenario = ActivityScenario.launch(AboutActivity.class)) {
+            scenario.onActivity(activity -> {
+                Intent report = activity.buildShareIntent(false);
+                assertEquals(Intent.ACTION_SEND, report.getAction());
+                assertEquals("text/plain", report.getType());
+                assertEquals(AboutActivity.CONTACT_EMAIL,
+                        report.getStringArrayExtra(Intent.EXTRA_EMAIL)[0]);
+                assertEquals(activity.getString(R.string.report_issue_subject),
+                        report.getStringExtra(Intent.EXTRA_SUBJECT));
+                assertEquals(activity.getString(R.string.report_issue_body),
+                        report.getStringExtra(Intent.EXTRA_TEXT));
+            });
+        }
+    }
+
+    @Test public void report_intent_with_diagnostics_appends_diagnostics() {
+        try (ActivityScenario<AboutActivity> scenario = ActivityScenario.launch(AboutActivity.class)) {
+            scenario.onActivity(activity -> {
+                String body = activity.buildShareIntent(true).getStringExtra(Intent.EXTRA_TEXT);
+                assertTrue(body.startsWith(activity.getString(R.string.report_issue_body)));
+                assertTrue(body.contains("--- Anonymized diagnostics ---"));
+                assertTrue(body.contains("report_format=1"));
             });
         }
     }

@@ -23,7 +23,7 @@ final class ReportDiagnostics {
         report.append("build_id=").append(safe(Build.ID)).append('\n');
         report.append("language=").append(safe(Locale.getDefault().toLanguageTag())).append('\n');
         report.append("contacts_scope=full_provider\n");
-        report.append("sim_contacts_scope=enabled\n");
+        report.append("sim_contacts_scope=best_effort\n");
         report.append("contacts_permission=")
                 .append(context.checkSelfPermission(Manifest.permission.READ_CONTACTS)
                         == android.content.pm.PackageManager.PERMISSION_GRANTED)
@@ -34,7 +34,9 @@ final class ReportDiagnostics {
         report.append("scheduled_backups=")
                 .append(BackupManager.prefs(context).getBoolean("scheduleEnabled", false)).append('\n');
         report.append("retention_mode=")
-                .append(safe(BackupManager.prefs(context).getString("retentionMode", "simple"))).append('\n');
+                .append(BackupManager.retentionPolicy(context).mode ==
+                        com.ashkanrafiee.librecontactsbackup.retention.RetentionPolicy.Mode.PERIODIC
+                        ? "periodic" : "simple").append('\n');
         report.append("last_run_status=").append(lastRunStatus(context)).append('\n');
         return report.toString();
     }
@@ -46,11 +48,7 @@ final class ReportDiagnostics {
     }
 
     private static String appVersion(Context context) {
-        try {
-            return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
-        } catch (Exception ignored) {
-            return "unknown";
-        }
+        return BuildConfig.VERSION_NAME;
     }
 
     private static String deviceName() {

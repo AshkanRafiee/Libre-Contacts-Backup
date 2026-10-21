@@ -4,6 +4,7 @@ android { namespace = 'com.ashkanrafiee.librecontactsbackup'; compileSdk 36; bui
     defaultConfig { applicationId 'com.ashkanrafiee.librecontactsbackup'; minSdk 26; targetSdk 36; versionCode 34; versionName '2.9.0'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
+    buildFeatures { buildConfig true }
     dependenciesInfo { includeInApk = false; includeInBundle = false }
     def signingFile = rootProject.file('signing.properties')
     def signingValues = new Properties()

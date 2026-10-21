@@ -68,8 +68,7 @@ public class AboutActivity extends Activity {
         report.setPaintFlags(report.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
         report.setPadding(0, dp(4), 0, dp(10)); report.setOnClickListener(v -> showReportDialog());
         body.addView(report, new LinearLayout.LayoutParams(-1, -2));
-        String version = "1.0"; try { version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception ignored) { }
-        TextView footer = text(getString(R.string.about_footer, version), 11, textTertiary); footer.setGravity(Gravity.CENTER); body.addView(footer);
+        TextView footer = text(getString(R.string.about_footer, BuildConfig.VERSION_NAME), 11, textTertiary); footer.setGravity(Gravity.CENTER); body.addView(footer);
     }
     TextView section(String heading, String body) { TextView v = text(heading + "\n" + body, 12, muted); v.setLineSpacing(2, 1.05f); return v; }
     LinearLayout info(String heading, String value, View.OnClickListener click) { LinearLayout box = new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL); box.setPadding(dp(16), dp(d(13, 11)), dp(16), dp(d(13, 11))); box.setBackground(rounded(card, 15)); TextView h = text(heading, 12, muted); box.addView(h); TextView v = text(value, 14, click == null ? textPrimary : link); v.setPadding(0, dp(5), 0, 0); v.setMaxLines(2); v.setEllipsize(TextUtils.TruncateAt.END); if (click != null) { v.setPaintFlags(v.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG); box.setOnClickListener(click); } box.addView(v); return box; }
@@ -84,23 +83,31 @@ public class AboutActivity extends Activity {
                 .show();
     }
     private void shareReport(boolean includeDiagnostics) {
-        String body = getString(R.string.report_issue_body);
-        if (includeDiagnostics) body += "\n\n--- Anonymized diagnostics ---\n" + ReportDiagnostics.create(this);
-        Intent share = new Intent(Intent.ACTION_SEND).setType("text/plain")
-                .putExtra(Intent.EXTRA_EMAIL, new String[]{CONTACT_EMAIL})
-                .putExtra(Intent.EXTRA_SUBJECT, getString(R.string.report_issue_subject))
-                .putExtra(Intent.EXTRA_TEXT, body);
+        Intent share = buildShareIntent(includeDiagnostics);
         try {
             startActivity(Intent.createChooser(share, getString(R.string.report_issue_share_title)));
         } catch (Exception shareError) {
             try {
-                Intent email = new Intent(Intent.ACTION_SENDTO, Uri.parse(CONTACT))
-                        .putExtra(Intent.EXTRA_SUBJECT, getString(R.string.report_issue_subject))
-                        .putExtra(Intent.EXTRA_TEXT, body);
-                startActivity(email);
+                startActivity(buildEmailIntent(includeDiagnostics));
             } catch (Exception emailError) {
                 Toast.makeText(this, getString(R.string.report_issue_no_app), Toast.LENGTH_LONG).show();
             }
         }
+    }
+    Intent buildShareIntent(boolean includeDiagnostics) {
+        return new Intent(Intent.ACTION_SEND).setType("text/plain")
+                .putExtra(Intent.EXTRA_EMAIL, new String[]{CONTACT_EMAIL})
+                .putExtra(Intent.EXTRA_SUBJECT, getString(R.string.report_issue_subject))
+                .putExtra(Intent.EXTRA_TEXT, reportBody(includeDiagnostics));
+    }
+    Intent buildEmailIntent(boolean includeDiagnostics) {
+        return new Intent(Intent.ACTION_SENDTO, Uri.parse(CONTACT))
+                        .putExtra(Intent.EXTRA_SUBJECT, getString(R.string.report_issue_subject))
+                        .putExtra(Intent.EXTRA_TEXT, reportBody(includeDiagnostics));
+    }
+    private String reportBody(boolean includeDiagnostics) {
+        String body = getString(R.string.report_issue_body);
+        if (includeDiagnostics) body += "\n\n--- Anonymized diagnostics ---\n" + ReportDiagnostics.create(this);
+        return body;
     }
 }

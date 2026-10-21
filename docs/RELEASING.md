@@ -78,11 +78,11 @@ For PowerShell, create the base64 secret value with:
 The release workflow runs only when a GitHub Release is published. Create the release from a tag beginning with `v`:
 
 ```bash
-git tag v1.0
-git push origin v1.0
+git tag v2.9.0
+git push origin v2.9.0
 ```
 
-Then create and publish a GitHub Release for the `v1.0` tag. The workflow builds the signed APK and AAB, renames them to `Libre-Contacts-Backup-vX.Y.apk` and `Libre-Contacts-Backup-vX.Y.aab`, creates matching SHA-256 checksums, and uploads them to that published release. Ordinary pushes and tags do not publish release artifacts.
+Then create and publish a GitHub Release for the `v2.9.0` tag. The workflow builds the signed APK and AAB, renames them to `Libre-Contacts-Backup-vX.Y.apk` and `Libre-Contacts-Backup-vX.Y.aab`, creates matching SHA-256 checksums, and uploads them to that published release. Ordinary pushes and tags do not publish release artifacts.
 
 The APK is for direct installation and F-Droid. The AAB is important for Google Play, which expects an Android App Bundle for Play distribution. It is not needed for direct APK installation.
 
@@ -117,7 +117,7 @@ UI renders as intended.
 
 F-Droid builds and signs the app itself. Do not give F-Droid your production keystore.
 
-1. Push the source repository and a tagged release such as `v1.0.0`.
+1. Push the source repository and a tagged release such as `v2.9.0`.
 2. Ensure the GPLv3 `LICENSE` file is present.
 3. The upstream repository includes Fastlane metadata and its main screenshot under `fastlane/`.
 4. Copy `docs/fdroid-metadata.yml` into the `metadata/` directory of the `fdroiddata` repository, renaming it to `com.ashkanrafiee.librecontactsbackup.yml`.
