@@ -1,1 +1,1 @@
-Offline und verschlüsselte Kontaktsicherungen
+Offline-Kontaktsicherungen mit optionaler Verschlüsselung

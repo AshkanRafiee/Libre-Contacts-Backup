@@ -11,8 +11,10 @@ upload path. The app does not request the Android `INTERNET` permission.
 When you start a manual or scheduled backup, or a restore, Android may grant
 the app access to the contacts and SIM providers needed for the operation. The
 app uses that data on the device to create or restore the archive you selected.
-The app does not automatically send contact data, phone numbers, email
-addresses, passwords, or archive contents to the project or any third party.
+The app does not independently transmit contact data, phone numbers, email
+addresses, passwords, or archive contents to the project or another third
+party. A Storage Access Framework provider that you select may sync files to
+its own service according to that provider's behavior.
 
 ## Issue reports
 

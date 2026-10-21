@@ -1,1 +1,1 @@
-Sauvegardes de contacts hors ligne et chiffrées
+Sauvegardes de contacts hors ligne avec chiffrement optionnel

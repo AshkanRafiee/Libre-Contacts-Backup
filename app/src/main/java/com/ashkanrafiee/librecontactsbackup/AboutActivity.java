@@ -61,8 +61,7 @@ public class AboutActivity extends Activity {
         body.addView(info(getString(R.string.about_website_label), "librecontactsbackup.ashkanrafiee.com", v -> open(APP_WEBSITE)), margins(0, 0, 0, 6));
         body.addView(info(getString(R.string.about_suggestions_label), "github.com/AshkanRafiee/Libre-Contacts-Backup/issues", v -> open(ISSUES_URL)), margins(0, 0, 0, 6));
         body.addView(info(getString(R.string.about_contact_label), CONTACT_EMAIL, v -> open(CONTACT)), margins(0, 0, 0, 6));
-        body.addView(info(getString(R.string.about_donate_label), "librecontactsbackup.ashkanrafiee.com/#donate", v -> open(DONATION_URL)), margins(0, 0, 0, 6));
-        body.addView(info(getString(R.string.about_privacy_label), getString(R.string.about_privacy_value), null), margins(0, 0, 0, d(12, 16)));
+        body.addView(info(getString(R.string.about_donate_label), "librecontactsbackup.ashkanrafiee.com/#donate", v -> open(DONATION_URL)), margins(0, 0, 0, d(12, 16)));
         TextView report = text(getString(R.string.about_report_issue_label), 12, link);
         report.setGravity(Gravity.CENTER); report.setTypeface(null, Typeface.BOLD);
         report.setPaintFlags(report.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
@@ -117,7 +116,7 @@ public class AboutActivity extends Activity {
     }
     private String reportBody(boolean includeDiagnostics) {
         String body = getString(R.string.report_issue_body);
-        if (includeDiagnostics) body += "\n\n--- Anonymized diagnostics ---\n" + ReportDiagnostics.create(this);
+        if (includeDiagnostics) body += "\n\n--- Technical diagnostics ---\n" + ReportDiagnostics.create(this);
         return body;
     }
 }

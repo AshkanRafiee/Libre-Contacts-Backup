@@ -58,7 +58,7 @@ public class AboutReportTest {
             scenario.onActivity(activity -> {
                 String body = activity.buildShareIntent(true).getStringExtra(Intent.EXTRA_TEXT);
                 assertTrue(body.startsWith(activity.getString(R.string.report_issue_body)));
-                assertTrue(body.contains("--- Anonymized diagnostics ---"));
+                assertTrue(body.contains("--- Technical diagnostics ---"));
                 assertTrue(body.contains("report_format=2"));
             });
         }

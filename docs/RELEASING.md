@@ -94,16 +94,18 @@ Increment `versionCode` in `app/build.gradle` for every future release.
 
 ## Test before tagging
 
-Run the full instrumented suite on a connected device or emulator before creating
-the release tag. Build the debug and test APKs, install both, and run them with
-direct `adb` instrumentation (the Gradle `connectedDebugAndroidTest` task hangs
-against a remote adb server):
+Run the full instrumented suite only on a disposable emulator before creating
+the release tag. These tests modify and delete contacts and groups. Set the
+emulator serial explicitly, build the debug and test APKs, install both, and
+run them with direct `adb` instrumentation (the Gradle `connectedDebugAndroidTest`
+task hangs against a remote adb server):
 
 ```bash
 ./gradlew assembleDebug assembleDebugAndroidTest
-adb install -r -t -g app/build/outputs/apk/debug/app-debug.apk
-adb install -r -t -g app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-adb shell am instrument -w \
+DEVICE_SERIAL=emulator-5554
+adb -s "$DEVICE_SERIAL" install -r -t -g app/build/outputs/apk/debug/app-debug.apk
+adb -s "$DEVICE_SERIAL" install -r -t -g app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb -s "$DEVICE_SERIAL" shell am instrument -w \
   com.ashkanrafiee.librecontactsbackup.test/androidx.test.runner.AndroidJUnitRunner
 ```
 
@@ -121,7 +123,7 @@ F-Droid builds and signs the app itself. Do not give F-Droid your production key
 2. Ensure the GPLv3 `LICENSE` file is present.
 3. The upstream repository includes Fastlane metadata and its main screenshot under `fastlane/`.
 4. Copy `docs/fdroid-metadata.yml` into the `metadata/` directory of the `fdroiddata` repository, renaming it to `com.ashkanrafiee.librecontactsbackup.yml`.
-   Replace the example build commit with the full commit hash of the exact release tag.
+   Replace the example build commit with the full hash of the tagged app-source commit. If a metadata-only alignment commit follows that source commit, keep the F-Droid `commit` on the tagged app-source commit so F-Droid builds the exact app source.
 5. Submit the metadata through the F-Droid issue tracker:
    `https://gitlab.com/fdroid/fdroiddata/-/issues`
 6. Respond to the F-Droid maintainer review and fix any metadata or reproducible-build findings.

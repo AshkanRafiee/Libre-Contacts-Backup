@@ -1,3 +1,3 @@
 Added:
 - You can now report a problem from About using your email or another sharing app
-- Reports can optionally include anonymized technical diagnostics; contact data, backup files, and storage paths stay out
+- Reports can optionally include technical diagnostics; contact data, backup files, and storage paths stay out

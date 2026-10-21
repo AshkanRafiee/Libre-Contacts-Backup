@@ -164,7 +164,7 @@
     <string name="category_account_not_recommended">هنگام بازگردانی به دستگاه یا حساب دیگر توصیه نمی‌شود — مخاطب همچنان بازگردانده می‌شود، اما به‌صورت مخاطب محلی. توجه: نگه‌داشتن یک حساب تضمین نمی‌کند که آن برنامه مخاطب را از پیش همگام‌شده بشناسد — این به برنامه بستگی دارد نه به این تنظیم</string>
 
     <string name="category_sim_title">مخاطبین سیم‌کارت</string>
-    <string name="category_sim_description">نام‌ها و شماره‌های ذخیره‌شده روی سیم‌کارت این دستگاه، که به‌عنوان بخشی از این پشتیبان ثبت شده‌اند.</string>
+    <string name="category_sim_description">نام‌ها و شماره‌های ذخیره‌شده روی سیم‌کارت این دستگاه، که در صورت امکان به‌عنوان بخشی از این پشتیبان ثبت می‌شوند.</string>
     <string name="category_sim_example">مثلاً «نازنین · +1 555-0123»</string>
 
     <string name="restore_brief_errors">بازگردانی‌شده: %1$d، ناموفق: %2$d%3$s</string>
@@ -189,8 +189,6 @@
     <string name="about_created_by_label">ساخته‌شده توسط</string>
     <string name="about_license_label">مجوز</string>
     <string name="about_source_label">کد منبع</string>
-    <string name="about_privacy_label">حریم خصوصی</string>
-    <string name="about_privacy_value">محلی · رمزگذاری‌شده · بدون فضای ابری · بدون حساب کاربری</string>
     <string name="about_website_label">وب‌سایت</string>
     <string name="about_suggestions_label">پیشنهادها</string>
     <string name="about_contact_label">تماس</string>
@@ -199,13 +197,14 @@
     <string name="about_no_browser">مرورگری در دسترس نیست</string>
     <string name="about_report_issue_label">گزارش مشکل</string>
     <string name="report_issue_title">گزارش مشکل</string>
-    <string name="report_issue_consent_message">آیا می‌خواهید گزارش فنی ناشناس در پایان گزارش اضافه شود؟ این گزارش شامل جزئیات برنامه و Android و وضعیت قابلیت‌هاست، اما هرگز شامل داده‌های مخاطبین، شماره‌های تلفن، نشانی‌های ایمیل، گذرواژه‌ها، فایل‌های پشتیبان یا مسیرهای ذخیره‌سازی نیست. متن گزارش شما فقط پس از انتخاب برنامهٔ ایمیل یا اشتراک‌گذاری به اشتراک گذاشته می‌شود. می‌توانید بدون گزارش فنی هم گزارش دهید.</string>
+    <string name="report_issue_consent_message">آیا می‌خواهید گزارش فنی در پایان گزارش اضافه شود؟ این گزارش شامل جزئیات برنامه و Android و وضعیت قابلیت‌هاست، اما هرگز شامل داده‌های مخاطبین، شماره‌های تلفن، نشانی‌های ایمیل، گذرواژه‌ها، فایل‌های پشتیبان یا مسیرهای ذخیره‌سازی نیست. متن گزارش شما فقط پس از انتخاب برنامهٔ ایمیل یا اشتراک‌گذاری به اشتراک گذاشته می‌شود. می‌توانید بدون گزارش فنی هم گزارش دهید.</string>
     <string name="report_issue_with_diagnostics">پیوست گزارش فنی</string>
     <string name="report_issue_without_diagnostics">بدون گزارش فنی</string>
     <string name="report_issue_subject">گزارش مشکل Libre Contacts Backup</string>
     <string name="report_issue_body">سلام تیم Libre Contacts Backup،\n\nشرح مشکل:\n[آنچه رخ داده را بنویسید]\n\nنتیجهٔ مورد انتظار:\n[انتظار داشتید چه اتفاقی بیفتد؟]\n\nمراحل بازتولید:\n1.\n2.\n3.\n\nجزئیات بیشتر:\n[جزئیات غیرحساس را اضافه کنید]\n\nپیش از ارسال، اطلاعات خصوصی را حذف کرده‌ام.</string>
     <string name="report_issue_share_title">ارسال گزارش مشکل</string>
     <string name="report_issue_no_app">برنامه‌ای برای ایمیل یا اشتراک‌گذاری در دسترس نیست.</string>
+    <string name="sim_backup_unavailable">مخاطبین سیم‌کارت خوانده نشدند؛ این پشتیبان فقط مخاطبین دستگاه را دارد</string>
 
     <string name="notification_channel_scheduled_backups">پشتیبان‌گیری‌های زمان‌بندی‌شده</string>
     <string name="notification_backup_complete_title">پشتیبان‌گیری Libre Contacts Backup کامل شد</string>

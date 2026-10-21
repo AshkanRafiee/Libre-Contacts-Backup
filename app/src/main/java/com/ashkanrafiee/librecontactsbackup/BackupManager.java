@@ -169,13 +169,16 @@ public final class BackupManager {
             // Capture the SIM card phonebook (best-effort) so every backup
             // carries the SIM contacts as a separate, additive part. A device
             // with no SIM or a non-exposed provider simply yields zero entries.
+            boolean simUnavailable = false;
             try {
                 SimContactsReader.Result sim = boundedSimRead
                         ? readSimContactsBounded(c.getContentResolver())
                         : SimContactsReader.readSimContacts(c.getContentResolver());
+                simUnavailable = !sim.providerAvailable;
                 for (SimContact simContact : sim.contacts) snapshot.addSimContact(simContact);
             } catch (Exception e) {
                 Log.w("LibreContactsBackup", "SIM phonebook capture failed; continuing without it", e);
+                simUnavailable = true;
             }
 
             // Step 2: Write .lcb archive
@@ -215,6 +218,7 @@ public final class BackupManager {
                         R.plurals.sim_contacts_count, snapshot.getSimContactCount(), snapshot.getSimContactCount());
                 message += " · " + simPart;
             }
+            if (simUnavailable) message += " · " + c.getString(R.string.sim_backup_unavailable);
             if (notify) MainActivity.notice(c, c.getString(R.string.notice_backup_complete_title), message);
             recordLastRun(c, true, message);
             return new BackupOutcome(true, message);

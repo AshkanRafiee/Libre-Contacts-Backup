@@ -3,15 +3,15 @@
 A free, open-source, native Android app that backs up your contacts — local-first, private, and fully yours.
 
 - **Libre & open source** — GPL-3.0, no proprietary bits, buildable from source, [available on F-Droid](https://f-droid.org/en/packages/com.ashkanrafiee.librecontactsbackup/).
-- **Private by design** — no account, no cloud, no analytics, no network permission at all. Contacts are only read when a backup runs. See the [privacy policy](PRIVACY.md) for the full boundary.
+- **Private by design** — no account, no cloud, no analytics, no network permission at all. Contacts are read only for a backup, export, or restore that you start or schedule. See the [privacy policy](PRIVACY.md) for the full boundary.
 - **Local by design** — backups are written to a folder you choose on your own device (or SD card); the app never uploads them automatically. You control any export, report sharing, or cloud-backed storage you choose.
-- **Scheduled backups** — daily, weekly, or monthly at a time you choose, running automatically in the background, entirely on-device (on Android 12 and above, allow alarms & reminders when asked so they run exactly on time).
+- **Scheduled backups** — daily, weekly, or monthly at a time you choose, running automatically in the background, entirely on-device (on Android 12 and above, allow alarms & reminders when asked; turn off battery optimization for the app to reduce missed runs).
 - **Retention by age** — keep the newest backups per day, week, and month with counts you choose (e.g. 7 daily + 4 weekly + 3 monthly), so backups of increasing age stay available while old ones thin out; or keep it simple and just keep the last N sets.
 - **As close to lossless as the Contacts Provider allows** — preserves the full Contact → RawContact → Data hierarchy (every readable field, every account, every custom type), not a lossy flattened copy.
-- **SIM card phonebook included** — every backup also captures the contacts stored on your SIM card; on restore, you choose whether they are written back to the SIM card, into the device address book, or both — and on phones with more than one SIM (including an eSIM), which of the available cards to write them to.
+- **SIM card phonebook included on a best-effort basis** — when the device exposes its SIM phonebook, backups capture those contacts; if it cannot be read, the backup reports that it contains device contacts only. On restore, you choose whether SIM contacts are written back to the SIM card, into the device address book, or both.
 - **Optional encryption** — AES-256-GCM with a key derived from your password (PBKDF2, 600,000 iterations); the password itself is stored on-device behind an Android Keystore key so scheduled backups can run unattended.
 - **Personalized display** — choose the app language and system, light, or dark theme from the Display menu in the footer.
-- **Help when needed** — create a problem report from About and choose whether to include anonymized technical diagnostics before sharing it with an email or sharing app.
+- **Help when needed** — create a problem report from About and choose whether to include technical diagnostics before sharing it with an email or sharing app.
 
 ## Download
 
@@ -56,13 +56,14 @@ To produce a signed release, add your own keystore details in a `signing.propert
 
 ## Test
 
-Instrumented tests run against a connected device/emulator with `adb`. Build the debug and test APKs, install them on the device, and run via direct `adb` instrumentation:
+Instrumented tests modify contacts and groups, so run them only against a disposable emulator. Set its serial explicitly and run via direct `adb` instrumentation:
 
 ```bash
 ./gradlew assembleDebug assembleDebugAndroidTest
-adb install -r -t -g app/build/outputs/apk/debug/app-debug.apk
-adb install -r -t -g app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-adb shell am instrument -w \
+DEVICE_SERIAL=emulator-5554
+adb -s "$DEVICE_SERIAL" install -r -t -g app/build/outputs/apk/debug/app-debug.apk
+adb -s "$DEVICE_SERIAL" install -r -t -g app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb -s "$DEVICE_SERIAL" shell am instrument -w \
   com.ashkanrafiee.librecontactsbackup.test/androidx.test.runner.AndroidJUnitRunner
 ```
 

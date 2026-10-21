@@ -1,1 +1,1 @@
-Çevrimdışı ve şifreli kişi yedeklemeleri
+İsteğe bağlı şifrelemeli çevrimdışı kişi yedekleri
