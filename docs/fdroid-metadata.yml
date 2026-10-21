@@ -18,7 +18,7 @@ Binaries:
 Builds:
   - versionName: 2.9.0
     versionCode: 34
-    commit: 482a94777e42660ebe725e8ed36359de7d01fe66
+    commit: 347b8ca4760a8bb36b8d776f962e6fa63a199d5a
     subdir: app
     gradle:
       - yes
