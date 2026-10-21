@@ -193,9 +193,19 @@
     <string name="about_privacy_value">Local · cifrado · sin nube · sin cuenta</string>
     <string name="about_website_label">Sitio web</string>
     <string name="about_suggestions_label">Sugerencias</string>
+    <string name="about_contact_label">Contacto</string>
     <string name="about_donate_label">Donar</string>
     <string name="about_footer">Libre Contacts Backup · Versión %1$s</string>
     <string name="about_no_browser">No hay ningún navegador disponible</string>
+    <string name="about_report_issue_label">Informar de un problema</string>
+    <string name="report_issue_title">Informar de un problema</string>
+    <string name="report_issue_consent_message">¿Quieres añadir diagnósticos técnicos anonimizados al final del correo? Contienen datos de la aplicación y Android y el estado de las funciones, pero nunca datos de contactos, teléfonos, direcciones de correo, contraseñas, copias de seguridad ni rutas de almacenamiento. El texto de tu correo solo se compartirá cuando elijas una aplicación. También puedes informar sin diagnósticos.</string>
+    <string name="report_issue_with_diagnostics">Incluir diagnósticos</string>
+    <string name="report_issue_without_diagnostics">Sin diagnósticos</string>
+    <string name="report_issue_subject">Informe de problema de Libre Contacts Backup</string>
+    <string name="report_issue_body">Hola, equipo de Libre Contacts Backup:\n\nDescripción del problema:\n[Describe lo que ocurrió]\n\nResultado esperado:\n[¿Qué esperabas?]\n\nPasos para reproducirlo:\n1.\n2.\n3.\n\nDetalles adicionales:\n[Añade detalles no sensibles]\n\nHe eliminado la información privada antes de enviarlo.</string>
+    <string name="report_issue_share_title">Enviar informe de problema</string>
+    <string name="report_issue_no_app">No hay ninguna aplicación de correo o uso compartido disponible.</string>
 
     <string name="notification_channel_scheduled_backups">Copias de seguridad programadas</string>
     <string name="notification_backup_complete_title">Copia de seguridad de Libre Contacts Backup completada</string>

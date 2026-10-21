@@ -193,9 +193,19 @@
     <string name="about_privacy_value">本地优先 · 加密 · 无云端 · 无账户</string>
     <string name="about_website_label">官方网站</string>
     <string name="about_suggestions_label">意见反馈</string>
+    <string name="about_contact_label">联系方式</string>
     <string name="about_donate_label">捐赠</string>
     <string name="about_footer">Libre Contacts Backup · 版本 %1$s</string>
     <string name="about_no_browser">没有可用的浏览器</string>
+    <string name="about_report_issue_label">报告问题</string>
+    <string name="report_issue_title">报告问题</string>
+    <string name="report_issue_consent_message">要在邮件末尾添加匿名技术诊断信息吗？其中包含应用和 Android 详情以及功能状态，但绝不包含联系人数据、电话号码、电子邮件地址、密码、备份文件或存储路径。只有在您选择应用后，您的邮件内容才会被分享。您也可以不添加诊断信息。</string>
+    <string name="report_issue_with_diagnostics">附加诊断信息</string>
+    <string name="report_issue_without_diagnostics">不附加诊断</string>
+    <string name="report_issue_subject">Libre Contacts Backup 问题报告</string>
+    <string name="report_issue_body">Libre Contacts Backup 团队您好：\n\n问题描述：\n[请描述发生了什么]\n\n预期结果：\n[您原本期望什么？]\n\n复现步骤：\n1.\n2.\n3.\n\n其他详情：\n[请添加非敏感详情]\n\n发送前我已删除私人信息。</string>
+    <string name="report_issue_share_title">发送问题报告</string>
+    <string name="report_issue_no_app">没有可用的邮件或分享应用。</string>
 
     <string name="notification_channel_scheduled_backups">计划备份</string>
     <string name="notification_backup_complete_title">Libre Contacts Backup 备份完成</string>

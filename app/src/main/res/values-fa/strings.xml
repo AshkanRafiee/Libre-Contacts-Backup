@@ -193,9 +193,19 @@
     <string name="about_privacy_value">محلی · رمزگذاری‌شده · بدون فضای ابری · بدون حساب کاربری</string>
     <string name="about_website_label">وب‌سایت</string>
     <string name="about_suggestions_label">پیشنهادها</string>
+    <string name="about_contact_label">تماس</string>
     <string name="about_donate_label">حمایت مالی</string>
     <string name="about_footer">Libre Contacts Backup · نسخهٔ %1$s</string>
     <string name="about_no_browser">مرورگری در دسترس نیست</string>
+    <string name="about_report_issue_label">گزارش مشکل</string>
+    <string name="report_issue_title">گزارش مشکل</string>
+    <string name="report_issue_consent_message">آیا می‌خواهید گزارش فنی ناشناس در پایان ایمیل اضافه شود؟ این گزارش شامل جزئیات برنامه و Android و وضعیت قابلیت‌هاست، اما هرگز شامل داده‌های مخاطبین، شماره‌های تلفن، نشانی‌های ایمیل، گذرواژه‌ها، فایل‌های پشتیبان یا مسیرهای ذخیره‌سازی نیست. متن ایمیل شما فقط پس از انتخاب برنامه به اشتراک گذاشته می‌شود. می‌توانید بدون گزارش فنی هم گزارش دهید.</string>
+    <string name="report_issue_with_diagnostics">پیوست گزارش فنی</string>
+    <string name="report_issue_without_diagnostics">بدون گزارش فنی</string>
+    <string name="report_issue_subject">گزارش مشکل Libre Contacts Backup</string>
+    <string name="report_issue_body">سلام تیم Libre Contacts Backup،\n\nشرح مشکل:\n[آنچه رخ داده را بنویسید]\n\nنتیجهٔ مورد انتظار:\n[انتظار داشتید چه اتفاقی بیفتد؟]\n\nمراحل بازتولید:\n1.\n2.\n3.\n\nجزئیات بیشتر:\n[جزئیات غیرحساس را اضافه کنید]\n\nپیش از ارسال، اطلاعات خصوصی را حذف کرده‌ام.</string>
+    <string name="report_issue_share_title">ارسال گزارش مشکل</string>
+    <string name="report_issue_no_app">برنامه‌ای برای ایمیل یا اشتراک‌گذاری در دسترس نیست.</string>
 
     <string name="notification_channel_scheduled_backups">پشتیبان‌گیری‌های زمان‌بندی‌شده</string>
     <string name="notification_backup_complete_title">پشتیبان‌گیری Libre Contacts Backup کامل شد</string>

@@ -11,6 +11,7 @@ A free, open-source, native Android app that backs up your contacts — fully of
 - **SIM card phonebook included** — every backup also captures the contacts stored on your SIM card; on restore, you choose whether they are written back to the SIM card, into the device address book, or both — and on phones with more than one SIM (including an eSIM), which of the available cards to write them to.
 - **Optional encryption** — AES-256-GCM with a key derived from your password (PBKDF2, 600,000 iterations); the password itself is stored on-device behind an Android Keystore key so scheduled backups can run unattended.
 - **Personalized display** — choose the app language and system, light, or dark theme from the Display menu in the footer.
+- **Help when needed** — create a problem report from About and choose whether to include anonymized technical diagnostics before sharing it with your email app.
 
 ## Download
 

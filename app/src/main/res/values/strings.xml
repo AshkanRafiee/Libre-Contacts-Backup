@@ -211,9 +211,19 @@
     <string name="about_privacy_value">Local-first · encrypted · no cloud · no account</string>
     <string name="about_website_label">Website</string>
     <string name="about_suggestions_label">Suggestions</string>
+    <string name="about_contact_label">Contact</string>
     <string name="about_donate_label">Donate</string>
     <string name="about_footer">Libre Contacts Backup · Version %1$s</string>
     <string name="about_no_browser">No browser available</string>
+    <string name="about_report_issue_label">Report a problem</string>
+    <string name="report_issue_title">Report a problem</string>
+    <string name="report_issue_consent_message">Would you like to add anonymized technical diagnostics at the end of the email? They contain app and Android details and feature state, but never contact data, phone numbers, email addresses, passwords, backup files, or storage paths. Your email text is shared only after you choose an app. You can report without diagnostics.</string>
+    <string name="report_issue_with_diagnostics">Include diagnostics</string>
+    <string name="report_issue_without_diagnostics">Without diagnostics</string>
+    <string name="report_issue_subject">Libre Contacts Backup problem report</string>
+    <string name="report_issue_body">Hello Libre Contacts Backup team,\n\nProblem description:\n[Describe what happened]\n\nExpected result:\n[What did you expect?]\n\nSteps to reproduce:\n1.\n2.\n3.\n\nAdditional details:\n[Add non-sensitive details]\n\nI have removed private information before sending.</string>
+    <string name="report_issue_share_title">Send issue report</string>
+    <string name="report_issue_no_app">No email or sharing app is available.</string>
 
     <!-- Scheduled backup notifications -->
     <string name="notification_channel_scheduled_backups">Scheduled backups</string>

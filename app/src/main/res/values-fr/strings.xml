@@ -193,9 +193,19 @@
     <string name="about_privacy_value">Local · chiffré · sans nuage · sans compte</string>
     <string name="about_website_label">Site web</string>
     <string name="about_suggestions_label">Suggestions</string>
+    <string name="about_contact_label">Nous contacter</string>
     <string name="about_donate_label">Faire un don</string>
     <string name="about_footer">Libre Contacts Backup · Version %1$s</string>
     <string name="about_no_browser">Aucun navigateur disponible</string>
+    <string name="about_report_issue_label">Signaler un problème</string>
+    <string name="report_issue_title">Signaler un problème</string>
+    <string name="report_issue_consent_message">Voulez-vous ajouter des diagnostics techniques anonymisés à la fin de l’e-mail ? Ils contiennent des détails sur l’application et Android ainsi que l’état des fonctionnalités, mais jamais de données de contacts, numéros, adresses e-mail, mots de passe, sauvegardes ou chemins de stockage. Le texte de votre e-mail ne sera partagé qu’après votre choix. Vous pouvez signaler le problème sans diagnostic.</string>
+    <string name="report_issue_with_diagnostics">Joindre les diagnostics</string>
+    <string name="report_issue_without_diagnostics">Sans diagnostic</string>
+    <string name="report_issue_subject">Rapport de problème Libre Contacts Backup</string>
+    <string name="report_issue_body">Bonjour l’équipe Libre Contacts Backup,\n\nDescription du problème :\n[Décrivez ce qui s’est passé]\n\nRésultat attendu :\n[Qu’attendiez-vous ?]\n\nÉtapes pour reproduire le problème :\n1.\n2.\n3.\n\nDétails supplémentaires :\n[Ajoutez des détails non sensibles]\n\nJ’ai supprimé les informations privées avant l’envoi.</string>
+    <string name="report_issue_share_title">Envoyer le rapport</string>
+    <string name="report_issue_no_app">Aucune application d’e-mail ou de partage n’est disponible.</string>
 
     <string name="notification_channel_scheduled_backups">Sauvegardes planifiées</string>
     <string name="notification_backup_complete_title">Sauvegarde Libre Contacts Backup terminée</string>

@@ -193,9 +193,19 @@
     <string name="about_privacy_value">Yerel · şifreli · bulut yok · hesap yok</string>
     <string name="about_website_label">Web sitesi</string>
     <string name="about_suggestions_label">Öneriler</string>
+    <string name="about_contact_label">İletişim</string>
     <string name="about_donate_label">Bağış Yap</string>
     <string name="about_footer">Libre Contacts Backup · Sürüm %1$s</string>
     <string name="about_no_browser">Kullanılabilir tarayıcı yok</string>
+    <string name="about_report_issue_label">Sorun bildir</string>
+    <string name="report_issue_title">Sorun bildir</string>
+    <string name="report_issue_consent_message">Anonimleştirilmiş teknik tanılamaları e-postanın sonuna eklemek ister misiniz? Uygulama ve Android ayrıntıları ile özellik durumunu içerir; ancak kişi verilerini, telefon numaralarını, e-posta adreslerini, parolaları, yedekleri veya depolama yollarını asla içermez. E-posta metniniz yalnızca bir uygulama seçtikten sonra paylaşılır. Tanılama olmadan da bildirim yapabilirsiniz.</string>
+    <string name="report_issue_with_diagnostics">Tanılamaları ekle</string>
+    <string name="report_issue_without_diagnostics">Tanılama olmadan</string>
+    <string name="report_issue_subject">Libre Contacts Backup sorun bildirimi</string>
+    <string name="report_issue_body">Merhaba Libre Contacts Backup ekibi,\n\nSorun açıklaması:\n[Ne olduğunu açıklayın]\n\nBeklenen sonuç:\n[Ne olmasını bekliyordunuz?]\n\nYeniden oluşturma adımları:\n1.\n2.\n3.\n\nEk ayrıntılar:\n[Hassas olmayan ayrıntılar ekleyin]\n\nGöndermeden önce özel bilgileri kaldırdım.</string>
+    <string name="report_issue_share_title">Sorun bildirimini gönder</string>
+    <string name="report_issue_no_app">Kullanılabilir e-posta veya paylaşım uygulaması yok.</string>
 
     <string name="notification_channel_scheduled_backups">Zamanlanmış yedeklemeler</string>
     <string name="notification_backup_complete_title">Libre Contacts Backup tamamlandı</string>

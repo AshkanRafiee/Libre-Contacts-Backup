@@ -193,9 +193,19 @@
     <string name="about_privacy_value">Lokal · verschlüsselt · keine Cloud · kein Konto</string>
     <string name="about_website_label">Website</string>
     <string name="about_suggestions_label">Vorschläge</string>
+    <string name="about_contact_label">Kontakt</string>
     <string name="about_donate_label">Spenden</string>
     <string name="about_footer">Libre Contacts Backup · Version %1$s</string>
     <string name="about_no_browser">Kein Browser verfügbar</string>
+    <string name="about_report_issue_label">Problem melden</string>
+    <string name="report_issue_title">Problem melden</string>
+    <string name="report_issue_consent_message">Möchtest du anonymisierte technische Diagnosedaten am Ende der E-Mail hinzufügen? Sie enthalten App- und Android-Details sowie den Funktionsstatus, aber niemals Kontaktdaten, Telefonnummern, E-Mail-Adressen, Passwörter, Backups oder Speicherpfade. Dein E-Mail-Text wird erst nach deiner Auswahl geteilt. Du kannst auch ohne Diagnosedaten melden.</string>
+    <string name="report_issue_with_diagnostics">Diagnose anhängen</string>
+    <string name="report_issue_without_diagnostics">Ohne Diagnose</string>
+    <string name="report_issue_subject">Problembericht zu Libre Contacts Backup</string>
+    <string name="report_issue_body">Hallo Libre-Contacts-Backup-Team,\n\nProblembeschreibung:\n[Beschreibe, was passiert ist]\n\nErwartetes Ergebnis:\n[Was hast du erwartet?]\n\nSchritte zur Reproduktion:\n1.\n2.\n3.\n\nWeitere Details:\n[Füge unsensible Details hinzu]\n\nIch habe persönliche Informationen vor dem Senden entfernt.</string>
+    <string name="report_issue_share_title">Problembericht senden</string>
+    <string name="report_issue_no_app">Keine E-Mail- oder Teilen-App verfügbar.</string>
 
     <string name="notification_channel_scheduled_backups">Geplante Sicherungen</string>
     <string name="notification_backup_complete_title">Libre Contacts Backup abgeschlossen</string>

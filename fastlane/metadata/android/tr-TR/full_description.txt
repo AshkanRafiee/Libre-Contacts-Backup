@@ -10,5 +10,6 @@ Libre Contacts Backup, özel ve önce yerel odaklı kişi yedeklemeleri için ye
 * Manuel CSV ve VCF dışa aktarımları; CSV dosyası Excel ve diğer elektronik tablo uygulamalarında açılır
 * Yaşa göre saklama — son yedekleri gün, hafta ve ay bazında sizin seçtiğiniz adetlerle koruyun (örneğin 7 günlük, 4 haftalık, 3 aylık), böylece yakın geçmiş sıkı yedeklenirken daha eski geçmiş seyreltilir — ya da yalnızca son N kümenizi tutun
 * Uygulama dilini ve sistem, açık veya koyu temayı Görünüm menüsünden seçin
+* Hakkında bölümünden sorun bildirimi oluşturun ve e-posta uygulamanızla paylaşmadan önce anonimleştirilmiş teknik tanılamaların eklenip eklenmeyeceğini seçin
 
 Libre Contacts Backup ücretsiz ve açık kaynaklıdır. İşinize yarıyorsa, geliştirilmesini destekleyebilirsiniz — bağış seçenekleri proje README'sinin Donate bölümünde yer alır: https://librecontactsbackup.ashkanrafiee.com/#donate

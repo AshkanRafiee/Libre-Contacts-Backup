@@ -14,6 +14,8 @@ public class AboutActivity extends Activity {
     static final String APP_WEBSITE = "https://librecontactsbackup.ashkanrafiee.com/";
     static final String ISSUES_URL = "https://github.com/AshkanRafiee/Libre-Contacts-Backup/issues";
     static final String DONATION_URL = "https://librecontactsbackup.ashkanrafiee.com/#donate";
+    static final String CONTACT_EMAIL = "librecontactsbackup.abstract692@passmail.net";
+    static final String CONTACT = "mailto:" + CONTACT_EMAIL;
     int background, card, muted, mint, link, textPrimary, subtitle, textTertiary;
     /** Spacing-only tightening: true on small screens OR any non-English language. Never used for font sizes or icon dimensions — see {@link #onCreate}. */
     boolean dense;
@@ -58,12 +60,47 @@ public class AboutActivity extends Activity {
         body.addView(info(getString(R.string.about_source_label), "github.com/AshkanRafiee/Libre-Contacts-Backup", v -> open("https://github.com/AshkanRafiee/Libre-Contacts-Backup")), margins(0, 0, 0, 6));
         body.addView(info(getString(R.string.about_website_label), "librecontactsbackup.ashkanrafiee.com", v -> open(APP_WEBSITE)), margins(0, 0, 0, 6));
         body.addView(info(getString(R.string.about_suggestions_label), "github.com/AshkanRafiee/Libre-Contacts-Backup/issues", v -> open(ISSUES_URL)), margins(0, 0, 0, 6));
+        body.addView(info(getString(R.string.about_contact_label), CONTACT_EMAIL, v -> open(CONTACT)), margins(0, 0, 0, 6));
         body.addView(info(getString(R.string.about_donate_label), "librecontactsbackup.ashkanrafiee.com/#donate", v -> open(DONATION_URL)), margins(0, 0, 0, 6));
         body.addView(info(getString(R.string.about_privacy_label), getString(R.string.about_privacy_value), null), margins(0, 0, 0, d(12, 16)));
+        TextView report = text(getString(R.string.about_report_issue_label), 12, link);
+        report.setGravity(Gravity.CENTER); report.setTypeface(null, Typeface.BOLD);
+        report.setPaintFlags(report.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
+        report.setPadding(0, dp(4), 0, dp(10)); report.setOnClickListener(v -> showReportDialog());
+        body.addView(report, new LinearLayout.LayoutParams(-1, -2));
         String version = "1.0"; try { version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception ignored) { }
         TextView footer = text(getString(R.string.about_footer, version), 11, textTertiary); footer.setGravity(Gravity.CENTER); body.addView(footer);
     }
     TextView section(String heading, String body) { TextView v = text(heading + "\n" + body, 12, muted); v.setLineSpacing(2, 1.05f); return v; }
     LinearLayout info(String heading, String value, View.OnClickListener click) { LinearLayout box = new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL); box.setPadding(dp(16), dp(d(13, 11)), dp(16), dp(d(13, 11))); box.setBackground(rounded(card, 15)); TextView h = text(heading, 12, muted); box.addView(h); TextView v = text(value, 14, click == null ? textPrimary : link); v.setPadding(0, dp(5), 0, 0); v.setMaxLines(2); v.setEllipsize(TextUtils.TruncateAt.END); if (click != null) { v.setPaintFlags(v.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG); box.setOnClickListener(click); } box.addView(v); return box; }
     void open(String url) { try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception e) { Toast.makeText(this, getString(R.string.about_no_browser), Toast.LENGTH_SHORT).show(); } }
+    private void showReportDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.report_issue_title))
+                .setMessage(getString(R.string.report_issue_consent_message))
+                .setNegativeButton(getString(R.string.action_cancel), null)
+                .setNeutralButton(getString(R.string.report_issue_without_diagnostics), (dialog, which) -> shareReport(false))
+                .setPositiveButton(getString(R.string.report_issue_with_diagnostics), (dialog, which) -> shareReport(true))
+                .show();
+    }
+    private void shareReport(boolean includeDiagnostics) {
+        String body = getString(R.string.report_issue_body);
+        if (includeDiagnostics) body += "\n\n--- Anonymized diagnostics ---\n" + ReportDiagnostics.create(this);
+        Intent share = new Intent(Intent.ACTION_SEND).setType("text/plain")
+                .putExtra(Intent.EXTRA_EMAIL, new String[]{CONTACT_EMAIL})
+                .putExtra(Intent.EXTRA_SUBJECT, getString(R.string.report_issue_subject))
+                .putExtra(Intent.EXTRA_TEXT, body);
+        try {
+            startActivity(Intent.createChooser(share, getString(R.string.report_issue_share_title)));
+        } catch (Exception shareError) {
+            try {
+                Intent email = new Intent(Intent.ACTION_SENDTO, Uri.parse(CONTACT))
+                        .putExtra(Intent.EXTRA_SUBJECT, getString(R.string.report_issue_subject))
+                        .putExtra(Intent.EXTRA_TEXT, body);
+                startActivity(email);
+            } catch (Exception emailError) {
+                Toast.makeText(this, getString(R.string.report_issue_no_app), Toast.LENGTH_LONG).show();
+            }
+        }
+    }
 }

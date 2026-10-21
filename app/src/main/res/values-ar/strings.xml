@@ -193,9 +193,19 @@
     <string name="about_privacy_value">محلي · مشفر · بدون سحابة · بدون حساب</string>
     <string name="about_website_label">الموقع الإلكتروني</string>
     <string name="about_suggestions_label">اقتراحات</string>
+    <string name="about_contact_label">اتصل بنا</string>
     <string name="about_donate_label">تبرع</string>
     <string name="about_footer">Libre Contacts Backup · الإصدار %1$s</string>
     <string name="about_no_browser">لا يوجد متصفح متاح</string>
+    <string name="about_report_issue_label">الإبلاغ عن مشكلة</string>
+    <string name="report_issue_title">الإبلاغ عن مشكلة</string>
+    <string name="report_issue_consent_message">هل تريد إضافة تشخيصات تقنية مجهّلة في نهاية البريد؟ تتضمن تفاصيل التطبيق وAndroid وحالة الميزات، ولا تتضمن أبدًا بيانات جهات الاتصال أو أرقام الهاتف أو عناوين البريد الإلكتروني أو كلمات المرور أو ملفات النسخ الاحتياطية أو مسارات التخزين. لن تتم مشاركة نص بريدك إلا بعد اختيار تطبيق. يمكنك الإبلاغ دون تشخيصات.</string>
+    <string name="report_issue_with_diagnostics">إرفاق التشخيصات</string>
+    <string name="report_issue_without_diagnostics">دون تشخيصات</string>
+    <string name="report_issue_subject">تقرير مشكلة في Libre Contacts Backup</string>
+    <string name="report_issue_body">مرحبًا فريق Libre Contacts Backup،\n\nوصف المشكلة:\n[اكتب ما حدث]\n\nالنتيجة المتوقعة:\n[ما الذي توقعت حدوثه؟]\n\nخطوات إعادة المشكلة:\n1.\n2.\n3.\n\nتفاصيل إضافية:\n[أضف تفاصيل غير حساسة]\n\nلقد أزلت المعلومات الخاصة قبل الإرسال.</string>
+    <string name="report_issue_share_title">إرسال تقرير المشكلة</string>
+    <string name="report_issue_no_app">لا يوجد تطبيق بريد أو مشاركة متاح.</string>
 
     <string name="notification_channel_scheduled_backups">النسخ الاحتياطية المجدولة</string>
     <string name="notification_backup_complete_title">اكتملت نسخة Libre Contacts Backup الاحتياطية</string>
