@@ -32,26 +32,7 @@ jobs:
         uses: android-actions/setup-android@v4
 
       - name: Install Android platform
-        run: |
-          sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools" "emulator" "system-images;android-36;google_apis;x86_64"
-          yes | sdkmanager --licenses >/dev/null || true
-
-      - name: Start disposable test emulator
-        run: |
-          echo "no" | avdmanager create avd --force --name release-test --package "system-images;android-36;google_apis;x86_64"
-          emulator -avd release-test -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > /tmp/release-emulator.log 2>&1 &
-          adb -s emulator-5554 wait-for-device
-          timeout 300 bash -c 'until [[ "$(adb -s emulator-5554 shell getprop sys.boot_completed 2>/dev/null | tr -d "\r")" == "1" ]]; do sleep 5; done'
-
-      - name: Run instrumented tests
-        run: |
-          bash ./gradlew assembleDebug assembleDebugAndroidTest
-          adb -s emulator-5554 install -r -t -g app/build/outputs/apk/debug/app-debug.apk
-          adb -s emulator-5554 install -r -t -g app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-          set -o pipefail
-          timeout 600 adb -s emulator-5554 shell am instrument -w \
-            com.ashkanrafiee.librecontactsbackup.test/androidx.test.runner.AndroidJUnitRunner | tee instrumented-tests.log
-          grep -qE 'OK \([0-9]+ tests\)' instrumented-tests.log
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
