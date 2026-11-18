@@ -45,4 +45,4 @@ Libre Contacts Backup has **no Android internet permission** and no cloud servic
 
 Requires **Android 8.0+** and Contacts permission for backup and restore. For automatic backups, allow **Alarms & reminders** if prompted; Android’s battery restrictions can still interfere. If you’re preparing to replace or reset your phone, keep a copy of the backup somewhere other than that phone.
 
-[Privacy policy](PRIVACY.md) · [GPL‑3.0 license](LICENSE) · [Report an issue](https://github.com/AshkanRafiee/Libre-Contacts-Backup/issues) · [Donate](https://librecontactsbackup.ashkanrafiee.com/#donate)
+[User guide](docs/USER-GUIDE.md) · [Privacy policy](PRIVACY.md) · [GPL‑3.0 license](LICENSE) · [Report an issue](https://github.com/AshkanRafiee/Libre-Contacts-Backup/issues) · [Donate](https://librecontactsbackup.ashkanrafiee.com/#donate)
