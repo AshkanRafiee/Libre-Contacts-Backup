@@ -1,15 +1,7 @@
-Libre Contacts Backup, özel ve önce yerel odaklı kişi yedeklemeleri için yerel ve özgür (FLOSS) bir Android uygulamasıdır. Hesap yok, izleme yok ve otomatik yükleme yok — bir yedekleme dosyasını taşımayı, verileri dışa aktarmayı veya rapor paylaşmayı seçmediğiniz sürece kişileriniz cihazınızda kalır.
+Libre Contacts Backup, Android’de internet erişim izni olmadan rehberinizi yedekler. Hesap istemez, reklam göstermez, sizi izlemez ve internete dosya yüklemez. Yerel bir klasöre çevrimdışı yedek alabilirsiniz. Bir bulut depolama hizmetine ait klasör seçerseniz dosyaları o hizmet eşitleyebilir.
 
-Özellikler:
-* Kişi grupları da dahil olmak üzere tam Contact → RawContact → Data hiyerarşisini koruyan kayıpsız yedekleme
-* Cihazın erişim sağladığı durumlarda SIM kart telefon rehberi mümkün olan en iyi şekilde yedeklenir; okunamazsa yedekleme yalnızca cihaz kişilerini içerdiğini bildirir. Geri yüklemede SIM kişileri SIM karta, cihaz adres defterine veya her ikisine birden yazılabilir
-* İnternet bağlantısı gerekmeden, seçtiğiniz saatte çalışan zamanlanmış yerel yedeklemeler — günlük, seçtiğiniz haftanın gününde haftalık veya seçtiğiniz ayın gününde aylık (ay bu günden daha kısaysa yedekleme ayın son gününde çalışır)
-* Standart JSON, VCF, CSV ve normalleştirilmiş dışa aktarımları içeren tek dosyalık LCB arşivleri
-* Android Keystore destekli, isteğe bağlı AES-256-GCM parola korumalı şifreleme
-* Geri yükleme, aynı ada sahip farklı kişileri birleştirmeden her kaynak kişiyi doğru şekilde bir araya getirir
-* Manuel CSV ve VCF dışa aktarımları; CSV dosyası Excel ve diğer elektronik tablo uygulamalarında açılır
-* Yaşa göre saklama — son yedekleri gün, hafta ve ay bazında sizin seçtiğiniz adetlerle koruyun (örneğin 7 günlük, 4 haftalık, 3 aylık), böylece yakın geçmiş sıkı yedeklenirken daha eski geçmiş seyreltilir — ya da yalnızca son N kümenizi tutun
-* Uygulama dilini ve sistem, açık veya koyu temayı Görünüm menüsünden seçin
-* Hakkında bölümünden sorun bildirimi oluşturun ve e-posta veya paylaşım uygulamanızla paylaşmadan önce teknik tanılamaların eklenip eklenmeyeceğini seçin
-
-Libre Contacts Backup ücretsiz ve açık kaynaklıdır. İşinize yarıyorsa, geliştirilmesini destekleyebilirsiniz — bağış seçenekleri proje README'sinin Donate bölümünde yer alır: https://librecontactsbackup.ashkanrafiee.com/#donate
+- Zamanlanmış yedekleme: Seçtiğiniz saatte her gün, her hafta veya her ay otomatik yedek alın.
+- Otomatik saklama: En yeni yedeklerden kaçını tutacağınızı belirleyin veya seçtiğiniz süreler içinde her günün, haftanın ve ayın en yeni yedeğini saklayın (örneğin 7 gün, 4 hafta ve 3 ay). Yalnızca yedek bulunan dönemler sayılır; sabit sayıda kopya garanti edilmez. Saklama kuralına uymayan eski yedekler, yeni bir yedek başarıyla alındıktan sonra silinir.
+- İsteğe bağlı şifreleme: Yedekleri parola ile AES-256-GCM kullanarak koruyun. Şifreleme varsayılan olarak kapalıdır. Elle dışa aktarılan CSV ve vCard dosyaları şifrelenmez.
+- Daha kapsamlı yedekler: Fotoğrafları, grupları ve standart vCard dışa aktarımında yer almayabilen ek Android kişi alanlarını saklayın. Hangi veri kategorilerinin geri yükleneceğini siz seçin.
+- SIM karttaki kişiler: Yedekleme ve geri yükleme desteği cihazınıza bağlıdır.

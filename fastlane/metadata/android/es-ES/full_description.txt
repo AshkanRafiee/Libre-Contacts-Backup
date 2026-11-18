@@ -1,15 +1,7 @@
-Libre Contacts Backup es una aplicación Android nativa y libre (FLOSS) para copias de seguridad de contactos privadas y locales. Sin cuentas, sin seguimiento y sin cargas automáticas: tus contactos permanecen en tu dispositivo a menos que tú mismo muevas un archivo de copia de seguridad, exportes datos o compartas un informe.
+Libre Contacts Backup guarda una copia de tus contactos sin permiso de acceso a Internet en Android. No requiere cuenta, no muestra anuncios, no te rastrea ni sube archivos. Puedes guardar las copias en una carpeta local sin conexión. Si eliges una carpeta de un servicio en la nube, ese servicio puede sincronizar los archivos.
 
-Características:
-* Copia de seguridad sin pérdidas que conserva toda la jerarquía Contact → RawContact → Data, incluidos los grupos de contactos
-* La libreta del teléfono de la tarjeta SIM se captura cuando el dispositivo la expone; si no se puede leer, la copia informa de que solo contiene contactos del dispositivo. Al restaurar, los contactos de la SIM pueden escribirse en la tarjeta SIM, en la libreta del dispositivo o en ambos
-* Copias de seguridad locales programadas a la hora que elijas — diarias, semanales el día de la semana que elijas, o mensuales el día del mes que elijas (si el mes tiene menos días que ese día, se ejecuta el último día del mes) — sin necesidad de conexión a internet
-* Archivos LCB de un solo fichero con exportaciones canónicas en JSON, VCF, CSV y formato normalizado
-* Cifrado opcional protegido por contraseña con AES-256-GCM (respaldado por el Android Keystore)
-* La restauración consolida correctamente cada contacto de origen, sin fusionar a personas distintas que comparten el mismo nombre
-* Exportaciones manuales en CSV y VCF; el archivo CSV se abre en Excel y en otros programas de hojas de cálculo
-* Retención por antigüedad — conserva las copias más recientes de cada día, semana y mes con las cantidades que elijas (por ejemplo 7 diarias, 4 semanales, 3 mensuales), para que el pasado reciente siga bien respaldado y el historial más antiguo se reduzca — o simplemente conserva los últimos N conjuntos
-* Elige el idioma de la aplicación y el tema del sistema, claro u oscuro desde el menú Pantalla
-* Crea un informe de problemas desde Acerca de y elige si quieres incluir diagnósticos técnicos antes de compartirlo con una aplicación de correo o de uso compartido
-
-Libre Contacts Backup es gratuito y de código abierto. Si te resulta útil, puedes apoyar su desarrollo — las opciones de donación están en la sección Donate del README del proyecto: https://librecontactsbackup.ashkanrafiee.com/#donate
+- Copias programadas: haz copias automáticas a la hora que elijas, a diario, cada semana o cada mes.
+- Conservación automática: elige cuántas copias recientes guardar o conserva la más reciente de cada día, semana y mes dentro de los plazos que fijes, por ejemplo, 7 días, 4 semanas y 3 meses. Solo cuentan los periodos en los que hay una copia; no se garantiza una cantidad fija. Las copias antiguas que quedan fuera de la regla se eliminan tras completarse una copia con éxito.
+- Cifrado opcional: protege las copias con contraseña mediante AES-256-GCM. Está desactivado por defecto y las exportaciones manuales a CSV y vCard no se cifran.
+- Copias más completas: guarda fotos, grupos y otros campos de los contactos de Android que una exportación vCard normal puede omitir. Elige qué categorías de datos quieres restaurar.
+- Contactos de la SIM: la copia y la restauración dependen de la compatibilidad del dispositivo.

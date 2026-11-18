@@ -1,15 +1,8 @@
-Libre Contacts Backup is a FLOSS native Android app for private, local-first contact backups. No account, no tracking, and no automatic uploads — your contacts stay on your device unless you choose to move a backup file, export data, or share a report.
+Back up and restore your Android contacts without giving the app internet access. Libre Contacts Backup is free and open source, with no account, ads, analytics, or tracking.
 
-Features:
-* Lossless backup preserving the full Contact → RawContact → Data hierarchy, including contact groups
-* SIM card phonebook captured on a best-effort basis when the device exposes it; if it cannot be read, the backup reports that it contains device contacts only. On restore, SIM contacts can be written back to the SIM card, into the device address book, or both
-* Scheduled local backups at a time you choose — daily, weekly on a selected weekday, or monthly on a selected day (if a month is shorter than that day, it runs on the month's last day) — with no internet connection required
-* Single-file LCB archives containing canonical JSON, VCF, CSV, and normalized exports
-* Optional AES-256-GCM password-protected encryption (Android Keystore backed)
-* Restore consolidates each source contact correctly, without merging different people who share a name
-* Manual CSV and vCard exports, and the CSV opens in Excel and other spreadsheet apps
-* Retention by age — keep the newest backups per day, week, and month with counts you choose (for example 7 daily, 4 weekly, 3 monthly), so the recent past stays densely backed up while older history thins out — or simply keep the last N sets
-* Choose the app language and system, light, or dark theme from the Display menu
-* Create a problem report from About and choose whether to include technical diagnostics before sharing it with an email or sharing app
+• Back up on your schedule. Pick a time for daily, weekly, or monthly backups, or back up manually whenever you need to.
+• Control what stays. Keep the newest backup sets, keep them all, or keep the newest available backup for each day, week, and month across windows you choose (for example, the last 7 days, 4 weeks, and 3 months). The app trims older sets after a successful backup.
+• Protect new backups with a password. Optional AES-256-GCM encryption is off by default. Keep the original password to restore an encrypted backup. Standalone CSV and vCard exports are unencrypted and are not removed by retention.
+• Restore what you need. Backups preserve more than a standard vCard, including photos, groups, and account information where supported. Choose what to restore without changing the archive. SIM phonebook support depends on the device.
 
-Libre Contacts Backup is free and open source. If you find it useful, you can support its development — see the donation options in the project README: https://librecontactsbackup.ashkanrafiee.com/#donate
+Choose a local folder to work entirely offline. The app has no internet permission and does not upload files. If you select a cloud-backed folder, its provider may sync the files. Android’s alarm and battery settings can affect scheduled backups.
